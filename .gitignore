@@ -1,0 +1,13 @@
+*Exercise*/
+*exercise*/
+Resources/
+.omp/
+
+# Python junk
+__pycache__/
+*.py[cod]
+
+# Test/tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
