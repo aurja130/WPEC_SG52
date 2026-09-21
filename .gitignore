@@ -2,6 +2,7 @@
 *exercise*/
 Resources/
 .omp/
+.vscode
 
 # Python junk
 __pycache__/
