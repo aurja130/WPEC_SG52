@@ -2,11 +2,14 @@
 *exercise*/
 Resources/
 .omp/
-.vscode
+.vscode/
 
 # Python junk
 __pycache__/
 *.py[cod]
+
+# C++ junk
+build/
 
 # Test/tool caches
 .pytest_cache/
