@@ -22,5 +22,17 @@ int main() {
     std::cout << "This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are" << std::endl;
     std::cout << "welcome to redistribute it under certain conditions. Read LICENSE.txt for details." << std::endl;
 
+    Eigen::MatrixXd A(2, 2);
+    A << 4.0, 1.0,
+         1.0, 3.0;
+
+    Eigen::VectorXd b(2);
+    b << 1.0, 2.0;
+
+    SPDSolver solver(A);
+    const Eigen::VectorXd x = solver.solve(b);
+
+    std::cout << x << '\n';
+
     return 0;
 }
