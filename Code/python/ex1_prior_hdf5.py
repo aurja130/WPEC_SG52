@@ -74,31 +74,37 @@ def parse_filename(path: Path) -> FileInfo | None:
     return None
 
 
-def interpret_quantity_id(qid: int) -> dict[str, object]:
+def interpret_quantity_id(zaid: int, qid: int) -> dict[str, object]:
     """Return the physical meaning attached to an SG52 quantity ID."""
 
     if qid in PFNS_PSEUDO_IDS:
         return {
             "family": "pfns",
+            "zaid": zaid,
+            "mtid": f"{qid:05d}",
             **PFNS_PSEUDO_IDS[qid],
         }
 
     if qid in MUBAR_PSEUDO_IDS:
         return {
             "family": "mubar",
+            "zaid": zaid,
+            "mtid": f"{qid:05d}",
             **MUBAR_PSEUDO_IDS[qid],
         }
 
     if qid in MT_NUMBERS:
         return {
             "family": "ordinary_MT",
-            "mt": qid,
+            "zaid": zaid,
+            "mtid": f"{qid:05d}",
             **MT_NUMBERS[qid],
         }
 
     return {
         "family": "unknown",
-        "quantity_id": qid,
+        "zaid": zaid,
+        "mtid": f"{qid:05d}",
     }
 
 
@@ -289,7 +295,7 @@ def write_mean_values(
         )
 
         quantity_group = material_group.create_group(
-            f"{quantity_id:05d}"
+            f"{zaid}_{quantity_id:05d}"
         )
 
         quantity_group.create_dataset(
@@ -297,7 +303,7 @@ def write_mean_values(
             data=values,
         )
 
-        metadata = interpret_quantity_id(quantity_id)
+        metadata = interpret_quantity_id(zaid, quantity_id)
 
         for h5_key, h5_value in metadata.items():
             if h5_value is not None:
@@ -323,8 +329,8 @@ def write_relative_covariances(
         )
 
         block_name = (
-            f"{quantity_id_1:05d}"
-            f"__"
+            f"{zaid_1}_{quantity_id_1:05d}"
+            f"_vs_"
             f"{zaid_2}_{quantity_id_2:05d}"
         )
 
@@ -337,10 +343,19 @@ def write_relative_covariances(
             data=h5_values,
         )
 
-        block_group.attrs["zaid_1"] = zaid_1
-        block_group.attrs["quantity_id_1"] = quantity_id_1
-        block_group.attrs["zaid_2"] = zaid_2
-        block_group.attrs["quantity_id_2"] = quantity_id_2
+        block_group.attrs["zaid_1"] = str(zaid_1)
+        block_group.attrs["quantity_id_1"] = f"{quantity_id_1:05d}"
+        block_group.attrs["zaid_2"] = str(zaid_2)
+        block_group.attrs["quantity_id_2"] = f"{quantity_id_2:05d}"
+
+        if quantity_id_1 in PFNS_PSEUDO_IDS and quantity_id_2 in PFNS_PSEUDO_IDS:
+            block_group.attrs["family"] = 'pfns'
+        elif quantity_id_1 in MUBAR_PSEUDO_IDS and quantity_id_2 in MUBAR_PSEUDO_IDS:
+            block_group.attrs["family"] = 'mubar'
+        elif quantity_id_1 in MT_NUMBERS and quantity_id_2 in MT_NUMBERS:
+            block_group.attrs["family"] = 'ordinary_MT'
+        else:
+            block_group.attrs["family"] = 'unknown'
 
 
 def write_hdf5(
@@ -424,7 +439,7 @@ for file_path in covariance_directory.glob("*.txt"):
         )
         relative_covariance_data[key] = file_data
 
-OUTPUT_FILE = prior_directory / "exercise_1_prior.hdf5"
+OUTPUT_FILE = prior_directory / "ex1_prior.hdf5"
 
 write_hdf5(
     OUTPUT_FILE,
