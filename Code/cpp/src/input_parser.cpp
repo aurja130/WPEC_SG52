@@ -35,9 +35,17 @@ struct Token {
   std::size_t line;
 };
 
-enum class Card : std::uint8_t { Prmean, Prcov, Obsdelta, Obscov, Sens };
+enum class Card : std::uint8_t {
+  Prmean,
+  Prcov,
+  Obsdelta,
+  Obscov,
+  Sens,
+  Psmean,
+  Pscov
+};
 
-constexpr std::size_t card_count = 5;
+constexpr std::size_t card_count = 7;
 
 struct ParsedCard {
   Card type;
@@ -68,6 +76,12 @@ auto card_type(std::string_view name) -> std::optional<Card> {
   if (name == "sens") {
     return Card::Sens;
   }
+  if (name == "psmean") {
+    return Card::Psmean;
+  }
+  if (name == "pscov") {
+    return Card::Pscov;
+  }
   return std::nullopt;
 }
 
@@ -83,6 +97,10 @@ auto card_name(Card card) -> const char * {
     return "obscov";
   case Card::Sens:
     return "sens";
+  case Card::Psmean:
+    return "psmean";
+  case Card::Pscov:
+    return "pscov";
   }
   return "unknown";
 }
@@ -235,6 +253,14 @@ auto store_card(InputPaths &paths, ParsedCard card) -> void {
   case Card::Sens:
     paths.sens_filepath = std::move(card.filepath);
     paths.sens_dataset = std::move(card.dataset);
+    break;
+  case Card::Psmean:
+    paths.psmean_filepath = std::move(card.filepath);
+    paths.psmean_dataset = std::move(card.dataset);
+    break;
+  case Card::Pscov:
+    paths.pscov_filepath = std::move(card.filepath);
+    paths.pscov_dataset = std::move(card.dataset);
     break;
   }
 }

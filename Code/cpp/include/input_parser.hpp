@@ -13,7 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#pragma once
+#ifndef NDA_INPUT_PARSER_HPP
+#define NDA_INPUT_PARSER_HPP
 
 #include <Eigen/Core>
 #include <filesystem>
@@ -31,6 +32,10 @@ struct InputPaths {
   std::string obscov_dataset;
   std::string sens_filepath;
   std::string sens_dataset;
+  std::string psmean_filepath;
+  std::string psmean_dataset;
+  std::string pscov_filepath;
+  std::string pscov_dataset;
 };
 
 using Dataset = std::variant<Eigen::MatrixXd, Eigen::VectorXd>;
@@ -39,3 +44,5 @@ auto read_dataset(const std::filesystem::path &file_path,
                   const std::string &dataset_path) -> Dataset;
 
 auto parse_input(const std::filesystem::path &input_file) -> InputPaths;
+
+#endif // NDA_INPUT_PARSER_HPP

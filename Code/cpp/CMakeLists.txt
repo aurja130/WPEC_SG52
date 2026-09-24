@@ -18,6 +18,7 @@ add_executable(nda
     src/glls.cpp
     src/linSolve.cpp
     src/input_parser.cpp
+    src/output_hdf5.cpp
 )
 
 target_include_directories(nda

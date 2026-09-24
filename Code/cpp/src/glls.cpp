@@ -23,25 +23,25 @@ GLLSResult glls(const Eigen::VectorXd &mu_x_i, const Eigen::MatrixXd &Sigma_x_i,
   const Eigen::Index m = Delta_E_i.size();
 
   if (n == 0 || m == 0) {
-    throw std::invalid_argument("glls: input dimensions must be non-zero.");
+    throw std::invalid_argument("GLLS: input dimensions must be non-zero.");
   }
 
   if (Sigma_x_i.rows() != n || Sigma_x_i.cols() != n) {
     throw std::invalid_argument(
-        "glls: prior covariance matrix must have dimensions n x n.");
+        "GLLS: prior covariance matrix must have dimensions n x n.");
   }
 
   if (S.rows() != m || S.cols() != n) {
     throw std::invalid_argument(
-        "glls: sensitivity matrix must have dimensions m x n.");
+        "GLLS: sensitivity matrix must have dimensions m x n.");
   }
 
   if (Sigma_E.rows() != m || Sigma_E.cols() != m) {
     throw std::invalid_argument(
-        "glls: observation covariance matrix must have dimensions m x m.");
+        "GLLS: observation covariance matrix must have dimensions m x m.");
   }
 
-  std::cout << "glls: input dimensions are valid.\n";
+  std::cout << "GLLS: input dimensions are valid.\n";
 
   // Construct V
   Eigen::MatrixXd V = (S * Sigma_x_i * S.transpose()) + Sigma_E;
