@@ -439,7 +439,7 @@ for file_path in covariance_directory.glob("*.txt"):
         )
         relative_covariance_data[key] = file_data
 
-OUTPUT_FILE = prior_directory / "ex1_prior.hdf5"
+OUTPUT_FILE = prior_directory / "ex1_groupwise_prior_data.hdf5"
 
 write_hdf5(
     OUTPUT_FILE,

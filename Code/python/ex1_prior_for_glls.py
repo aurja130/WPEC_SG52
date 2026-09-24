@@ -63,7 +63,7 @@ class PriorMean:
 
 FloatArray = NDArray[np.float64]
 
-PRIOR_PATH = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/Prior/ex1_prior.hdf5")
+PRIOR_PATH = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/Prior/ex1_groupwise_prior_data.hdf5")
 
 
 prior_file = h5py.File(str(PRIOR_PATH), "r")
@@ -170,8 +170,10 @@ for cov_set in prior_covariances:
                             cov_set.row_indices.index(row),
                             cov_set.col_indices.index(col)]
 
-with h5py.File("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/Prior/mean.hdf5", "w") as mean_hdf5:
+Sigma_x_i = cov_matrix * np.outer(mean_vector, mean_vector)
+
+with h5py.File("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/Prior/mu_x_i.hdf5", "w") as mean_hdf5:
     mean_dset = mean_hdf5.create_dataset("values", data=mean_vector)
 
-with h5py.File("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/Prior/covariance.hdf5", "w") as cov_hdf5:
+with h5py.File("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/Prior/Sigma_x_i.hdf5", "w") as cov_hdf5:
     cov_dset = cov_hdf5.create_dataset("values", data=cov_matrix)
