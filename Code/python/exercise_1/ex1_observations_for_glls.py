@@ -8,8 +8,8 @@ observation_file = h5py.File(str(OBSERVATION_PATH), "r")
 # READ OBS MEAN AND COV DATA
 mean_cov_group = observation_file["observations"]
 obs_response_ids = mean_cov_group.get("response_ids").asstr()[...].tolist()
-criticality_response_id = "PU-MET-FAST-001-001-s"
-desired_obs_response_index = obs_response_ids.index(criticality_response_id)
+CRITICALITY_RESPONSE_ID = "PU-MET-FAST-001-001-s"
+desired_obs_response_index = obs_response_ids.index(CRITICALITY_RESPONSE_ID)
 obs_experimental = np.asarray(mean_cov_group["experimental"])
 obs_simulated = np.asarray(mean_cov_group["simulated"])
 obs_total_uncertainty_std = np.asarray(mean_cov_group["total_uncertainty"])
@@ -27,7 +27,7 @@ Sigma_E = np.array([[
 # READ SENSITIVITY DATA
 sens_group = observation_file["sensitivities"]
 sens_response_ids = sens_group.get("response_ids").asstr()[...].tolist()
-desired_sens_response_index = sens_response_ids.index(criticality_response_id)
+desired_sens_response_index = sens_response_ids.index(CRITICALITY_RESPONSE_ID)
 sens_parameter_ids = sens_group.get("parameter_ids").asstr()[...].tolist()
 rel_sens_values = np.asarray(sens_group["relative"])
 
