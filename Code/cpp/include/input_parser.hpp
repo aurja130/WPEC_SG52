@@ -14,14 +14,28 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
-#include "linSolve.hpp"
-#include <iostream>
 
-struct GLLSResult {
-  Eigen::VectorXd mu_x_f;
-  Eigen::MatrixXd Sigma_x_f;
+#include <Eigen/Core>
+#include <filesystem>
+#include <string>
+#include <variant>
+
+struct InputPaths {
+  std::string prmean_filepath;
+  std::string prmean_dataset;
+  std::string prcov_filepath;
+  std::string prcov_dataset;
+  std::string obsdelta_filepath;
+  std::string obsdelta_dataset;
+  std::string obscov_filepath;
+  std::string obscov_dataset;
+  std::string sens_filepath;
+  std::string sens_dataset;
 };
 
-GLLSResult glls(const Eigen::VectorXd &mu_x_i, const Eigen::MatrixXd &Sigma_x_i,
-                const Eigen::MatrixXd &S, const Eigen::VectorXd &Delta_E_i,
-                const Eigen::MatrixXd &Sigma_E);
+using Dataset = std::variant<Eigen::MatrixXd, Eigen::VectorXd>;
+
+auto read_dataset(const std::filesystem::path &file_path,
+                  const std::string &dataset_path) -> Dataset;
+
+auto parse_input(const std::filesystem::path &input_file) -> InputPaths;

@@ -3,6 +3,7 @@
 Resources/
 .omp/
 .vscode/
+tmp/
 
 # Python junk
 __pycache__/

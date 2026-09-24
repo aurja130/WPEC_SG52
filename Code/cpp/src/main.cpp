@@ -1,38 +1,52 @@
-// Nuclear Data Adjustment Tool 
+// Nuclear Data Adjustment Tool
 // Copyright (C) 2026 Aurora Jahan
-// 
+//
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License version 3 as 
+// it under the terms of the GNU General Public License version 3 as
 // published by the Free Software Foundation.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# include <iostream>
-# include "glls.hpp"
-# include <highfive/highfive.hpp>
+#include <exception>
+#include <iostream>
+#include <span>
 
-int main() {
-    std::cout << "Nuclear Data Adjustment Tool; Copyright (C) 2026 Aurora Jahan" << std::endl;
-    std::cout << "This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are" << std::endl;
-    std::cout << "welcome to redistribute it under certain conditions. Read LICENSE.txt for details." << std::endl;
+#include "input_parser.hpp"
 
-    Eigen::MatrixXd A(2, 2);
-    A << 4.0, 1.0,
-         1.0, 3.0;
+auto main(int argc, char *argv[]) -> int {
+  const std::span<char *const> arguments(argv, static_cast<std::size_t>(argc));
+  if (arguments.size() != 2) {
+    const char *executable = arguments.empty() ? "nda" : arguments.front();
+    std::cerr << "Usage: " << executable << " <input-file>\n";
+    return 2;
+  }
 
-    Eigen::VectorXd b(2);
-    b << 1.0, 2.0;
+  try {
+    const auto [prmean_filepath, prmean_dataset, prcov_filepath, prcov_dataset,
+                obsdelta_filepath, obsdelta_dataset, obscov_filepath,
+                obscov_dataset, sens_filepath, sens_dataset] =
+        parse_input(arguments.back());
 
-    SPDSolver solver(A);
-    const Eigen::VectorXd x = solver.solve(b);
+    std::cout << "prmean.filepath: " << prmean_filepath << '\n'
+              << "prmean.dataset: " << prmean_dataset << '\n'
+              << "prcov.filepath: " << prcov_filepath << '\n'
+              << "prcov.dataset: " << prcov_dataset << '\n'
+              << "obsdelta.filepath: " << obsdelta_filepath << '\n'
+              << "obsdelta.dataset: " << obsdelta_dataset << '\n'
+              << "obscov.filepath: " << obscov_filepath << '\n'
+              << "obscov.dataset: " << obscov_dataset << '\n'
+              << "sens.filepath: " << sens_filepath << '\n'
+              << "sens.dataset: " << sens_dataset << '\n';
+  } catch (const std::exception &error) {
+    std::cerr << error.what() << '\n';
+    return 1;
+  }
 
-    std::cout << x << '\n';
-
-    return 0;
+  return 0;
 }
