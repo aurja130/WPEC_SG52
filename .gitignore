@@ -3,6 +3,7 @@ Resources/
 .omp/
 .vscode/
 tmp/
+Submission_to_NEA/
 
 # Python junk
 __pycache__/
