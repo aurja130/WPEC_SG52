@@ -27,11 +27,8 @@ from openpyxl.worksheet.worksheet import Worksheet
 # =============================================================================
 
 TEMPLATE_PATH = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/SG52_materials_release_2/Output template/Output_example.xlsx")
-MU_X_I_PATH = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/mu_x_i.hdf5")
-SIGMA_X_I_PATH = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/Sigma_x_i.hdf5")
-DELTA_E_I_PATH = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/Delta_E_i.hdf5")
-S_PATH = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/S.hdf5")
-SIGMA_E_PATH = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/Sigma_E.hdf5")
+PRIOR_PATH = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/ex1_prior.hdf5")
+OBSERVATION_PATH = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/ex1_observations.hdf5")
 POSTERIOR_PATH = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/ex1_results.hdf5")
 
 OUTPUT_DIR = Path("/home/aurja/Programming/OECDNEA_WPEC_SG52/Auroras_solution/Exercise_1/Submission")
@@ -190,11 +187,11 @@ def validate_input_data(data: InputData) -> None:
 def load_inputs() -> InputData:
     """Load and immediately validate every required numerical input."""
     data = InputData(
-        mu_i=read_dataset(MU_X_I_PATH, "/values"),
-        Sigma_i=read_dataset(SIGMA_X_I_PATH, "/values"),
-        Delta_E_i=read_dataset(DELTA_E_I_PATH, "/values"),
-        S=read_dataset(S_PATH, "/values"),
-        Sigma_E=read_dataset(SIGMA_E_PATH, "/values"),
+        mu_i=read_dataset(PRIOR_PATH, "/mean/values"),
+        Sigma_i=read_dataset(PRIOR_PATH, "/cov/values"),
+        Delta_E_i=read_dataset(OBSERVATION_PATH, "/delta/values"),
+        S=read_dataset(OBSERVATION_PATH, "/sens/values"),
+        Sigma_E=read_dataset(OBSERVATION_PATH, "/cov/values"),
         mu_f=read_dataset(POSTERIOR_PATH, "/mean/values"),
         Sigma_f=read_dataset(POSTERIOR_PATH, "/covariance/values"),
     )

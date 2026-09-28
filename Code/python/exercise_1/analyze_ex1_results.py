@@ -4,20 +4,14 @@ Comprehensive diagnostics for WPEC SG52 Exercise 1 (JEZEBEL k_eff GLLS).
 
 Expected input files
 --------------------
-mu_x_i.hdf5
-    /values                 shape (979,)
+ex1_prior.hdf5
+    /mean/values            shape (979,)
+    /cov/values             shape (979, 979)
 
-Sigma_x_i.hdf5
-    /values                 shape (979, 979)
-
-Delta_E_i.hdf5
-    /values                 shape (1,)
-
-S.hdf5
-    /values                 shape (1, 979)
-
-Sigma_E.hdf5
-    /values                 shape (1, 1)
+ex1_observations.hdf5
+    /delta/values           shape (1,)
+    /sens/values            shape (1, 979)
+    /cov/values             shape (1, 1)
 
 ex1_results.hdf5
     /mean/values            shape (979,)
@@ -52,18 +46,15 @@ mu_i is tiny.  The preferred mean-adjustment diagnostic is
 
 Usage
 -----
-Run in the directory containing the six HDF5 files:
+Run in the directory containing the three HDF5 files:
 
     python analyze_ex1_results.py
 
 or specify paths explicitly:
 
     python analyze_ex1_results.py \
-        --prior-mean mu_x_i.hdf5 \
-        --prior-cov Sigma_x_i.hdf5 \
-        --delta-e Delta_E_i.hdf5 \
-        --sensitivity S.hdf5 \
-        --response-cov Sigma_E.hdf5 \
+        --prior ex1_prior.hdf5 \
+        --observations ex1_observations.hdf5 \
         --posterior ex1_results.hdf5
 
 Outputs are written to ./ex1_analysis by default.
@@ -213,11 +204,11 @@ def read_dataset(path: Path, dataset: str) -> np.ndarray:
 
 
 def read_inputs(args: argparse.Namespace):
-    mu_i = read_dataset(args.prior_mean, "values")
-    Sigma_i = read_dataset(args.prior_cov, "values")
-    Delta_E_i = read_dataset(args.delta_e, "values")
-    S = read_dataset(args.sensitivity, "values")
-    Sigma_E = read_dataset(args.response_cov, "values")
+    mu_i = read_dataset(args.prior, "mean/values")
+    Sigma_i = read_dataset(args.prior, "cov/values")
+    Delta_E_i = read_dataset(args.observations, "delta/values")
+    S = read_dataset(args.observations, "sens/values")
+    Sigma_E = read_dataset(args.observations, "cov/values")
 
     mu_f = read_dataset(args.posterior, "mean/values")
     Sigma_f = read_dataset(args.posterior, "covariance/values")
@@ -1108,29 +1099,14 @@ def parse_args() -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--prior-mean",
+        "--prior",
         type=Path,
-        default=Path("mu_x_i.hdf5"),
+        default=Path("ex1_prior.hdf5"),
     )
     parser.add_argument(
-        "--prior-cov",
+        "--observations",
         type=Path,
-        default=Path("Sigma_x_i.hdf5"),
-    )
-    parser.add_argument(
-        "--delta-e",
-        type=Path,
-        default=Path("Delta_E_i.hdf5"),
-    )
-    parser.add_argument(
-        "--sensitivity",
-        type=Path,
-        default=Path("S.hdf5"),
-    )
-    parser.add_argument(
-        "--response-cov",
-        type=Path,
-        default=Path("Sigma_E.hdf5"),
+        default=Path("ex1_observations.hdf5"),
     )
     parser.add_argument(
         "--posterior",
