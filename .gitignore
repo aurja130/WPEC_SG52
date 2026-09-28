@@ -1,9 +1,13 @@
-*Exercise*/
 Resources/
 .omp/
 .vscode/
 tmp/
+*.hdf5
+*.h5
+*.xlsx
+ex*_analysis/
 Submission_to_NEA/
+omp.sh
 
 # Python junk
 __pycache__/

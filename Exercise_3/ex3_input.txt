@@ -1,0 +1,54 @@
+# prior data
+
+# mean
+
+CARD prmean
+filepath Exercise_3/ex3_prior.hdf5
+dataset /mean/values
+END
+
+# covariance
+
+CARD prcov
+filepath Exercise_3/ex3_prior.hdf5
+dataset /cov/values
+END
+
+# observation data
+
+# discrepancy in responses between experiment and calculation
+
+CARD obsdelta
+filepath Exercise_3/ex3_observations.hdf5
+dataset /delta/values
+END
+
+# response covariance
+
+CARD obscov
+filepath Exercise_3/ex3_observations.hdf5
+dataset /cov/values
+END
+
+# sensitivity data
+
+CARD sens
+filepath Exercise_3/ex3_observations.hdf5
+dataset /sens/values
+END
+
+# output data
+
+# posterior mean
+
+CARD psmean
+filepath Exercise_3/ex3_results.hdf5
+dataset /mean/values
+END
+
+# posterior covariance
+
+CARD pscov
+filepath Exercise_3/ex3_results.hdf5
+dataset /covariance/values
+END

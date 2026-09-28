@@ -1,8 +1,13 @@
-# WPEC SG52 GLLS adjustment tool
+# WPEC SG52 nuclear data adjustment exercises
+
+This repository demonstrates the work done by researchers at Uppsala University 
+related to the OECD-NEA WPEC SG52 nuclear data adjustment exercises.
+
+## GLLS adjustment tool
 
 `GLLS_code/` contains the standalone C++ generalized least-squares adjustment
-program. It has no dependency on this repository's Exercise 1 data or Python
-workflows; prepare your own HDF5 inputs and input card file.
+program. It has no dependency on the data or Python
+workflows for WPEC SG52 exercises; prepare your own HDF5 inputs and input card file.
 
 Build from the repository root:
 
@@ -20,6 +25,11 @@ GLLS_code/build/nda path/to/input.txt
 See [`GLLS_code/README.md`](GLLS_code/README.md) for build requirements, input
 cards, and HDF5 dataset expectations.
 
-`Exercise_1/` is a local, git-ignored workspace for project-specific data and
-Python utilities; its contents are not part of the standalone GLLS tool or
-tracked in this repository.
+## Exercise workflows
+
+Run each workflow from the repository root with the sibling
+`SG52_materials_release_2/` data directory available:
+
+- [Exercise 1 — JEZEBEL criticality](Exercise_1/README.md)
+- [Exercise 2 — JEZEBEL and EUCLID criticalities](Exercise_2/README.md)
+- [Exercise 3 — all JEZEBEL and EUCLID integral responses](Exercise_3/README.md)
