@@ -41,6 +41,7 @@ REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[1]
 EXERCISE_DIRECTORY: Final = Path(__file__).resolve().parent
 DEFAULT_SOURCE_DIRECTORY: Final = (
     REPOSITORY_ROOT.parent
+    / "SG52_materials"
     / "SG52_materials_release_3"
     / "Adjustement set"
     / "Integral"

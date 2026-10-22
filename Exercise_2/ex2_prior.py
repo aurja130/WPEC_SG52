@@ -33,7 +33,11 @@ QUANTITY_IDS: Final = (
 REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[1]
 EXERCISE_DIRECTORY: Final = Path(__file__).resolve().parent
 DEFAULT_SOURCE_DIRECTORY: Final = (
-    REPOSITORY_ROOT.parent / "SG52_materials_release_3" / "Covariances" / "plaintext"
+    REPOSITORY_ROOT.parent
+    / "SG52_materials"
+    / "SG52_materials_release_3"
+    / "Covariances"
+    / "plaintext"
 )
 DEFAULT_OUTPUT_PATH: Final = EXERCISE_DIRECTORY / "ex2_prior.hdf5"
 

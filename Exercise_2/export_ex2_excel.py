@@ -31,6 +31,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 EXERCISE_DIRECTORY = Path(__file__).resolve().parent
 TEMPLATE_PATH = (
     REPOSITORY_ROOT.parent
+    / "SG52_materials"
     / "SG52_materials_release_3"
     / "Output template"
     / "Output_example.xlsx"

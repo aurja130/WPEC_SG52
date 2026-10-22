@@ -4,7 +4,7 @@ Adjust the 979-state Pu-239 prior using **all 29 released integral responses** i
 source order: JEZEBEL's criticality and three reaction-rate ratios, followed by
 EUCLID's two criticalities, 15 neutron-leakage spectrum points, and eight
 reaction-rate ratios. The release calls the 1x8 EUCLID configuration `8x1`.
-The input data come from the sibling `SG52_materials_release_3/` directory.
+The input data come from `../SG52_materials/SG52_materials_release_3/`.
 
 From the repository root, with `GLLS_code/build/nda` built and Python packages
 `numpy`, `h5py`, `matplotlib`, and `openpyxl` installed:

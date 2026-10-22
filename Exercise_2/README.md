@@ -3,7 +3,7 @@
 Adjust Pu-239 with three criticality responses: JEZEBEL PMF-001, EUCLID 3x2,
 and EUCLID 8x1 (the release's name for the 1x8 configuration). Other JEZEBEL
 and EUCLID responses are reserved for later exercises. The input data come
-from the sibling `SG52_materials_release_3/` directory.
+from `../SG52_materials/SG52_materials_release_3/`.
 
 From the repository root, with `GLLS_code/build/nda` built and Python packages
 `numpy`, `h5py`, `matplotlib`, and `openpyxl` available:

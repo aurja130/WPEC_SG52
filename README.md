@@ -27,9 +27,9 @@ cards, and HDF5 dataset expectations.
 
 ## Exercise workflows
 
-Run each workflow from the repository root with the sibling
-`SG52_materials_release_3/` data directory available (release 3 replaces
-release 2; the first submission used release 2):
+Run each workflow from the repository root with the release 3 data in
+`../SG52_materials/SG52_materials_release_3/` (release 3 replaces release 2;
+the first submission used release 2):
 
 - [Exercise 1 — JEZEBEL criticality](Exercise_1/README.md)
 - [Exercise 2 — JEZEBEL and EUCLID criticalities](Exercise_2/README.md)

@@ -1,8 +1,8 @@
 # SG52 Exercise 1
 
 Adjust the 979-state Pu-239 prior using the JEZEBEL PMF-001 criticality
-response (`PU-MET-FAST-001-001-s`). The input data come from the sibling
-`SG52_materials_release_3/` directory.
+response (`PU-MET-FAST-001-001-s`). The input data come from
+`../SG52_materials/SG52_materials_release_3/`.
 
 From the repository root, with `GLLS_code/build/nda` built and Python packages
 `numpy`, `h5py`, `matplotlib`, and `openpyxl` available:
