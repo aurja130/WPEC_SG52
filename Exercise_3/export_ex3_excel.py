@@ -31,7 +31,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 EXERCISE_DIRECTORY = Path(__file__).resolve().parent
 TEMPLATE_PATH = (
     REPOSITORY_ROOT.parent
-    / "SG52_materials_release_2"
+    / "SG52_materials_release_3"
     / "Output template"
     / "Output_example.xlsx"
 )
@@ -50,7 +50,7 @@ VERY_LARGE_RELATIVE_THRESHOLD = 1.0e6
 ZAID = "94239"
 N_GROUPS = 51
 EXPECTED_STATE_SIZE = 979
-SCIENTIFIC_FORMAT = "0.000000000000000E+00"
+SCIENTIFIC_FORMAT = "0.0000000000E+00"
 NAN_TEXT = "NaN"
 
 PRIOR_MTS = [
@@ -89,16 +89,39 @@ PRIOR_MUBAR_IDS = [
     "09251",
 ]
 
-XS_MEAN_HEADERS = [2, 4, 16, 17, 18, 37, 102, 251, 452]
-PFNS_MEAN_HEADERS = [1018, 1118, 1218, 1318, 1418, 1518, 1618, 1718, 1818, 1918]
-XS_COVARIANCE_MTS = ["00002", "00004", "00016", "00017", "00018", "00037", "00102"]
+MEAN_HEADERS = [
+    2,
+    4,
+    16,
+    17,
+    18,
+    37,
+    102,
+    251,
+    452,
+    1018,
+    1118,
+    1218,
+    1318,
+    1418,
+    1518,
+    1618,
+    1718,
+    1818,
+    1918,
+]
+MUBAR_HEADER = 251
+MEAN_TABLE_ANCHOR = "GROUP\\MT"
+TEMPLATE_STATE_COUNT = 928
 
 RELATIVE_SHEET_NAMES = [
     "Comment",
-    "XS_posterior_rel_adjust",
-    "PFNS_posterior_rel_adjust",
-    "XS_cov_posterior_rel_adjust",
-    "PFNS_cov_posterior_rel_adjust",
+    "Questions",
+    "Groups",
+    "prior_abs",
+    "prior_cov_rel_to_prior",
+    "posterior_rel_adjust",
+    "posterior_cov_rel_to_prior",
 ]
 ABSOLUTE_SHEET_NAMES = [
     "Comment",
@@ -145,27 +168,22 @@ class StateMeta:
 
 @dataclass(frozen=True)
 class TemplateSelection:
-    xs_indices: NDArray[np.int64]
-    xs_labels: tuple[str, ...]
-    pfns_indices: NDArray[np.int64]
-    pfns_labels: tuple[str, ...]
-
-    @property
-    def all_indices(self) -> NDArray[np.int64]:
-        return np.concatenate((self.xs_indices, self.pfns_indices))
+    indices: NDArray[np.int64]
+    axis_labels: tuple[str, ...]
 
 
 @dataclass(frozen=True)
 class RelativeOutputs:
     mean_adjustment: FloatArray
-    xs_covariance: FloatArray
-    pfns_covariance: FloatArray
+    prior_covariance: FloatArray
+    posterior_covariance: FloatArray
 
 
 @dataclass(frozen=True)
 class ExportDiagnostics:
     undefined_mean_count: int
-    undefined_covariance_count: int
+    undefined_prior_covariance_count: int
+    undefined_posterior_covariance_count: int
     very_large_finite_count: int
 
 
@@ -290,47 +308,45 @@ def build_state_metadata() -> tuple[list[StateMeta], dict[str, int]]:
     return metadata, index_by_label
 
 
-def build_template_output_indices(index_by_label: dict[str, int]) -> TemplateSelection:
-    """Build the exact 418-state XS/mubar and 510-state PFNS selections."""
-    xs_labels: list[str] = []
-    for qid in XS_COVARIANCE_MTS:
-        xs_labels.extend(f"{ZAID}_{qid}_{group}" for group in range(N_GROUPS))
-    xs_labels.extend(f"{ZAID}_{qid}" for qid in PRIOR_MUBAR_IDS)
-    xs_labels.extend(f"{ZAID}_00452_{group}" for group in range(N_GROUPS))
+def template_cells() -> list[tuple[int, int, str]]:
+    """Return the 928 NEA template cells as (MT header, group, state label)."""
+    cells: list[tuple[int, int, str]] = []
+    for header in MEAN_HEADERS:
+        if header == MUBAR_HEADER:
+            cells.extend(
+                (header, group, f"{ZAID}_{qid}")
+                for group, qid in enumerate(PRIOR_MUBAR_IDS)
+            )
+        else:
+            cells.extend(
+                (header, group, f"{ZAID}_{header:05d}_{group}")
+                for group in range(N_GROUPS)
+            )
+    return cells
 
-    pfns_labels = [
-        f"{ZAID}_{qid}_{outgoing_group}"
-        for qid in PRIOR_PFNS_IDS
-        for outgoing_group in range(N_GROUPS)
-    ]
 
+def build_template_selection(index_by_label: dict[str, int]) -> TemplateSelection:
+    """Map the 928 NEA template cells to canonical state indices, in template order."""
+    cells = template_cells()
     try:
-        xs_indices: NDArray[np.int64] = np.asarray(
-            [index_by_label[label] for label in xs_labels], dtype=np.int64
-        )
-        pfns_indices: NDArray[np.int64] = np.asarray(
-            [index_by_label[label] for label in pfns_labels], dtype=np.int64
+        indices: NDArray[np.int64] = np.asarray(
+            [index_by_label[label] for _, _, label in cells], dtype=np.int64
         )
     except KeyError as error:
         raise RuntimeError(
             f"Template selection references unknown state {error.args[0]!r}"
         ) from error
 
-    if xs_indices.shape != (418,):
+    if indices.shape != (TEMPLATE_STATE_COUNT,):
         raise RuntimeError(
-            f"Official non-PFNS selection has {xs_indices.size} states, expected 418"
+            f"Template selection has {indices.size} states, "
+            + f"expected {TEMPLATE_STATE_COUNT}"
         )
-    if pfns_indices.shape != (510,):
-        raise RuntimeError(
-            f"Official PFNS selection has {pfns_indices.size} states, expected 510"
-        )
-    if xs_indices.size + pfns_indices.size != 928:
-        raise RuntimeError(
-            "Official relative selections must contain 418 + 510 = 928 states"
-        )
+    unique_indices = set(indices.tolist())
+    if len(unique_indices) != TEMPLATE_STATE_COUNT:
+        raise RuntimeError("Template selection contains duplicate states")
 
-    selected = {index_by_label[label] for label in (*xs_labels, *pfns_labels)}
-    omitted = set(range(EXPECTED_STATE_SIZE)) - selected
+    omitted = set(range(EXPECTED_STATE_SIZE)) - unique_indices
     expected_omitted = {
         index_by_label[f"{ZAID}_00456_{group}"] for group in range(N_GROUPS)
     }
@@ -338,27 +354,27 @@ def build_template_output_indices(index_by_label: dict[str, int]) -> TemplateSel
         raise RuntimeError(
             "The 51 states omitted from the relative template are not exactly MT456"
         )
-    if len(selected) != 928:
-        raise RuntimeError("Official relative output selections overlap unexpectedly")
 
     return TemplateSelection(
-        xs_indices=xs_indices,
-        xs_labels=tuple(xs_labels),
-        pfns_indices=pfns_indices,
-        pfns_labels=tuple(pfns_labels),
+        indices=indices,
+        axis_labels=tuple(f"MT{header}.{group}" for header, group, _ in cells),
     )
 
 
-def relative_covariance_block(Sigma_f: FloatArray, mu_f: FloatArray) -> FloatArray:
-    """Normalize one selected covariance block without thresholding denominators."""
-    denominator: FloatArray = cast(FloatArray, np.multiply.outer(mu_f, mu_f))
-    relative: FloatArray = np.full(Sigma_f.shape, np.nan, dtype=np.float64)
+def relative_covariance_block(
+    covariance: FloatArray, prior_mean: FloatArray
+) -> FloatArray:
+    """Normalize one selected covariance block by the prior-mean outer product."""
+    denominator: FloatArray = cast(
+        FloatArray, np.multiply.outer(prior_mean, prior_mean)
+    )
+    relative: FloatArray = np.full(covariance.shape, np.nan, dtype=np.float64)
     denominator_nonzero: BoolArray = cast(BoolArray, denominator != 0.0)
     with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
         _ = cast(
             FloatArray,
             np.divide(
-                Sigma_f,
+                covariance,
                 denominator,
                 out=relative,
                 where=denominator_nonzero,
@@ -377,7 +393,7 @@ def relative_covariance_block(Sigma_f: FloatArray, mu_f: FloatArray) -> FloatArr
 def calculate_relative_outputs(
     data: InputData, selection: TemplateSelection
 ) -> RelativeOutputs:
-    """Calculate requested relative values exactly, using zero-only guards."""
+    """Normalize all relative quantities on the prior mean mu_i, not the posterior."""
     mean_adjustment: FloatArray = np.full(data.mu_i.shape, np.nan, dtype=np.float64)
     nonzero_prior_mean: BoolArray = cast(BoolArray, data.mu_i != 0.0)
     with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
@@ -398,19 +414,18 @@ def calculate_relative_outputs(
             + "nonzero denominators; these cannot be represented faithfully in Excel"
         )
 
-    xs_indices = selection.xs_indices
-    pfns_indices = selection.pfns_indices
-    xs_covariance = relative_covariance_block(
-        data.Sigma_f[np.ix_(xs_indices, xs_indices)], data.mu_f[xs_indices]
+    selected = selection.indices
+    prior_covariance = relative_covariance_block(
+        data.Sigma_i[np.ix_(selected, selected)], data.mu_i[selected]
     )
-    pfns_covariance = relative_covariance_block(
-        data.Sigma_f[np.ix_(pfns_indices, pfns_indices)], data.mu_f[pfns_indices]
+    posterior_covariance = relative_covariance_block(
+        data.Sigma_f[np.ix_(selected, selected)], data.mu_i[selected]
     )
 
     return RelativeOutputs(
         mean_adjustment=mean_adjustment,
-        xs_covariance=xs_covariance,
-        pfns_covariance=pfns_covariance,
+        prior_covariance=prior_covariance,
+        posterior_covariance=posterior_covariance,
     )
 
 
@@ -435,27 +450,31 @@ def validate_relative_outputs(
     selection: TemplateSelection,
     relative: RelativeOutputs,
 ) -> ExportDiagnostics:
-    """Check normalization round trips, ordering, symmetry, and diagnostics."""
-    selected_indices = selection.all_indices
-    selected_adjustments = relative.mean_adjustment[selected_indices]
+    """Check mean and covariance round trips, symmetry, and undefined counts."""
+    selected = selection.indices
+    prior_mean = data.mu_i[selected]
+    selected_adjustments = relative.mean_adjustment[selected]
     finite_mean = np.isfinite(selected_adjustments)
-    reconstructed_mean = data.mu_i[selected_indices][finite_mean] * (
+    reconstructed_mean = prior_mean[finite_mean] * (
         1.0 + selected_adjustments[finite_mean]
     )
     assert_allclose_or_raise(
         reconstructed_mean,
-        data.mu_f[selected_indices][finite_mean],
+        data.mu_f[selected][finite_mean],
         "Relative mean round-trip validation",
         rtol=2.0e-12,
         atol=1.0e-12,
     )
 
-    covariance_specs = (
-        ("XS", selection.xs_indices, relative.xs_covariance),
-        ("PFNS", selection.pfns_indices, relative.pfns_covariance),
+    denominator: FloatArray = cast(
+        FloatArray, np.multiply.outer(prior_mean, prior_mean)
     )
-    for name, indices, relative_covariance in covariance_specs:
-        expected_shape = (indices.size, indices.size)
+    covariance_specs = (
+        ("prior", data.Sigma_i, relative.prior_covariance),
+        ("posterior", data.Sigma_f, relative.posterior_covariance),
+    )
+    for name, absolute_matrix, relative_covariance in covariance_specs:
+        expected_shape = (selected.size, selected.size)
         if relative_covariance.shape != expected_shape:
             raise ValueError(
                 f"{name} relative covariance has shape {relative_covariance.shape}; "
@@ -472,9 +491,7 @@ def validate_relative_outputs(
                 f"{name} relative covariance is not symmetric after mapping"
             )
 
-        selected_mu = data.mu_f[indices]
-        denominator = np.multiply.outer(selected_mu, selected_mu)
-        absolute_covariance = data.Sigma_f[np.ix_(indices, indices)]
+        absolute_covariance = absolute_matrix[np.ix_(selected, selected)]
         finite_covariance = np.isfinite(relative_covariance)
         reconstructed_covariance = (
             relative_covariance[finite_covariance] * denominator[finite_covariance]
@@ -485,10 +502,12 @@ def validate_relative_outputs(
             f"{name} relative covariance round-trip validation",
         )
 
-    covariance_values = (relative.xs_covariance, relative.pfns_covariance)
     undefined_mean_count = int(np.count_nonzero(~finite_mean))
-    undefined_covariance_count = sum(
-        int(np.count_nonzero(~np.isfinite(values))) for values in covariance_values
+    undefined_prior_covariance_count = int(
+        np.count_nonzero(~np.isfinite(relative.prior_covariance))
+    )
+    undefined_posterior_covariance_count = int(
+        np.count_nonzero(~np.isfinite(relative.posterior_covariance))
     )
     very_large_finite_count = int(
         np.count_nonzero(
@@ -501,12 +520,13 @@ def validate_relative_outputs(
                 np.isfinite(values) & (np.abs(values) > VERY_LARGE_RELATIVE_THRESHOLD)
             )
         )
-        for values in covariance_values
+        for values in (relative.prior_covariance, relative.posterior_covariance)
     )
 
     return ExportDiagnostics(
         undefined_mean_count=undefined_mean_count,
-        undefined_covariance_count=undefined_covariance_count,
+        undefined_prior_covariance_count=undefined_prior_covariance_count,
+        undefined_posterior_covariance_count=undefined_posterior_covariance_count,
         very_large_finite_count=very_large_finite_count,
     )
 
@@ -628,130 +648,124 @@ def locate_covariance_axes(
     return columns, rows
 
 
-def excel_relative_value(value: float) -> float | str:
+def excel_numeric_value(value: float) -> float | str:
     if np.isnan(value):
         return NAN_TEXT
     if not np.isfinite(value):
-        raise ValueError(f"Cannot write non-finite relative value {value!r} to Excel")
+        raise ValueError(f"Cannot write non-finite value {value!r} to Excel")
     return float(value)
 
 
-def write_relative_cell(cell: Cell, value: float) -> None:
-    cell.value = excel_relative_value(value)
+def write_numeric_cell(cell: Cell, value: float) -> None:
+    cell.value = excel_numeric_value(value)
     if not isinstance(cell.value, str):
         cell.number_format = SCIENTIFIC_FORMAT
 
 
-def populate_xs_mean_sheet(
+def populate_mean_sheet(
     ws: Worksheet,
-    adjustment: FloatArray,
+    values: FloatArray,
     index_by_label: dict[str, int],
 ) -> None:
-    columns, rows = locate_mean_table(ws, "MT", XS_MEAN_HEADERS)
-
-    ordinary_header_qids = {
-        2: "00002",
-        4: "00004",
-        16: "00016",
-        17: "00017",
-        18: "00018",
-        37: "00037",
-        102: "00102",
-        452: "00452",
-    }
-    for header, qid in ordinary_header_qids.items():
-        for group in range(N_GROUPS):
-            label = f"{ZAID}_{qid}_{group}"
-            write_relative_cell(
-                cast(Cell, ws.cell(rows[group], columns[header])),
-                float_at(adjustment, index_by_label[label]),
-            )
-
-    mubar_column = columns[251]
-    for incident_group, qid in enumerate(PRIOR_MUBAR_IDS):
-        label = f"{ZAID}_{qid}"
-        write_relative_cell(
-            cast(Cell, ws.cell(rows[incident_group], mubar_column)),
-            float_at(adjustment, index_by_label[label]),
+    """Fill one MT-by-group mean table from a 979-state vector."""
+    columns, rows = locate_mean_table(ws, MEAN_TABLE_ANCHOR, MEAN_HEADERS)
+    for header, group, label in template_cells():
+        write_numeric_cell(
+            cast(Cell, ws.cell(rows[group], columns[header])),
+            float_at(values, index_by_label[label]),
         )
-    for nonexistent_group in range(len(PRIOR_MUBAR_IDS), N_GROUPS):
-        cast(Cell, ws.cell(rows[nonexistent_group], mubar_column)).value = None
-
-
-def populate_pfns_mean_sheet(
-    ws: Worksheet,
-    adjustment: FloatArray,
-    index_by_label: dict[str, int],
-) -> None:
-    columns, rows = locate_mean_table(ws, "Artificial MT", PFNS_MEAN_HEADERS)
-    for header, qid in zip(PFNS_MEAN_HEADERS, PRIOR_PFNS_IDS, strict=True):
-        for outgoing_group in range(N_GROUPS):
-            label = f"{ZAID}_{qid}_{outgoing_group}"
-            write_relative_cell(
-                cast(Cell, ws.cell(rows[outgoing_group], columns[header])),
-                float_at(adjustment, index_by_label[label]),
-            )
-
-
-def xs_template_axis_labels() -> tuple[str, ...]:
-    labels = [
-        f"MT{int(qid)}.{group}"
-        for qid in XS_COVARIANCE_MTS
-        for group in range(N_GROUPS)
-    ]
-    labels.extend(f"MT251.{incident_group}" for incident_group in range(10))
-    labels.extend(f"MT452.{group}" for group in range(N_GROUPS))
-    return tuple(labels)
-
-
-def pfns_template_axis_labels() -> tuple[str, ...]:
-    return tuple(
-        f"MT{int(qid)}.{outgoing_group}"
-        for qid in PRIOR_PFNS_IDS
-        for outgoing_group in range(N_GROUPS)
-    )
 
 
 def populate_covariance_sheet(
     ws: Worksheet,
     axis_labels: tuple[str, ...],
-    relative_covariance: FloatArray,
+    covariance: FloatArray,
 ) -> None:
     columns, rows = locate_covariance_axes(ws, axis_labels)
     for matrix_row, row_label in enumerate(axis_labels):
         excel_row = rows[row_label]
         for matrix_column, column_label in enumerate(axis_labels):
-            write_relative_cell(
+            write_numeric_cell(
                 cast(Cell, ws.cell(excel_row, columns[column_label])),
-                float_at_2d(relative_covariance, matrix_row, matrix_column),
+                float_at_2d(covariance, matrix_row, matrix_column),
             )
+
+
+RELATIVE_COMMENT_LINES = (
+    "Numerical conventions used for this submission",
+    "Relative mean adjustment: a_i = (mu_post,i - mu_prior,i) / mu_prior,i.",
+    "Prior and posterior relative covariances: Sigma[i,j] / (mu_prior,i * mu_prior,j), normalized on the prior mean.",
+    "Division is performed for every nonzero denominator, regardless of its magnitude; no thresholds or clipping are applied.",
+    "When a denominator is exactly zero, the relative quantity is undefined and is reported as the literal text NaN.",
+    "Blank MT251 cells after incident index 9 are not states; they are not undefined mathematical quantities.",
+    "prior_abs holds the absolute prior mean mu_prior,i as ingested.",
+    "Numbers are shown in scientific format with 11 significant digits.",
+    "MT456 (51 states) is not in this template; its full absolute covariances are kept in Ex3_absolute_results.xlsx.",
+)
 
 
 def append_relative_comment(ws: Worksheet) -> None:
     start_row = ws.max_row + 2
-    lines = [
-        "Numerical conventions used for this submission",
-        "Relative posterior mean adjustment: a_i = (mu_f,i - mu_i,i) / mu_i,i.",
-        "Posterior relative covariance: Sigma_rel,f[i,j] = Sigma_abs,f[i,j] / (mu_f,i * mu_f,j).",
-        "Division is performed for every nonzero denominator, regardless of its magnitude.",
-        "No epsilon threshold, clipping, or replacement of large finite values was used.",
-        "When a mathematical denominator is exactly zero, the relative quantity is undefined and is reported as the literal text NaN.",
-        "Blank MT251 cells after incident index 9 represent nonexistent template/state entries; they are not undefined mathematical quantities.",
-        "Ex3_absolute_results.xlsx is supplied so the underlying absolute posterior data can be inspected independently of relative normalization.",
-        "MT456 and covariance information that cannot be represented by the supplied relative template are retained in the absolute companion workbook.",
-    ]
-    for offset, line in enumerate(lines):
+    for offset, line in enumerate(RELATIVE_COMMENT_LINES):
         cell = ws.cell(start_row + offset, 1, line)
         cell.alignment = Alignment(wrap_text=True, vertical="top")
         if offset == 0:
             cell.font = Font(bold=True)
 
 
+QUESTION_ANSWERS = (
+    (
+        "Are you considering the input covariances as relative covariances ?",
+        "Yes. The released covariances are relative. Each entry is multiplied by the two prior mean values, Sigma_abs[i,j] = mu_prior,i * mu_prior,j * R[i,j], to form the absolute prior covariance used in GLLS.",
+    ),
+    (
+        "Is your code using GLLS equations in relative or absolute form ?",
+        "Absolute form: mu_post = mu_prior + Sigma_prior S^T V^-1 (E - C), Sigma_post = Sigma_prior - Sigma_prior S^T V^-1 S Sigma_prior, with V = S Sigma_prior S^T + Sigma_E.",
+    ),
+    (
+        "If your code uses the relative form of GLLS, are all the terms (bias, experimental covariance, model/calculation covariance) normalized on C ?",
+        "Not applicable: GLLS is solved in absolute form. All terms are absolute: discrepancy E - C, experimental/calculation covariance Sigma_E = diag(expt_uncert^2 + sim_uncert^2), and the absolute prior covariance. Relative sensitivities are converted to absolute ones with the calculated value C: S[k,j] = C_k * s_rel[k,j] / mu_prior,j.",
+    ),
+    (
+        "Are your posterior covariances normalized on the prior mean to match the exercise specifications ?",
+        "Yes. Both relative covariance sheets are divided by the prior means: Sigma[i,j] / (mu_prior,i * mu_prior,j).",
+    ),
+    (
+        "Are you taking into account the sensitivity uncertainties ? If yes, elaborate briefly on how you do it.",
+        "No. The sensitivity uncertainties (sens_unc_rel.csv) are not propagated; the sensitivities are treated as exact.",
+    ),
+)
+
+
+def question_row(ws: Worksheet, question: str) -> int:
+    """Return the single row whose column-A text, whitespace-stripped, equals question."""
+    rows = [
+        row[0].row
+        for row in cast(Iterable[tuple[Cell, ...]], ws.iter_rows(min_col=1, max_col=1))
+        if normalized_header(cast(object, row[0].value)) == question
+    ]
+    if len(rows) != 1:
+        raise ValueError(
+            f"Sheet {ws.title!r}: expected one row for question {question!r}, "
+            + f"found {len(rows)}"
+        )
+    return rows[0]
+
+
+def populate_questions_sheet(ws: Worksheet) -> None:
+    for question, answer in QUESTION_ANSWERS:
+        answer_cell = cast(Cell, ws.cell(question_row(ws, question), 2))
+        answer_cell.value = answer
+        answer_cell.alignment = Alignment(wrap_text=True, vertical="top")
+
+
 def populate_relative_workbook(
+    data: InputData,
     relative: RelativeOutputs,
+    selection: TemplateSelection,
     index_by_label: dict[str, int],
 ) -> None:
-    """Load the NEA template, populate mapped cells, and preserve its structure."""
+    """Load the NEA release-3 template, populate mapped cells, and preserve its structure."""
     if not TEMPLATE_PATH.is_file():
         raise FileNotFoundError(
             f"Required Excel template does not exist: {TEMPLATE_PATH}"
@@ -765,25 +779,24 @@ def populate_relative_workbook(
         workbook.close()
         raise ValueError(f"Template is missing required sheet(s): {missing_sheets}")
 
-    populate_xs_mean_sheet(
-        cast(Worksheet, workbook["XS_posterior_rel_adjust"]),
-        relative.mean_adjustment,
-        index_by_label,
+    populate_questions_sheet(cast(Worksheet, workbook["Questions"]))
+    populate_mean_sheet(
+        cast(Worksheet, workbook["prior_abs"]), data.mu_i, index_by_label
     )
-    populate_pfns_mean_sheet(
-        cast(Worksheet, workbook["PFNS_posterior_rel_adjust"]),
+    populate_mean_sheet(
+        cast(Worksheet, workbook["posterior_rel_adjust"]),
         relative.mean_adjustment,
         index_by_label,
     )
     populate_covariance_sheet(
-        cast(Worksheet, workbook["XS_cov_posterior_rel_adjust"]),
-        xs_template_axis_labels(),
-        relative.xs_covariance,
+        cast(Worksheet, workbook["prior_cov_rel_to_prior"]),
+        selection.axis_labels,
+        relative.prior_covariance,
     )
     populate_covariance_sheet(
-        cast(Worksheet, workbook["PFNS_cov_posterior_rel_adjust"]),
-        pfns_template_axis_labels(),
-        relative.pfns_covariance,
+        cast(Worksheet, workbook["posterior_cov_rel_to_prior"]),
+        selection.axis_labels,
+        relative.posterior_covariance,
     )
     append_relative_comment(cast(Worksheet, workbook["Comment"]))
 
@@ -963,17 +976,19 @@ def validate_outputs() -> None:
 def main() -> None:
     data = load_inputs()
     metadata, index_by_label = build_state_metadata()
-    selection = build_template_output_indices(index_by_label)
+    selection = build_template_selection(index_by_label)
     relative = calculate_relative_outputs(data, selection)
     diagnostics = validate_relative_outputs(data, selection, relative)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    populate_relative_workbook(relative, index_by_label)
+    populate_relative_workbook(data, relative, selection, index_by_label)
     populate_absolute_workbook(metadata, data)
     validate_outputs()
 
     print(f"Loaded {EXPECTED_STATE_SIZE}-state, 29-response Exercise-3 result.")
-    print("Relative template state coverage: 928 / 979.")
+    print(
+        f"Template state coverage: {selection.indices.size} / {EXPECTED_STATE_SIZE}."
+    )
     print("Omitted from NEA relative template: MT456 (51 values).")
     print(f"Wrote: {RELATIVE_OUTPUT_PATH}")
     print(f"Wrote: {ABSOLUTE_OUTPUT_PATH}")
@@ -982,8 +997,12 @@ def main() -> None:
         + f"{diagnostics.undefined_mean_count}"
     )
     print(
-        "Undefined relative covariance cells written as NaN: "
-        + f"{diagnostics.undefined_covariance_count}"
+        "Undefined prior relative covariance cells written as NaN: "
+        + f"{diagnostics.undefined_prior_covariance_count}"
+    )
+    print(
+        "Undefined posterior relative covariance cells written as NaN: "
+        + f"{diagnostics.undefined_posterior_covariance_count}"
     )
     print(
         "Very large finite relative values "

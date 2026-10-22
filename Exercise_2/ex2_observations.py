@@ -23,8 +23,6 @@ OBSERVATION_COLUMNS: Final = (
     "expt_uncert",
     "sim",
     "sim_uncert",
-    "total_uncert",
-    "bias",
 )
 JEZEBEL_RESPONSE_IDS: Final = ("PU-MET-FAST-001-001-s",)
 EUCLID_RESPONSE_IDS: Final = ("euclid-3x2-crit", "euclid-8x1-crit")
@@ -43,7 +41,7 @@ REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[1]
 EXERCISE_DIRECTORY: Final = Path(__file__).resolve().parent
 DEFAULT_SOURCE_DIRECTORY: Final = (
     REPOSITORY_ROOT.parent
-    / "SG52_materials_release_2"
+    / "SG52_materials_release_3"
     / "Adjustement set"
     / "Integral"
 )
@@ -57,8 +55,9 @@ class ObservationData:
 
     response_ids: tuple[str, ...]
     experimental: FloatArray
+    experimental_uncertainty: FloatArray
     simulated: FloatArray
-    total_uncertainty: FloatArray
+    simulated_uncertainty: FloatArray
 
 
 @dataclass(frozen=True)
@@ -156,8 +155,6 @@ def select_response_positions(
 def load_observations(
     path: Path,
     required_ids: tuple[str, ...],
-    *,
-    signed_bias: bool,
 ) -> ObservationData:
     """Load and validate only selected criticality observations."""
     header, rows = read_csv(path)
@@ -175,39 +172,18 @@ def load_observations(
     experimental_uncertainty = numeric[:, 1]
     simulated = numeric[:, 2].copy()
     simulated_uncertainty = numeric[:, 3]
-    total_uncertainty = numeric[:, 4].copy()
-    bias = numeric[:, 5]
 
-    calculated_uncertainty = np.hypot(
-        experimental_uncertainty,
-        simulated_uncertainty,
-    )
-    if not np.allclose(
-        total_uncertainty,
-        calculated_uncertainty,
-        rtol=1.0e-6,
-        atol=1.0e-12,
-    ):
-        raise ValueError(
-            f"{path.name}: total_uncert does not match the component uncertainties"
-        )
-    if np.any(total_uncertainty <= 0.0):
-        raise ValueError(f"{path.name}: total uncertainty must be positive")
-
-    calculated_bias = (simulated - experimental) / total_uncertainty
-    if not signed_bias:
-        calculated_bias = np.abs(calculated_bias)
-    if not np.allclose(bias, calculated_bias, rtol=1.0e-6, atol=1.0e-10):
-        convention = "(sim - expt)" if signed_bias else "abs(sim - expt)"
-        raise ValueError(
-            f"{path.name}: bias does not match {convention} / total_uncert"
-        )
+    if np.any(experimental_uncertainty < 0.0) or np.any(simulated_uncertainty < 0.0):
+        raise ValueError(f"{path.name}: component uncertainties must be nonnegative")
+    if np.any(experimental_uncertainty**2 + simulated_uncertainty**2 <= 0.0):
+        raise ValueError(f"{path.name}: expt_uncert^2 + sim_uncert^2 must be positive")
 
     return ObservationData(
         response_ids=required_ids,
         experimental=experimental,
+        experimental_uncertainty=experimental_uncertainty,
         simulated=simulated,
-        total_uncertainty=total_uncertainty,
+        simulated_uncertainty=simulated_uncertainty,
     )
 
 
@@ -300,7 +276,6 @@ def parameter_to_prior_index(parameter_id: str) -> str:
     raise ValueError(f"Unsupported Pu-239 sensitivity parameter: {parameter_id}")
 
 
-
 def build_inputs(
     observations: tuple[ObservationData, ObservationData],
     sensitivities: tuple[SensitivityData, SensitivityData],
@@ -320,11 +295,17 @@ def build_inputs(
 
     response_indices = EXERCISE_2_RESPONSE_IDS
     experimental = np.concatenate([data.experimental for data in observations])
+    experimental_uncertainty = np.concatenate(
+        [data.experimental_uncertainty for data in observations]
+    )
     simulated = np.concatenate([data.simulated for data in observations])
-    uncertainty = np.concatenate([data.total_uncertainty for data in observations])
+    simulated_uncertainty = np.concatenate(
+        [data.simulated_uncertainty for data in observations]
+    )
     relative_values = np.concatenate([data.values for data in sensitivities], axis=0)
     delta = experimental - simulated
-    covariance = np.diag(np.square(uncertainty)).astype(np.float64, copy=False)
+    variance = experimental_uncertainty**2 + simulated_uncertainty**2
+    covariance = np.diag(variance).astype(np.float64, copy=False)
 
     prior_position = {index: position for position, index in enumerate(prior.indices)}
     sensitivity = np.zeros(
@@ -515,12 +496,10 @@ def main() -> None:
         load_observations(
             source_directory / "JEZEBEL" / "JEZEBEL_obs.csv",
             JEZEBEL_RESPONSE_IDS,
-            signed_bias=False,
         ),
         load_observations(
             source_directory / "EUCLID" / "EUCLID_obs.csv",
             EUCLID_RESPONSE_IDS,
-            signed_bias=True,
         ),
     )
     sensitivities = (

@@ -2,7 +2,8 @@
 
 Adjust Pu-239 with three criticality responses: JEZEBEL PMF-001, EUCLID 3x2,
 and EUCLID 8x1 (the release's name for the 1x8 configuration). Other JEZEBEL
-and EUCLID responses are reserved for later exercises.
+and EUCLID responses are reserved for later exercises. The input data come
+from the sibling `SG52_materials_release_3/` directory.
 
 From the repository root, with `GLLS_code/build/nda` built and Python packages
 `numpy`, `h5py`, `matplotlib`, and `openpyxl` available:
@@ -20,11 +21,14 @@ scales each released relative covariance entry by both prior means before
 writing absolute HDF5 covariance. `ex2_observations.py` aligns the selected
 responses and relative sensitivities to that state, converts sensitivities to
 absolute derivatives, and stores observed/simulated responses for diagnostics.
-The released integral files provide individual response uncertainties, but no
-between-response covariance; the observation covariance is diagonal. Treating
-these responses as uncorrelated is an assumption of this workflow.
+Each response's observation variance is `expt_uncert² + sim_uncert²`.
 
-Outputs: `ex2_results.hdf5`, diagnostics in `ex2_analysis/`, and the NEA
-relative-template and full-state absolute workbooks in `Submission/`. Check
-the analysis report for PFNS normalization and positivity; linear GLLS does
-not enforce either constraint.
+Assumptions: the release gives no covariance between responses, so the
+observation covariance is diagonal; the released sensitivity uncertainties
+(`sens_unc_rel.csv`) are not propagated.
+
+Outputs: `ex2_results.hdf5`, diagnostics in `ex2_analysis/`, and in
+`Submission/` the release 3 template (relative results normalized on the prior
+mean, 11 significant digits) plus the full-state absolute workbook. Check the
+analysis report for PFNS normalization and positivity; linear GLLS does not
+enforce either constraint.

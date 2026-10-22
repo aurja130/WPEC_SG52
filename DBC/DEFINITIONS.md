@@ -31,6 +31,7 @@ marks an unresolved question.
 | discrepancy | $\Delta_k = E_k - C_k$, measured minus calculated. The release's bias is $(C - E)/\sqrt{\sigma_E^2 + \sigma_C^2}$, a normalized discrepancy with the opposite sign | release |
 | experimental uncertainty | Released absolute uncertainty $\sigma_E$ of a measured value (`expt_uncert`) | release |
 | calculation uncertainty | Released absolute uncertainty $\sigma_C$ of a calculated value (`sim_uncert`) | release |
+| sensitivity uncertainty | Released relative uncertainty of each relative sensitivity (`sens_unc_rel.csv`). Not propagated in Exercises 1–3: an assumption, answered as such in the questions sheet | release, Captain |
 | `total_uncert` | Release 2 column of total response uncertainty. Not equal to the quadrature of its components for the 15 EUCLID leakage points; removed in release 3; must not be used | feedback |
 | observation covariance | $\Sigma_E$, covariance of the discrepancies: $\operatorname{diag}(\sigma_E^2 + \sigma_C^2)$ under the method rule | feedback |
 | response covariance | $V = S \Sigma_i S^\top + \Sigma_E$, the covariance of the discrepancies including prior nuclear-data uncertainty | Captain |
@@ -67,8 +68,10 @@ marks an unresolved question.
 | Term | Meaning | Source |
 |---|---|---|
 | output template | The NEA results workbook. Release 3 adds sheets for the prior and the questions and allows the full covariance | feedback |
+| questions sheet | The release 3 template sheet of five method questions every participant answers; the shared answers are in [EXERCISES](EXERCISES.md) | feedback |
+| prior sheets | The release 3 template sheets `prior_abs` (absolute prior mean as ingested) and `prior_cov_rel_to_prior` (prior covariance normalized on prior) | feedback |
 | submission | The filled output template for one exercise, sent to the NEA | spec |
-| template state selection | The 928 states the relative template holds: 418 cross-section and mubar states plus 510 PFNS states | Captain |
+| template state selection | The 928 states the release 3 template holds, in its axis order: MT2, 4, 16, 17, 18, 37, 102 (51 groups each), ten mubar, MT452, ten PFNS slices; all states except MT456. Before 2026-10-22, split into 418 cross-section and mubar plus 510 PFNS states for the release 2 template | Captain |
 | relative mean adjustment | $(\mu_f - \mu_i)/\mu_i$ per state | spec |
 | absolute workbook | Our own workbook with all 979 states, prior and posterior means and full absolute covariances | Captain |
 

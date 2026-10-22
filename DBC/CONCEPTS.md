@@ -71,7 +71,7 @@ flowchart LR
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class ReleaseData,Observations,Diagnostics,Submission partial
+  class ReleaseData,Observations,Diagnostics partial
   class Validation planned
 ```
 
@@ -79,10 +79,10 @@ flowchart LR
 |---|---|---|---|
 | `ReleaseData` | The coordinators' input package: prior covariances, integral and differential data with sensitivities, validation benchmarks and the output template. Integral data and prior are used; differential and validation data are not yet | release, release data | partial |
 | `Prior` | ENDF/B-VIII.0 Pu-239 means and absolute covariance on the state vector | prior, state vector | implemented |
-| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses. Integral responses are built; differential measurements are not; the observation covariance does not yet follow the method rule | observation, integral response, differential measurement | partial |
+| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses. Integral responses are built; differential measurements are not | observation, integral response, differential measurement | partial |
 | `Glls` | Linear Bayesian update of the prior with the observations, in absolute form | GLLS, posterior | implemented |
 | `Diagnostics` | Checks and summaries of the update: reproduction, linearized responses, uncertainty reduction, covariance health, PFNS normalization and positivity. Comparison with ENDF/B-VIII.1 is not built | linearized prediction, PFNS normalization | partial |
-| `Submission` | Relative and absolute results filled into the output template. Uses the old template and normalizes the posterior relative covariance on the posterior mean, against the method rule | output template, submission | partial |
+| `Submission` | Relative and absolute results filled into the release 3 output template, normalized on the prior mean. Before 2026-10-22 it used the release 2 template and normalized the posterior relative covariance on the posterior mean | output template, submission | implemented |
 | `Validation` | Predict the validation benchmarks with the adjusted data and compare with measurement | validation benchmark | planned |
 
 ### L2 · Release data (`ReleaseData`)
@@ -108,7 +108,6 @@ flowchart LR
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
   class DifferentialSet,DifferentialSensitivities,ValidationSet planned
-  class OutputTemplate partial
   class Prior,Observations,Validation,Submission external
 ```
 
@@ -120,7 +119,7 @@ flowchart LR
 | `DifferentialSet` | Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi fission ratios, SACS-Cf, with their covariances | differential measurement, EXFOR | planned |
 | `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector | relative sensitivity | planned |
 | `ValidationSet` | SNEAK-7A/B models and measured responses | validation benchmark, SNEAK | planned |
-| `OutputTemplate` | The NEA results workbook. The release 2 version is read; the release 3 version (prior and questions sheets, full covariance) is not | output template | partial |
+| `OutputTemplate` | The NEA results workbook, release 3 version: questions, groups, prior sheets and full 928-state covariance sheets | output template, questions sheet, prior sheets | implemented |
 | `Prior` | See L1 | | external |
 | `Observations` | See L1 | | external |
 | `Validation` | See L1 | | external |
@@ -193,7 +192,6 @@ flowchart LR
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class ObservationCovariance partial
   class DifferentialObservations planned
   class IntegralSet,IntegralSensitivities,DifferentialSet,DifferentialSensitivities,PriorMean,Glls external
 ```
@@ -237,7 +235,7 @@ construction.
 | `Discrepancy` | Measured minus calculated value per response | discrepancy | implemented |
 | `SensitivityAlignment` | Map each released Pu-239 sensitivity column to its state; reject duplicates and unknown parameters | relative sensitivity, state vector | implemented |
 | `AbsoluteSensitivity` | Convert relative sensitivities to absolute derivatives with the calculated value and the prior mean | absolute sensitivity | implemented |
-| `ObservationCovariance` | Covariance of the discrepancies. Uses the published total uncertainty today; the method rule asks for the experimental and calculation components | observation covariance, assumption | partial |
+| `ObservationCovariance` | Covariance of the discrepancies, from the experimental and calculation uncertainties (method rule). Used the published total uncertainty before 2026-10-22 | observation covariance, assumption | implemented |
 | `DifferentialObservations` | Discrepancies, sensitivities and covariances of differential measurements on the same state vector | differential measurement | planned |
 | `IntegralSet` | See Release data | | external |
 | `IntegralSensitivities` | See Release data | | external |
@@ -257,15 +255,13 @@ flowchart LR
   Glls["GLLS update"]
   ExperimentalUncertainty & CalculationUncertainty --> CombinedVariance
   CombinedVariance & UncorrelatedResponses --> Glls
-  classDef planned stroke-dasharray: 6 4
   classDef external opacity: 0.6
-  class CombinedVariance planned
   class Glls external
 ```
 
 $$
 \Sigma_E = \operatorname{diag}\!\left(\sigma_{E,k}^2 + \sigma_{C,k}^2\right)
-\qquad \text{(method rule; today } \operatorname{diag}(\sigma_{\text{tot},k}^2) \text{)}
+\qquad \text{(method rule)}
 $$
 
 The release defines its bias with the same denominator,
@@ -275,7 +271,7 @@ $(C - E) / \sqrt{\sigma_E^2 + \sigma_C^2}$.
 |---|---|---|---|
 | `ExperimentalUncertainty` | Released absolute uncertainty of each measured value; read and stored | experimental uncertainty | implemented |
 | `CalculationUncertainty` | Released absolute uncertainty of each calculated value; read and stored | calculation uncertainty | implemented |
-| `CombinedVariance` | Sum of the squared experimental and calculation uncertainties per response, replacing the published total | observation covariance, method rule | planned |
+| `CombinedVariance` | Sum of the squared experimental and calculation uncertainties per response; replaced the release 2 published total on 2026-10-22 | observation covariance, method rule | implemented |
 | `UncorrelatedResponses` | Off-diagonal entries are zero, because the release gives no covariance between responses | assumption | implemented |
 | `Glls` | See L1 | | external |
 
@@ -341,7 +337,7 @@ flowchart TD
   UncertaintyReduction["Uncertainty reduction"]
   CovarianceHealth["Covariance health"]
   PfnsChecks["PFNS checks"]
-  UncertaintyAudit["Uncertainty audit"]
+  UncertaintyAudit["Observation uncertainty audit"]
   EndfComparison["ENDF/B-VIII.1 comparison"]
   Glls --> GllsReproduction & LinearizedResponses & UncertaintyReduction & CovarianceHealth & PfnsChecks & UncertaintyAudit & EndfComparison
   classDef planned stroke-dasharray: 6 4
@@ -382,7 +378,7 @@ $$
 | `UncertaintyReduction` | Prior and posterior standard deviations per state, family and QID, and each response's variance split by QID | uncertainty reduction | implemented |
 | `CovarianceHealth` | Symmetry error and eigenvalue range of the prior and posterior covariances | absolute covariance | implemented |
 | `PfnsChecks` | Normalization of each posterior PFNS slice and sign of every posterior state; flags only, no correction | PFNS normalization, positivity | implemented |
-| `UncertaintyAudit` | Compare the published total uncertainty with the quadrature of its components | `total_uncert`, experimental uncertainty | implemented |
+| `UncertaintyAudit` | Check that each observation standard deviation equals the quadrature of its experimental and calculation uncertainties; fails otherwise. Before 2026-10-22 it compared the release 2 published total uncertainty with that quadrature | experimental uncertainty, calculation uncertainty | implemented |
 | `EndfComparison` | Compare the posterior with ENDF/B-VIII.1 on the same state vector | ENDF/B-VIII.1 | planned |
 | `Glls` | See L1 | | external |
 
@@ -404,11 +400,7 @@ flowchart LR
   TemplateSelection --> RelativeMeanAdjustment & RelativePosteriorCovariance
   Prior & Glls --> AbsoluteWorkbook
   RelativeMeanAdjustment & RelativePosteriorCovariance --> UpdatedTemplate
-  classDef planned stroke-dasharray: 6 4
-  classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class RelativePosteriorCovariance partial
-  class UpdatedTemplate planned
   class Prior,Glls,OutputTemplate external
 ```
 
@@ -422,20 +414,24 @@ r_j = \frac{\mu_{f,j} - \mu_{i,j}}{\mu_{i,j}},
 R_f = D_{\mu_i}^{-1} \Sigma_f D_{\mu_i}^{-1}
 $$
 
-Today $R_f$ is divided by $\mu_{f,j}\,\mu_{f,k}$ instead. The same map applied to
-$\Sigma_i$ returns the released $R_i$, which is the prior the updated template
-asks for. Entries with $\mu_{i,j} = 0$ are undefined and written as NaN.
+The same map applied to $\Sigma_i$ returns the released $R_i$, which the
+template's prior sheet holds. Before 2026-10-22, $R_f$ was divided by the
+posterior mean $\mu_{f,j}\,\mu_{f,k}$. Entries with $\mu_{i,j} = 0$ are
+undefined and written as NaN; the released $R_i$ there is at most
+$1.2 \times 10^{-19}$ in magnitude.
 
-The template holds $928$ of the $979$ states: $418$ cross-section and mubar
-states plus $510$ PFNS states, without the 51 MT456 states.
+The template holds $928$ of the $979$ states in one axis order: seven
+cross-section QIDs, ten mubar, MT452, then ten PFNS slices, without the 51
+MT456 states. Both covariance sheets are full $928 \times 928$ matrices,
+including the cross-section–PFNS blocks.
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
 | `TemplateSelection` | Map template rows and columns to states by their labels, never by fixed cell positions | template state selection, MT456 | implemented |
 | `RelativeMeanAdjustment` | Posterior minus prior mean, divided by the prior mean | relative mean adjustment | implemented |
-| `RelativePosteriorCovariance` | Posterior covariance divided by the product of two means; must use the prior means | normalized on prior, relative covariance | partial |
+| `RelativePosteriorCovariance` | Posterior (and prior) covariance divided by the product of two prior means | normalized on prior, relative covariance | implemented |
 | `AbsoluteWorkbook` | All 979 states with prior and posterior means, standard deviations and full absolute covariances | absolute workbook | implemented |
-| `UpdatedTemplate` | The release 3 template: prior and questions sheets, full covariance, scientific format with 11 significant digits | output template, method rule | planned |
+| `UpdatedTemplate` | The release 3 template filled: questions sheet, prior sheets, relative mean adjustment, full posterior relative covariance, scientific format with 11 significant digits | output template, questions sheet, prior sheets, method rule | implemented |
 | `Prior` | See L1 | | external |
 | `Glls` | See L1 | | external |
 | `OutputTemplate` | See Release data | | external |

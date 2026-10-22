@@ -2,7 +2,7 @@
 
 Adjust the 979-state Pu-239 prior using the JEZEBEL PMF-001 criticality
 response (`PU-MET-FAST-001-001-s`). The input data come from the sibling
-`SG52_materials_release_2/` directory.
+`SG52_materials_release_3/` directory.
 
 From the repository root, with `GLLS_code/build/nda` built and Python packages
 `numpy`, `h5py`, `matplotlib`, and `openpyxl` available:
@@ -22,16 +22,21 @@ quantity values, 510 PFNS values, and 10 mubar values. `ex1_observations.py`
 selects the JEZEBEL criticality row and its relative sensitivities, maps the
 Pu-239 columns to the prior ordering, converts them to absolute response
 derivatives, and writes `ex1_observations.hdf5`. Its observation variance is
-the square of the release-provided `total_uncert`.
+`expt_uncert² + sim_uncert²`.
+
+Assumption: the released sensitivity uncertainties (`sens_unc_rel.csv`) are
+not propagated.
 
 The GLLS executable writes the posterior mean and covariance to
 `ex1_results.hdf5`. `ex1_analysis/` contains the report, state/family/QID CSVs,
 PFNS normalization checks, and plots. The adjusted criticality value reported
 there is a linearized prediction, not a new transport calculation.
 
-`Submission/Ex1_relative_results.xlsx` fills the official relative output
-template, which represents 928 states. `Submission/Ex1_absolute_results.xlsx`
+`Submission/Ex1_relative_results.xlsx` fills the release 3 output template
+(928 states): questions, absolute prior mean, prior and posterior relative
+covariances normalized on the prior mean, and relative mean adjustments, in
+scientific format with 11 significant digits. `Submission/Ex1_absolute_results.xlsx`
 retains all 979 states and the full prior/posterior absolute covariances,
-including the 51 MT456 values absent from that template. Linear GLLS does not
+including the 51 MT456 values absent from the template. Linear GLLS does not
 enforce PFNS normalization or positivity; inspect the analysis report before
 using the posterior as physical data.

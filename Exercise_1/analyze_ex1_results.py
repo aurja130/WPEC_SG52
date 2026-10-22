@@ -941,6 +941,11 @@ def analyze(args: AnalysisArgs) -> str:
     add("=" * 78)
     add()
 
+    add("ASSUMPTIONS")
+    add("-" * 78)
+    add("Observation covariance: diag(expt_uncert^2 + sim_uncert^2).")
+    add("Sensitivity uncertainties (sens_unc_rel.csv) are not propagated.")
+    add()
     add("INPUT DIMENSIONS")
     add("-" * 78)
     for name, shape in actual_shapes.items():

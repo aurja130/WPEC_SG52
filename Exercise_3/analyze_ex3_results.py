@@ -706,18 +706,9 @@ def analyze(args: AnalysisArgs) -> str:
         e_calc_f, experimental, out=np.full(n_responses, np.nan),
         where=experimental != 0.0,
     )
-    component_quadrature = np.hypot(experimental_uncertainty, simulated_uncertainty)
-    uncertainty_ratio = np.divide(
-        observation_std, component_quadrature,
-        out=np.full(n_responses, np.inf), where=component_quadrature != 0.0,
-    )
-    uncertainty_mismatch = ~np.isclose(
-        observation_std, component_quadrature, rtol=1e-6, atol=1e-12,
-    )
-    nls_indices = np.asarray(
-        [index for index, rid in enumerate(response_ids) if rid.startswith("euclid_NLS_")],
-        dtype=np.intp,
-    )
+    observation_quadrature = np.hypot(experimental_uncertainty, simulated_uncertainty)
+    if not np.allclose(observation_std, observation_quadrature, rtol=1e-12, atol=0.0):
+        raise ValueError("Sigma_E diagonal must equal hypot(expt_uncert, sim_uncert)")
     if np.any(observation_std <= 0.0):
         raise ValueError("Observation covariance must have strictly positive diagonal")
 
@@ -933,6 +924,15 @@ def analyze(args: AnalysisArgs) -> str:
     add("=" * 78)
     add()
 
+    add("ASSUMPTIONS")
+    add("-" * 78)
+    add(
+        "No covariance between responses (diagonal observation covariance), "
+        + "including between neutron-leakage-spectrum points."
+    )
+    add("Observation covariance: diag(expt_uncert^2 + sim_uncert^2).")
+    add("Sensitivity uncertainties (sens_unc_rel.csv) are not propagated.")
+    add()
     add("INPUT DIMENSIONS")
     add("-" * 78)
     for name, shape in actual_shapes.items():
@@ -1009,30 +1009,19 @@ def analyze(args: AnalysisArgs) -> str:
             "posterior_ce": float_at(c_over_e_f, r),
             "experimental_uncertainty": float_at(experimental_uncertainty, r),
             "simulated_uncertainty": float_at(simulated_uncertainty, r),
-            "component_quadrature": float_at(component_quadrature, r),
-            "observation_std_published": float_at(observation_std, r),
-            "published_to_component_ratio": float_at(uncertainty_ratio, r),
-            "published_component_mismatch": bool_at(uncertainty_mismatch, r),
+            "observation_std": float_at(observation_std, r),
             "prior_propagated_std": float_at(prior_nd_response_std, r),
             "posterior_propagated_std": float_at(posterior_nd_response_std, r),
             "innovation_std": float_at(innovation_std, r),
         })
     write_csv(output_dir / "response_summary.csv", list(response_rows[0]), response_rows)
     add()
-    add("PUBLISHED UNCERTAINTY AUDIT")
+    add("OBSERVATION UNCERTAINTY")
     add("-" * 78)
     add(
-        f"EUCLID NLS: {int(np.sum(uncertainty_mismatch[nls_indices]))} / "
-        + f"{nls_indices.size} published total uncertainties differ from "
-        + "hypot(experimental_uncertainty, simulated_uncertainty)."
+        "Observation uncertainty: sqrt(expt_uncert^2 + sim_uncert^2) for all "
+        + f"{n_responses} responses (checked)."
     )
-    add("Published total uncertainty (sqrt observation covariance diagonal) is used in GLLS; no replacement by component quadrature.")
-    for r in nls_indices:
-        add(
-            f"[{r}] {response_ids[r]}: published={fmt(float_at(observation_std, int(r)))}, "
-            + f"quadrature={fmt(float_at(component_quadrature, int(r)))}, "
-            + f"ratio={fmt(float_at(uncertainty_ratio, int(r)))}"
-        )
     add()
 
     add("MEAN ADJUSTMENT SUMMARY")
@@ -1181,20 +1170,6 @@ def analyze(args: AnalysisArgs) -> str:
     add("AUTOMATIC FLAGS")
     add("-" * 78)
     flags: list[str] = []
-    if np.any(uncertainty_mismatch[nls_indices]):
-        flags.append(
-            f"{int(np.sum(uncertainty_mismatch[nls_indices]))} / 15 EUCLID NLS "
-            + "published total uncertainties differ from quadrature of their components; "
-            + "published totals remain the GLLS observation uncertainties."
-        )
-    other_mismatch_count = int(np.sum(uncertainty_mismatch)) - int(
-        np.sum(uncertainty_mismatch[nls_indices])
-    )
-    if other_mismatch_count:
-        flags.append(
-            f"{other_mismatch_count} non-NLS observations "
-            + "also have published/component uncertainty mismatches."
-        )
 
     if mean_update_max_abs_error > args.reproduction_tolerance:
         flags.append(

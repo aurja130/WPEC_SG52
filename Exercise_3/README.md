@@ -4,6 +4,7 @@ Adjust the 979-state Pu-239 prior using **all 29 released integral responses** i
 source order: JEZEBEL's criticality and three reaction-rate ratios, followed by
 EUCLID's two criticalities, 15 neutron-leakage spectrum points, and eight
 reaction-rate ratios. The release calls the 1x8 EUCLID configuration `8x1`.
+The input data come from the sibling `SG52_materials_release_3/` directory.
 
 From the repository root, with `GLLS_code/build/nda` built and Python packages
 `numpy`, `h5py`, `matplotlib`, and `openpyxl` installed:
@@ -24,10 +25,12 @@ derivatives. It writes `ex3_observations.hdf5`, including response IDs and both
 experimental and simulated values/uncertainties. Only Pu-239 parameters are
 adjusted; sensitivities for other nuclides are outside this state vector.
 
-The observation covariance uses the release-provided `total_uncert` for each
-response without recomputing it from other columns. The release supplies no
-between-response covariance, so using zero off-diagonal entries—including
-between leakage-spectrum points—is an assumption of this workflow.
+Each response's observation variance is `expt_uncert² + sim_uncert²` (release
+3 dropped the earlier `total_uncert` column, which overstated the 15 EUCLID
+leakage-spectrum uncertainties). Assumptions: the release
+supplies no between-response covariance, so off-diagonal entries are zero,
+including between leakage-spectrum points; the released sensitivity
+uncertainties (`sens_unc_rel.csv`) are not propagated.
 
 `ex3_results.hdf5` contains the GLLS posterior mean and covariance. The
 `ex3_analysis/` directory contains a text report, response/state/family/QID
@@ -35,10 +38,11 @@ CSVs, PFNS normalization data, and four plots. The report reproduces the
 multivariate GLLS update and its coupled residual identity. Its adjusted
 responses are *linearized predictions*, not new transport simulations.
 
-`Submission/Ex3_relative_results.xlsx` fills the official relative template
-(928 representable states). `Submission/Ex3_absolute_results.xlsx` contains the
-full 979-state means and prior/posterior absolute covariances, including the 51
-MT456 values omitted from that template. Inspect the report's PFNS normalization
-and positivity flags: linear GLLS imposes neither constraint. In the released
-29-response run, the largest posterior PFNS slice normalization error is about
-0.001565; do not interpret the posterior as exactly normalized.
+`Submission/Ex3_relative_results.xlsx` fills the release 3 output template
+(928 states): questions, absolute prior mean, prior and posterior relative
+covariances normalized on the prior mean, and relative mean adjustments, in
+scientific format with 11 significant digits. `Submission/Ex3_absolute_results.xlsx`
+contains the full 979-state means and prior/posterior absolute covariances,
+including the 51 MT456 values omitted from the template. Inspect the report's
+PFNS normalization and positivity flags: linear GLLS imposes neither
+constraint, so do not interpret the posterior as exactly normalized.

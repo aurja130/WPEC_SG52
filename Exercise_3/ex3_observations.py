@@ -23,8 +23,6 @@ OBSERVATION_COLUMNS: Final = (
     "expt_uncert",
     "sim",
     "sim_uncert",
-    "total_uncert",
-    "bias",
 )
 JEZEBEL_CRITICALITY_ID: Final = "PU-MET-FAST-001-001-s"
 EUCLID_CRITICALITY_IDS: Final = ("euclid-3x2-crit", "euclid-8x1-crit")
@@ -42,7 +40,7 @@ REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[1]
 EXERCISE_DIRECTORY: Final = Path(__file__).resolve().parent
 DEFAULT_SOURCE_DIRECTORY: Final = (
     REPOSITORY_ROOT.parent
-    / "SG52_materials_release_2"
+    / "SG52_materials_release_3"
     / "Adjustement set"
     / "Integral"
 )
@@ -59,8 +57,7 @@ class ObservationData:
     experimental_uncertainty: FloatArray
     simulated: FloatArray
     simulated_uncertainty: FloatArray
-    total_uncertainty: FloatArray
-    discrepancy_ratios: FloatArray
+
 
 @dataclass(frozen=True)
 class SensitivityData:
@@ -92,8 +89,6 @@ class ObservationInputs:
     simulated: FloatArray
     experimental_uncertainty: FloatArray
     simulated_uncertainty: FloatArray
-    total_uncertainty: FloatArray
-    discrepancy_ratios: FloatArray
 
 
 def read_csv(path: Path) -> tuple[list[str], list[list[str]]]:
@@ -139,8 +134,6 @@ def parse_float_rows(path: Path, rows: list[list[str]]) -> FloatArray:
     return values
 
 
-
-
 def load_observations(path: Path, source: str) -> ObservationData:
     """Load every released response in source order and validate the inventory."""
     header, rows = read_csv(path)
@@ -179,26 +172,11 @@ def load_observations(path: Path, source: str) -> ObservationData:
     experimental_uncertainty = numeric[:, 1].copy()
     simulated = numeric[:, 2].copy()
     simulated_uncertainty = numeric[:, 3].copy()
-    total_uncertainty = numeric[:, 4].copy()
-    bias = numeric[:, 5]
 
-    calculated_uncertainty = np.hypot(
-        experimental_uncertainty,
-        simulated_uncertainty,
-    )
-    if np.any(total_uncertainty <= 0.0):
-        raise ValueError(f"{path.name}: total uncertainty must be positive")
     if np.any(experimental_uncertainty < 0.0) or np.any(simulated_uncertainty < 0.0):
         raise ValueError(f"{path.name}: component uncertainties must be nonnegative")
-    if np.any(calculated_uncertainty == 0.0):
-        raise ValueError(f"{path.name}: component uncertainty cannot be zero")
-    discrepancy_ratios = total_uncertainty / calculated_uncertainty
-
-    calculated_bias = np.abs(simulated - experimental) / total_uncertainty
-    if not np.allclose(np.abs(bias), calculated_bias, rtol=1.0e-6, atol=1.0e-6):
-        raise ValueError(
-            f"{path.name}: |bias| does not match |sim - expt| / total_uncert"
-        )
+    if np.any(experimental_uncertainty**2 + simulated_uncertainty**2 <= 0.0):
+        raise ValueError(f"{path.name}: expt_uncert^2 + sim_uncert^2 must be positive")
 
     return ObservationData(
         response_ids=response_ids,
@@ -206,8 +184,6 @@ def load_observations(path: Path, source: str) -> ObservationData:
         experimental_uncertainty=experimental_uncertainty,
         simulated=simulated,
         simulated_uncertainty=simulated_uncertainty,
-        total_uncertainty=total_uncertainty,
-        discrepancy_ratios=discrepancy_ratios,
     )
 
 
@@ -300,7 +276,6 @@ def parameter_to_prior_index(parameter_id: str) -> str:
     raise ValueError(f"Unsupported Pu-239 sensitivity parameter: {parameter_id}")
 
 
-
 def build_inputs(
     observations: tuple[ObservationData, ObservationData],
     sensitivities: tuple[SensitivityData, SensitivityData],
@@ -324,13 +299,10 @@ def build_inputs(
     simulated_uncertainty = np.concatenate(
         [data.simulated_uncertainty for data in observations]
     )
-    uncertainty = np.concatenate([data.total_uncertainty for data in observations])
-    discrepancy_ratios = np.concatenate(
-        [data.discrepancy_ratios for data in observations]
-    )
     relative_values = np.concatenate([data.values for data in sensitivities], axis=0)
     delta = experimental - simulated
-    covariance = np.diag(np.square(uncertainty)).astype(np.float64, copy=False)
+    variance = experimental_uncertainty**2 + simulated_uncertainty**2
+    covariance = np.diag(variance).astype(np.float64, copy=False)
 
     prior_position = {index: position for position, index in enumerate(prior.indices)}
     sensitivity = np.zeros(
@@ -385,8 +357,6 @@ def build_inputs(
         simulated=simulated,
         experimental_uncertainty=experimental_uncertainty,
         simulated_uncertainty=simulated_uncertainty,
-        total_uncertainty=uncertainty,
-        discrepancy_ratios=discrepancy_ratios,
     )
 
 
@@ -420,8 +390,6 @@ def write_observations(output_path: Path, inputs: ObservationInputs) -> None:
     for name, values in (
         ("Experimental uncertainty", inputs.experimental_uncertainty),
         ("Simulated uncertainty", inputs.simulated_uncertainty),
-        ("Total uncertainty", inputs.total_uncertainty),
-        ("Total-to-component ratio", inputs.discrepancy_ratios),
     ):
         if values.shape != (response_count,):
             raise ValueError(f"{name} shape does not match its indices")
@@ -496,14 +464,6 @@ def write_observations(output_path: Path, inputs: ObservationInputs) -> None:
                 data=inputs.simulated_uncertainty,
                 dtype=np.float64,
             )
-            _ = responses_group.create_dataset(
-                "total_uncertainty", data=inputs.total_uncertainty, dtype=np.float64
-            )
-            _ = responses_group.create_dataset(
-                "total_to_component_uncertainty_ratio",
-                data=inputs.discrepancy_ratios,
-                dtype=np.float64,
-            )
 
         _ = temporary_path.replace(output_path)
     except BaseException:
@@ -575,17 +535,6 @@ def main() -> None:
     print(f"Delta shape: {inputs.delta.shape}")
     print(f"Covariance shape: {inputs.covariance.shape}")
     print(f"Sensitivity shape: {inputs.sensitivity.shape}")
-    discrepant = ~np.isclose(
-        inputs.discrepancy_ratios, 1.0, rtol=1.0e-6, atol=1.0e-12
-    )
-    if np.any(discrepant):
-        ratios = inputs.discrepancy_ratios[discrepant]
-        print(
-            f"WARNING: {np.count_nonzero(discrepant)} released total_uncert values "
-            f"differ from hypot(expt_uncert, sim_uncert); "
-            f"total/component ratios {ratios.min():.6g}–{ratios.max():.6g}. "
-            "Using released total_uncert for GLLS covariance."
-        )
 
 
 if __name__ == "__main__":

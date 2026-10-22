@@ -14,8 +14,9 @@ from ex3_observations import DEFAULT_SOURCE_DIRECTORY, parameter_to_prior_index
 
 
 class Exercise3ObservationTest(unittest.TestCase):
-    def test_all_released_responses_and_published_uncertainties(self) -> None:
+    def test_all_released_responses_and_observation_uncertainties(self) -> None:
         source = DEFAULT_SOURCE_DIRECTORY
+        self.assertIn("SG52_materials_release_3", source.parts)
         observation_rows = []
         sensitivity_rows = []
         parameter_header = None
@@ -69,14 +70,9 @@ class Exercise3ObservationTest(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
-            self.assertIn("WARNING: 15 released total_uncert", result.stdout)
             self.assertIn("Sensitivity shape: (29, 979)", result.stdout)
 
             numeric = np.array([[float(cell) for cell in row[1:]] for row in observation_rows])
-            published_total = numeric[:, 4]
-            component_total = np.hypot(numeric[:, 1], numeric[:, 3])
-            discrepancies = ~np.isclose(published_total, component_total, rtol=1e-6, atol=1e-12)
-            self.assertEqual(np.flatnonzero(discrepancies).tolist(), list(range(6, 21)))
             with h5py.File(output_path, "r") as output:
                 self.assertEqual(output["responses/row_indices"].asstr()[:].tolist(), ids)
                 self.assertEqual(output["sens/col_indices"].asstr()[:].tolist(), indices)
@@ -85,12 +81,18 @@ class Exercise3ObservationTest(unittest.TestCase):
                 np.testing.assert_allclose(output["responses/simulated"][:], numeric[:, 2])
                 np.testing.assert_allclose(output["responses/experimental_uncertainty"][:], numeric[:, 1])
                 np.testing.assert_allclose(output["responses/simulated_uncertainty"][:], numeric[:, 3])
-                np.testing.assert_allclose(output["responses/total_uncertainty"][:], published_total)
-                np.testing.assert_allclose(
-                    output["responses/total_to_component_uncertainty_ratio"][:],
-                    published_total / component_total,
+                self.assertEqual(
+                    set(output["responses"].keys()),
+                    {
+                        "row_indices",
+                        "experimental",
+                        "simulated",
+                        "experimental_uncertainty",
+                        "simulated_uncertainty",
+                    },
                 )
-                np.testing.assert_allclose(output["cov/values"][:], np.diag(published_total**2))
+                observation_variance = numeric[:, 1] ** 2 + numeric[:, 3] ** 2
+                np.testing.assert_allclose(output["cov/values"][:], np.diag(observation_variance))
                 self.assertEqual(output["sens/values"].shape, (29, 979))
                 relative = np.array([[float(cell) for cell in row[1:]] for row in sensitivity_rows])
                 np.testing.assert_allclose(

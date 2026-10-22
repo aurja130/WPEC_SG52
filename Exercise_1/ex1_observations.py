@@ -24,8 +24,6 @@ OBSERVATION_COLUMNS: Final = (
     "expt_uncert",
     "sim",
     "sim_uncert",
-    "total_uncert",
-    "bias",
 )
 EXERCISE_1_RESPONSE_IDS: Final = ("PU-MET-FAST-001-001-s",)
 REACTION_QUANTITY_IDS: Final = {
@@ -42,7 +40,7 @@ REPOSITORY_ROOT: Final = Path(__file__).resolve().parents[1]
 EXERCISE_DIRECTORY: Final = Path(__file__).resolve().parent
 DEFAULT_SOURCE_DIRECTORY: Final = (
     REPOSITORY_ROOT.parent
-    / "SG52_materials_release_2"
+    / "SG52_materials_release_3"
     / "Adjustement set"
     / "Integral"
     / "JEZEBEL"
@@ -57,8 +55,9 @@ class ObservationData:
 
     response_ids: tuple[str, ...]
     experimental: FloatArray
+    experimental_uncertainty: FloatArray
     simulated: FloatArray
-    total_uncertainty: FloatArray
+    simulated_uncertainty: FloatArray
 
 
 @dataclass(frozen=True)
@@ -150,36 +149,18 @@ def load_observations(path: Path) -> ObservationData:
     experimental_uncertainty = numeric[:, 1]
     simulated = numeric[:, 2].copy()
     simulated_uncertainty = numeric[:, 3]
-    total_uncertainty = numeric[:, 4].copy()
-    bias = numeric[:, 5]
 
-    calculated_uncertainty = np.hypot(
-        experimental_uncertainty,
-        simulated_uncertainty,
-    )
-    if not np.allclose(
-        total_uncertainty,
-        calculated_uncertainty,
-        rtol=1.0e-6,
-        atol=1.0e-12,
-    ):
-        raise ValueError(
-            f"{path.name}: total_uncert does not match the component uncertainties"
-        )
-    if np.any(total_uncertainty <= 0.0):
-        raise ValueError(f"{path.name}: total uncertainty must be positive")
-
-    calculated_bias = np.abs(simulated - experimental) / total_uncertainty
-    if not np.allclose(bias, calculated_bias, rtol=1.0e-6, atol=1.0e-10):
-        raise ValueError(
-            f"{path.name}: bias does not match abs(sim - expt) / total_uncert"
-        )
+    if np.any(experimental_uncertainty < 0.0) or np.any(simulated_uncertainty < 0.0):
+        raise ValueError(f"{path.name}: component uncertainties must be nonnegative")
+    if np.any(experimental_uncertainty**2 + simulated_uncertainty**2 <= 0.0):
+        raise ValueError(f"{path.name}: expt_uncert^2 + sim_uncert^2 must be positive")
 
     return ObservationData(
         response_ids=response_ids,
         experimental=experimental,
+        experimental_uncertainty=experimental_uncertainty,
         simulated=simulated,
-        total_uncertainty=total_uncertainty,
+        simulated_uncertainty=simulated_uncertainty,
     )
 
 
@@ -301,10 +282,12 @@ def build_inputs(
     response_indices = tuple(observations.response_ids[index] for index in positions)
     position_array = np.asarray(positions, dtype=np.int64)
     experimental = observations.experimental[position_array]
+    experimental_uncertainty = observations.experimental_uncertainty[position_array]
     simulated = observations.simulated[position_array]
-    uncertainty = observations.total_uncertainty[position_array]
+    simulated_uncertainty = observations.simulated_uncertainty[position_array]
     delta = experimental - simulated
-    covariance = np.diag(np.square(uncertainty)).astype(np.float64, copy=False)
+    variance = experimental_uncertainty**2 + simulated_uncertainty**2
+    covariance = np.diag(variance).astype(np.float64, copy=False)
 
     prior_position = {index: position for position, index in enumerate(prior.indices)}
     sensitivity = np.zeros(

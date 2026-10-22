@@ -22,7 +22,7 @@ class Exercise2ObservationTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             observation_header = [
-                "", "expt", "expt_uncert", "sim", "sim_uncert", "total_uncert", "bias"
+                "", "expt", "expt_uncert", "sim", "sim_uncert"
             ]
             parameters = (
                 "Pu239_crossSection_elastic_0",
@@ -31,14 +31,14 @@ class Exercise2ObservationTest(unittest.TestCase):
             )
             records = {
                 "JEZEBEL": (
-                    [(JEZEBEL_RESPONSE_IDS[0], 1.0, 0.1, 1.1, 0, 0.1, 1.0)],
+                    [(JEZEBEL_RESPONSE_IDS[0], 1.0, 0.1, 1.1, 0.2)],
                     [(JEZEBEL_RESPONSE_IDS[0], 0.2, -0.4, 100.0)],
                 ),
                 "EUCLID": (
                     [
-                        (EUCLID_RESPONSE_IDS[1], 1.2, 0.3, 1.1, 0, 0.3, -1 / 3),
-                        ("unused-leakage", 0, 0, 0, 0, 0, 0),
-                        (EUCLID_RESPONSE_IDS[0], 0.9, 0.2, 0.8, 0, 0.2, -0.5),
+                        (EUCLID_RESPONSE_IDS[1], 1.2, 0.3, 1.1, 0.4),
+                        ("unused-leakage", 0, 0, 0, 0),
+                        (EUCLID_RESPONSE_IDS[0], 0.9, 0.2, 0.8, 0.0),
                     ],
                     [
                         (EUCLID_RESPONSE_IDS[1], -0.5, 0.4, 100.0),
@@ -64,9 +64,7 @@ class Exercise2ObservationTest(unittest.TestCase):
                     JEZEBEL_RESPONSE_IDS if source_name == "JEZEBEL" else EUCLID_RESPONSE_IDS
                 )
                 loaded_observations.append(
-                    load_observations(
-                        obs_path, required, signed_bias=source_name == "EUCLID"
-                    )
+                    load_observations(obs_path, required)
                 )
                 loaded_sensitivities.append(load_sensitivities(sens_path, required))
 
@@ -84,7 +82,7 @@ class Exercise2ObservationTest(unittest.TestCase):
             np.testing.assert_allclose(inputs.experimental, [1.0, 0.9, 1.2])
             np.testing.assert_allclose(inputs.simulated, [1.1, 0.8, 1.1])
             np.testing.assert_allclose(inputs.delta, [-0.1, 0.1, 0.1])
-            np.testing.assert_allclose(inputs.covariance, np.diag([0.01, 0.04, 0.09]))
+            np.testing.assert_allclose(inputs.covariance, np.diag([0.05, 0.04, 0.25]))
             np.testing.assert_allclose(
                 inputs.sensitivity,
                 [[0.11, -0.11], [0.04, 0.06], [-0.275, 0.11]],
