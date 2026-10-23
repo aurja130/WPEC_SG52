@@ -77,9 +77,9 @@ flowchart LR
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
-| `ReleaseData` | The coordinators' input package: prior covariances, integral and differential data with sensitivities, validation benchmarks and the output template. Integral data and prior are used; differential and validation data are not yet | release, release data | partial |
+| `ReleaseData` | The coordinators' input package: prior covariances, integral and differential data with sensitivities, validation benchmarks and the output template. Prior, integral data and Marini nu-bar are used; the other differential sets and validation data are not yet | release, release data | partial |
 | `Prior` | ENDF/B-VIII.0 Pu-239 means and absolute covariance on the state vector | prior, state vector | implemented |
-| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses. Integral responses are built; differential measurements are not | observation, integral response, differential measurement | partial |
+| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses. Integral responses and Marini nu-bar are built; PFNS and fission cross-section data are not | observation, integral response, differential measurement | partial |
 | `Glls` | Linear Bayesian update of the prior with the observations, in absolute form | GLLS, posterior | implemented |
 | `Diagnostics` | Checks and summaries of the update: reproduction, linearized responses, uncertainty reduction, covariance health, PFNS normalization and positivity. Comparison with ENDF/B-VIII.1 is not built | linearized prediction, PFNS normalization | partial |
 | `Submission` | Relative and absolute results filled into the release 3 output template, normalized on the prior mean. Before 2026-10-22 it used the release 2 template and normalized the posterior relative covariance on the posterior mean | output template, submission | implemented |
@@ -107,7 +107,8 @@ flowchart LR
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class DifferentialSet,DifferentialSensitivities,ValidationSet planned
+  class DifferentialSet,DifferentialSensitivities partial
+  class ValidationSet planned
   class Prior,Observations,Validation,Submission external
 ```
 
@@ -116,8 +117,8 @@ flowchart LR
 | `PriorCovariances` | Released ENDF/B-VIII.0 Pu-239 group means and relative covariance blocks, one file per QID pair | relative covariance, QID | implemented |
 | `IntegralSet` | JEZEBEL and EUCLID responses: measured and calculated values with their uncertainties, in released row order | integral response, experimental uncertainty, calculation uncertainty | implemented |
 | `IntegralSensitivities` | Relative sensitivities of each integral response to every released nuclide parameter | relative sensitivity | implemented |
-| `DifferentialSet` | Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi fission ratios, SACS-Cf, with their covariances | differential measurement, EXFOR | planned |
-| `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector | relative sensitivity | planned |
+| `DifferentialSet` | Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi fission ratios, SACS-Cf, with their covariances. Marini nu-bar is read; the others are not yet | differential measurement, EXFOR | partial |
+| `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector. Released for nu-bar and the fission sets (used for nu-bar); the PFNS files have none | relative sensitivity, differential sensitivity | partial |
 | `ValidationSet` | SNEAK-7A/B models and measured responses | validation benchmark, SNEAK | planned |
 | `OutputTemplate` | The NEA results workbook, release 3 version: questions, groups, prior sheets and full 928-state covariance sheets | output template, questions sheet, prior sheets | implemented |
 | `Prior` | See L1 | | external |
@@ -193,8 +194,7 @@ flowchart LR
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class DifferentialObservations planned
-  class ObservationCovariance partial
+  class DifferentialObservations partial
   class IntegralSet,IntegralSensitivities,DifferentialSet,DifferentialSensitivities,PriorMean,Glls external
 ```
 
@@ -237,8 +237,8 @@ construction.
 | `Discrepancy` | Measured minus calculated value per response | discrepancy | implemented |
 | `SensitivityAlignment` | Map each released Pu-239 sensitivity column to its state; reject duplicates and unknown parameters | relative sensitivity, state vector | implemented |
 | `AbsoluteSensitivity` | Convert relative sensitivities to absolute derivatives with the calculated value and the prior mean | absolute sensitivity | implemented |
-| `ObservationCovariance` | Covariance of the discrepancies, block-diagonal over data sets: the integral block from the experimental and calculation uncertainties (method rule), each differential block from its released correlations. Used the published total uncertainty before 2026-10-22; integral responses only before 2026-10-23 | observation covariance, assumption | partial |
-| `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules | differential measurement, differential point | planned |
+| `ObservationCovariance` | Covariance of the discrepancies, block-diagonal over data sets: the integral block from the experimental and calculation uncertainties (method rule), each differential block from its released correlations. Used the published total uncertainty before 2026-10-22; integral responses only before 2026-10-23 | observation covariance, assumption | implemented |
+| `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules. Built for data sets with released one-group sensitivity rows; the PFNS observation model is not | differential measurement, differential point | partial |
 | `IntegralSet` | See Release data | | external |
 | `IntegralSensitivities` | See Release data | | external |
 | `DifferentialSet` | See Release data | | external |
@@ -259,9 +259,7 @@ flowchart LR
   Glls["GLLS update"]
   ExperimentalUncertainty & CalculationUncertainty --> CombinedVariance
   CombinedVariance & UncorrelatedResponses & DifferentialCovariance & IndependentDataSets --> Glls
-  classDef planned stroke-dasharray: 6 4
   classDef external opacity: 0.6
-  class DifferentialCovariance,IndependentDataSets planned
   class Glls external
 ```
 
@@ -291,8 +289,8 @@ $$
 | `CalculationUncertainty` | Released absolute uncertainty of each calculated value; read and stored | calculation uncertainty | implemented |
 | `CombinedVariance` | Sum of the squared experimental and calculation uncertainties per response; replaced the release 2 published total on 2026-10-22 | observation covariance, method rule | implemented |
 | `UncorrelatedResponses` | Off-diagonal entries between integral responses are zero, because the release gives no covariance between them | assumption | implemented |
-| `DifferentialCovariance` | Absolute experimental covariance of one differential data set from its relative uncertainties and full correlation matrix; no calculation uncertainty | differential covariance, assumption | planned |
-| `IndependentDataSets` | Zero covariance between data sets: the integral block and each differential set | independent data sets, assumption | planned |
+| `DifferentialCovariance` | Absolute experimental covariance of one differential data set from its relative uncertainties and full correlation matrix; no calculation uncertainty | differential covariance, assumption | implemented |
+| `IndependentDataSets` | Zero covariance between data sets: the integral block and each differential set | independent data sets, assumption | implemented |
 | `Glls` | See L1 | | external |
 
 #### L3 · Differential observations (`DifferentialObservations`)
@@ -307,13 +305,16 @@ flowchart LR
   Discrepancy["Discrepancy"]
   AbsoluteSensitivity["Absolute sensitivity"]
   ObservationCovariance["Observation covariance"]
+  PfnsObservationModel["PFNS observation model"]
   DifferentialSet & DifferentialSensitivities --> DifferentialSelection
   DifferentialSelection --> Discrepancy & ObservationCovariance
   DifferentialSelection & NubarAsTotal --> DifferentialAlignment
   DifferentialAlignment --> AbsoluteSensitivity
+  DifferentialSet --> PfnsObservationModel
+  PfnsObservationModel --> Discrepancy & AbsoluteSensitivity & ObservationCovariance
   classDef planned stroke-dasharray: 6 4
   classDef external opacity: 0.6
-  class DifferentialSelection,NubarAsTotal,DifferentialAlignment planned
+  class PfnsObservationModel planned
   class DifferentialSet,DifferentialSensitivities,Discrepancy,AbsoluteSensitivity,ObservationCovariance external
 ```
 
@@ -334,9 +335,10 @@ $$
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
-| `DifferentialSelection` | Keep the points of a data set that lie on the 51-group grid and have a non-zero sensitivity row, in released order; give each a response ID | differential point, response ID, energy group | planned |
-| `NubarAsTotal` | Nu-bar data adjust MT452 (total nu-bar), though Marini measured prompt nu-bar; MT456 receives no sensitivity | as-MT452 rule, MT452, MT456 | planned |
-| `DifferentialAlignment` | Place each released 52-column sensitivity row on the state of its QID and energy group; reject a non-zero column 51 | differential sensitivity, state vector | planned |
+| `DifferentialSelection` | Keep the points of a data set that lie on the 51-group grid and have a non-zero sensitivity row, in released order; give each a response ID | differential point, response ID, energy group | implemented |
+| `NubarAsTotal` | Nu-bar data adjust MT452 (total nu-bar), though Marini measured prompt nu-bar; MT456 receives no sensitivity | as-MT452 rule, MT452, MT456 | implemented |
+| `DifferentialAlignment` | Place each released 52-column sensitivity row on the state of its QID and energy group; reject a non-zero column 51 | differential sensitivity, state vector | implemented |
+| `PfnsObservationModel` | How pointwise PFNS points, released without sensitivities or calculated values, map onto the PFNS slices. **Open:** design not fixed | PFNS observation model | planned |
 | `DifferentialSet` | See Release data | | external |
 | `DifferentialSensitivities` | See Release data | | external |
 | `Discrepancy` | See Observations | | external |

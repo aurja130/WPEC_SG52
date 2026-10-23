@@ -151,7 +151,17 @@ uncertainties are not propagated.
   (integral diagonal, Marini full correlation); the comment sheet states the
   as-MT452 rule.
 
-**Result today:** Contract fixed 2026-10-23; not built.
+**Result today:** Built 2026-10-23 on release 3; all acceptance checks pass
+(14 tests; an independent numpy GLLS reproduces the `nda` posterior; reruns
+give identical HDF5). C/E prior → linearized posterior: JEZEBEL
+$k_\text{eff}$ 1.00044 → 1.00012; EUCLID 3x2 0.99983 → 1.00049; EUCLID 1x8
+0.99800 → 0.99952; Marini 0.9909–1.0121 → 0.9815–0.9962. Within one
+observation standard deviation: 41 of 54 before, 35 after (integral 20 → 24,
+Marini 21 → 11). MT452 lowered in every group, by at most 1.84 % (group 50);
+MT456 unchanged. Largest PFNS normalization deviation
+$1.40 \times 10^{-3}$ (flagged; $1.38 \times 10^{-3}$ in Exercise 3); no
+negative states. Submission workbooks in `Exercise_4/Submission/`; not yet
+reviewed or sent.
 
 **Concepts:** `ResponseSelection` `DifferentialSet` `DifferentialSensitivities` `DifferentialObservations` `DifferentialSelection` `NubarAsTotal` `DifferentialAlignment` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -163,6 +173,17 @@ MT452, and ENDF/B-VIII.0 MF31 has no MT452–MT456 covariance. **Resolved** the
 same day by Andry Monlon (`Update_email.pdf`): use the Marini data as if they
 were MT452, as agreed before we joined. Corrected total nu-bar data derived
 from Marini may be released later; Exercise 4 would then need a rerun.
+2026-10-23, orchestrator: **Marini lies off the posterior.** All 25 posterior
+C/E are below 1 (0.9815–0.9962), outside the measured scatter. The rule and
+the integral data are not the cause: Marini alone gives the same (0.9834–0.9977),
+as does building $\sigma_E$ on $C$ instead of $E$ (0.9845–0.9985); dropping the
+correlations gives 0.9906–1.0081. The released correlations are strong (mean
+off-diagonal 0.81; one mode carries 82 % of the variance), and the prior
+disagrees with Marini's shape ($\chi^2/m = 2.34$ for Marini alone before the
+update), so GLLS fits the shape and moves the common level. Seven groups hold
+two points whose measured difference is tighter than one group value can
+follow (up to $2.6\sigma$); keeping one point per group still gives
+0.9851–1.0009. Reported, not corrected.
 
 ## Exercise 5 · Add Marini and Keegan PFNS
 

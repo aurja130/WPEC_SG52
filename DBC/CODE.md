@@ -7,8 +7,8 @@ Where each implemented or partial concept node lives. Paths are relative to the
 repository root; symbols follow the path they belong to.
 
 The exercise workflows are per-exercise copies of the same scripts.
-`Exercise_3/` is the most general version; `Exercise_1/` and `Exercise_2/`
-differ in which responses they select.
+`Exercise_4/` is the most general version (integral responses plus Marini
+nu-bar); `Exercise_1/` to `Exercise_3/` differ in which responses they select.
 
 ## Release data
 
@@ -17,6 +17,8 @@ differ in which responses they select.
 | `PriorCovariances` | `Exercise_3/ex3_prior.py` `DEFAULT_SOURCE_DIRECTORY` `validate_source_inventory` `load_mean` `load_covariance` `parse_covariance_filename` | Same in `ex1_prior.py` and `ex2_prior.py`. Points at release 3 |
 | `IntegralSet` | `Exercise_3/ex3_observations.py` `OBSERVATION_COLUMNS` `read_csv` `load_observations` | Reads the release 3 columns `expt`, `expt_uncert`, `sim`, `sim_uncert` |
 | `IntegralSensitivities` | `Exercise_3/ex3_observations.py` `load_sensitivities` | |
+| `DifferentialSet` | `Exercise_4/ex4_observations.py` `DEFAULT_MARINI_PATH` `load_marini_nubar` `float_array_at` | Marini nu-bar only |
+| `DifferentialSensitivities` | `Exercise_4/ex4_observations.py` `load_marini_nubar` `MARINI_SENSITIVITY_COLUMNS` | Marini nu-bar only |
 | `OutputTemplate` | `Exercise_3/export_ex3_excel.py` `TEMPLATE_PATH` `locate_mean_table` `locate_covariance_axes` `question_row` | Release 3 template |
 
 ## Prior
@@ -35,7 +37,13 @@ differ in which responses they select.
 | `Discrepancy` | `Exercise_3/ex3_observations.py` `build_inputs` | `delta = experimental - simulated` |
 | `SensitivityAlignment` | `Exercise_3/ex3_observations.py` `parameter_to_prior_index` `build_inputs` | |
 | `AbsoluteSensitivity` | `Exercise_3/ex3_observations.py` `build_inputs` | $S = D_C\, s\, D_{\mu_i}^{-1}$ |
-| `ObservationCovariance` | `Exercise_3/ex3_observations.py` `build_inputs` `write_observations` | $\operatorname{diag}(\sigma_E^2 + \sigma_C^2)$; the Exercise 3 analysis checks it against the components |
+| `ObservationCovariance` | `Exercise_3/ex3_observations.py` `build_inputs` `write_observations` `Exercise_4/ex4_observations.py` `build_marini_inputs` `combine_inputs` `require_positive_definite` | Integral block $\operatorname{diag}(\sigma_E^2 + \sigma_C^2)$, checked against the components by the analysis; Marini block $D_{\sigma_E}\rho D_{\sigma_E}$ |
+| `DifferentialObservations` | `Exercise_4/ex4_observations.py` `load_marini_nubar` `build_marini_inputs` `combine_inputs` | Marini rows appended after the 29 integral rows |
+| `DifferentialSelection` | `Exercise_4/ex4_observations.py` `load_marini_nubar` `MARINI_ENERGY_LIMIT_MEV` `MARINI_RESPONSE_PREFIX` | Drops points above 20 MeV or with a zero sensitivity row |
+| `NubarAsTotal` | `Exercise_4/ex4_observations.py` `total_nubar_prior_index` | |
+| `DifferentialAlignment` | `Exercise_4/ex4_observations.py` `load_marini_nubar` `build_marini_inputs` | Rejects a non-zero column 51 and rows that are not one-hot |
+| `DifferentialCovariance` | `Exercise_4/ex4_observations.py` `build_marini_inputs` `require_positive_definite` | |
+| `IndependentDataSets` | `Exercise_4/ex4_observations.py` `combine_inputs` | |
 
 ## GLLS update
 

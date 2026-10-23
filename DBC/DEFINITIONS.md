@@ -40,6 +40,7 @@ unresolved question.
 | differential covariance | $D_{\sigma_E}\, \rho\, D_{\sigma_E}$ for one differential data set, with $\sigma_E = u E$ from the released relative uncertainties $u$ and correlation matrix $\rho$. No calculation uncertainty: the release gives none (assumption) | release, Captain |
 | independent data sets | Assumption: zero covariance between the integral responses and each differential data set, and between differential data sets | Captain |
 | differential sensitivity | A released 52-column sensitivity row of a differential point: column $g \le 50$ is the relative sensitivity to energy group $g$, column 51 is always zero. Rows for the cross-section and nu-bar sets are one-hot | release |
+| PFNS observation model | How the pointwise, shape-only PFNS points (Marini, Keegan), released without sensitivities or calculated values, are predicted from the PFNS slices of the state vector. **Open:** design not fixed | Captain |
 | response covariance | $V = S \Sigma_i S^\top + \Sigma_E$, the covariance of the discrepancies including prior nuclear-data uncertainty | Captain |
 | linearized prediction | A response recomputed to first order, $C + S(\mu_f - \mu_i)$; not a transport calculation | Captain |
 | residual identity | $E - C_f = \Sigma_E V^{-1} \Delta$: the posterior residuals follow from the update alone. Individual residuals need not shrink | Captain |
