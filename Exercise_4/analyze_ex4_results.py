@@ -1018,16 +1018,24 @@ def analyze(args: AnalysisArgs) -> str:
     add("(ii) E (experimental) and C (simulated) used as released; no correction.")
     add(
         "(iii) MT456 (94239_00456_*) kept at prior, not directly constrained: its "
-        + "sensitivity is zero in all rows (checked), so any MT456 change arises only "
-        + "via prior cross-covariance."
+        + "sensitivity is zero in all rows (checked), and the released prior has no "
+        + "MT452-MT456 covariance (ENDF/B-VIII.0 MF31 has none)."
     )
-    add("(iv) No calculation uncertainty is assigned to Marini points.")
+    add(
+        "(iv) No calculation uncertainty is assigned to Marini points; their "
+        + "experimental standard deviation is built on the measured value, "
+        + "sigma_E = relative uncertainty x E, with the released 25 x 25 correlations."
+    )
     add(
         "(v) Marini and integral data sets treated as independent: block-diagonal "
         + "observation covariance (integral-Marini blocks exactly zero; integral block "
-        + "diagonal, diag(expt_uncert^2 + sim_uncert^2))."
+        + "diagonal, diag(expt_uncert^2 + sim_uncert^2), i.e. no covariance between "
+        + "integral responses, including between leakage-spectrum points)."
     )
-    add("(vi) Sensitivity uncertainties are not propagated.")
+    add(
+        "(vi) Sensitivity uncertainties are not propagated: the integral ones "
+        + "(sens_unc_rel.csv) are ignored; the Marini file provides none."
+    )
     add(
         "(vii) Marini kept points: energy <= 20 MeV and nonzero sensitivity (selection "
         + "applied upstream); kept count read from data: "

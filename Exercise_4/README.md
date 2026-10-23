@@ -45,11 +45,13 @@ Marini selection: energy at or below 20 MeV and a non-zero sensitivity row. All 
 
 ## Assumptions
 
-- The Marini release has no sensitivity uncertainties (`sensitivities` holds `structure` and `values` only), so none are propagated.
-- No calculation uncertainty is added to the Marini data.
-- Integral and Marini data are treated as independent.
-- MT456 states have no direct sensitivity in any row. Any posterior change arises only through prior cross-covariances; the analysis reports the MT456 shift rather than assuming zero.
+- As-MT452 rule (coordinator instruction, 2026-10-23): Marini measured prompt nu-bar, but its sensitivity rows land on MT452 (total nu-bar); E and C are used as released.
+- No calculation uncertainty is added to the Marini data; their σ_E is built on the measured value (σ_E = u · E).
+- Integral and Marini data are treated as independent (zero integral–Marini covariance).
+- No covariance between integral responses, including between leakage-spectrum points, as in Exercise 3.
+- Sensitivity uncertainties are not propagated: the integral ones (`sens_unc_rel.csv`) are ignored, and the Marini file provides none.
+- MT456 states have no sensitivity in any row and the released prior has no MT452–MT456 covariance, so MT456 stays at the prior; the analysis reports the MT456 shift as a check.
 
 ## Tests
 
-`test_ex4_prior.py` and `test_ex4_observations.py` read the release data and fail if it is missing. The observation test builds the 54-row file, checks the integral rows against `Exercise_3/ex3_observations.py` (run read-only), and checks the Marini covariance, sensitivity mapping, selection, and input validation.
+`test_ex4_prior.py` uses synthetic covariance files. `test_ex4_observations.py` reads the release data and fails if it is missing: it builds the 54-row file on a synthetic prior, checks the integral rows against `Exercise_3/ex3_observations.py` (run read-only), and checks the Marini covariance, sensitivity mapping, selection, and input validation.

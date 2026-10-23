@@ -33,7 +33,11 @@ INTEGRAL_COUNT: Final = 29
 MARINI_COUNT: Final = 25
 PRIOR_COUNT: Final = 979
 ENERGY_GROUP_COUNT: Final = 51
-SYNTHETIC_MEAN: Final = 2.0
+
+
+def synthetic_means(count: int) -> np.ndarray:
+    """Distinct positive prior means, so a wrong target state shows in C / mu."""
+    return 1.0 + 1.0e-3 * np.arange(count, dtype=np.float64)
 
 
 @dataclass(frozen=True)
@@ -110,7 +114,7 @@ def synthetic_prior_indices() -> list[str]:
 
 
 def write_synthetic_prior(path: Path, indices: list[str]) -> None:
-    """Write a prior with the combined HDF5 layout and constant positive means."""
+    """Write a prior with the combined HDF5 layout and distinct positive means."""
     with h5py.File(path, "w") as h5:
         group = h5.create_group("mean")
         _ = group.create_dataset(
@@ -119,7 +123,7 @@ def write_synthetic_prior(path: Path, indices: list[str]) -> None:
             dtype=h5py.string_dtype(encoding="utf-8"),
         )
         _ = group.create_dataset(
-            "values", data=np.full(len(indices), SYNTHETIC_MEAN), dtype=np.float64
+            "values", data=synthetic_means(len(indices)), dtype=np.float64
         )
 
 
@@ -267,17 +271,18 @@ class ExerciseFourObservationTest(unittest.TestCase):
         )
 
         sensitivity = self.ex4.sensitivity[INTEGRAL_COUNT:]
+        means = synthetic_means(PRIOR_COUNT)
         for row, group in enumerate(groups):
             column = self.ex4.prior_ids.index(total_nubar_prior_index(int(group)))
             expected = np.zeros(PRIOR_COUNT, dtype=np.float64)
-            expected[column] = evaluated[row] / SYNTHETIC_MEAN
+            expected[column] = evaluated[row] / means[column]
             np.testing.assert_allclose(sensitivity[row], expected, rtol=1e-12, atol=0.0)
         mt456 = [
             index
             for index, name in enumerate(self.ex4.prior_ids)
             if name.startswith("94239_00456_")
         ]
-        np.testing.assert_array_equal(sensitivity[:, mt456], 0.0)
+        np.testing.assert_array_equal(self.ex4.sensitivity[:, mt456], 0.0)
 
     def test_release_marini_points_all_pass_the_selection_rules(self) -> None:
         points = load_marini_nubar(DEFAULT_MARINI_PATH)

@@ -737,7 +737,7 @@ QUESTION_ANSWERS = (
     ),
     (
         "Are you taking into account the sensitivity uncertainties ? If yes, elaborate briefly on how you do it.",
-        "No, not propagated (assumption): the differential file provides no sensitivity uncertainties.",
+        "No. The sensitivity uncertainties of the integral responses (sens_unc_rel.csv) are not propagated; the sensitivities are treated as exact (assumption). The Marini nu-bar file provides no sensitivity uncertainties.",
     ),
 )
 
