@@ -188,11 +188,13 @@ flowchart LR
   IntegralSensitivities --> SensitivityAlignment
   SensitivityAlignment & PriorMean --> AbsoluteSensitivity
   DifferentialSet & DifferentialSensitivities --> DifferentialObservations
-  Discrepancy & AbsoluteSensitivity & ObservationCovariance & DifferentialObservations --> Glls
+  DifferentialObservations --> Discrepancy & AbsoluteSensitivity & ObservationCovariance
+  Discrepancy & AbsoluteSensitivity & ObservationCovariance --> Glls
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
   class DifferentialObservations planned
+  class ObservationCovariance partial
   class IntegralSet,IntegralSensitivities,DifferentialSet,DifferentialSensitivities,PriorMean,Glls external
 ```
 
@@ -235,8 +237,8 @@ construction.
 | `Discrepancy` | Measured minus calculated value per response | discrepancy | implemented |
 | `SensitivityAlignment` | Map each released Pu-239 sensitivity column to its state; reject duplicates and unknown parameters | relative sensitivity, state vector | implemented |
 | `AbsoluteSensitivity` | Convert relative sensitivities to absolute derivatives with the calculated value and the prior mean | absolute sensitivity | implemented |
-| `ObservationCovariance` | Covariance of the discrepancies, from the experimental and calculation uncertainties (method rule). Used the published total uncertainty before 2026-10-22 | observation covariance, assumption | implemented |
-| `DifferentialObservations` | Discrepancies, sensitivities and covariances of differential measurements on the same state vector | differential measurement | planned |
+| `ObservationCovariance` | Covariance of the discrepancies, block-diagonal over data sets: the integral block from the experimental and calculation uncertainties (method rule), each differential block from its released correlations. Used the published total uncertainty before 2026-10-22; integral responses only before 2026-10-23 | observation covariance, assumption | partial |
+| `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules | differential measurement, differential point | planned |
 | `IntegralSet` | See Release data | | external |
 | `IntegralSensitivities` | See Release data | | external |
 | `DifferentialSet` | See Release data | | external |
@@ -251,29 +253,95 @@ flowchart LR
   ExperimentalUncertainty["Experimental uncertainty"]
   CalculationUncertainty["Calculation uncertainty"]
   CombinedVariance["Combined variance"]
-  UncorrelatedResponses["Uncorrelated responses"]
+  UncorrelatedResponses["Uncorrelated integral responses"]
+  DifferentialCovariance["Differential covariance"]
+  IndependentDataSets["Independent data sets"]
   Glls["GLLS update"]
   ExperimentalUncertainty & CalculationUncertainty --> CombinedVariance
-  CombinedVariance & UncorrelatedResponses --> Glls
+  CombinedVariance & UncorrelatedResponses & DifferentialCovariance & IndependentDataSets --> Glls
+  classDef planned stroke-dasharray: 6 4
   classDef external opacity: 0.6
+  class DifferentialCovariance,IndependentDataSets planned
   class Glls external
 ```
 
+Integral block, with the release's bias using the same denominator,
+$(C - E) / \sqrt{\sigma_E^2 + \sigma_C^2}$:
+
 $$
-\Sigma_E = \operatorname{diag}\!\left(\sigma_{E,k}^2 + \sigma_{C,k}^2\right)
+\Sigma_E^{\text{int}} = \operatorname{diag}\!\left(\sigma_{E,k}^2 + \sigma_{C,k}^2\right)
 \qquad \text{(method rule)}
 $$
 
-The release defines its bias with the same denominator,
-$(C - E) / \sqrt{\sigma_E^2 + \sigma_C^2}$.
+Differential block $d$, from the released relative uncertainties $u$ and
+correlation matrix $\rho$, with no calculation uncertainty (assumption), and
+the whole matrix block-diagonal over data sets (assumption):
+
+$$
+\sigma_{E,k} = u_k E_k,
+\qquad
+\Sigma_E^{(d)} = D_{\sigma_E}\, \rho^{(d)}\, D_{\sigma_E},
+\qquad
+\Sigma_E = \operatorname{blockdiag}\!\left(\Sigma_E^{\text{int}}, \Sigma_E^{(1)}, \Sigma_E^{(2)}, \dots\right)
+$$
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
 | `ExperimentalUncertainty` | Released absolute uncertainty of each measured value; read and stored | experimental uncertainty | implemented |
 | `CalculationUncertainty` | Released absolute uncertainty of each calculated value; read and stored | calculation uncertainty | implemented |
 | `CombinedVariance` | Sum of the squared experimental and calculation uncertainties per response; replaced the release 2 published total on 2026-10-22 | observation covariance, method rule | implemented |
-| `UncorrelatedResponses` | Off-diagonal entries are zero, because the release gives no covariance between responses | assumption | implemented |
+| `UncorrelatedResponses` | Off-diagonal entries between integral responses are zero, because the release gives no covariance between them | assumption | implemented |
+| `DifferentialCovariance` | Absolute experimental covariance of one differential data set from its relative uncertainties and full correlation matrix; no calculation uncertainty | differential covariance, assumption | planned |
+| `IndependentDataSets` | Zero covariance between data sets: the integral block and each differential set | independent data sets, assumption | planned |
 | `Glls` | See L1 | | external |
+
+#### L3 · Differential observations (`DifferentialObservations`)
+
+```mermaid
+flowchart LR
+  DifferentialSet["Differential measurements"]
+  DifferentialSensitivities["Differential sensitivities"]
+  DifferentialSelection["Differential point selection"]
+  NubarAsTotal["Nu-bar as MT452"]
+  DifferentialAlignment["Differential alignment"]
+  Discrepancy["Discrepancy"]
+  AbsoluteSensitivity["Absolute sensitivity"]
+  ObservationCovariance["Observation covariance"]
+  DifferentialSet & DifferentialSensitivities --> DifferentialSelection
+  DifferentialSelection --> Discrepancy & ObservationCovariance
+  DifferentialSelection & NubarAsTotal --> DifferentialAlignment
+  DifferentialAlignment --> AbsoluteSensitivity
+  classDef planned stroke-dasharray: 6 4
+  classDef external opacity: 0.6
+  class DifferentialSelection,NubarAsTotal,DifferentialAlignment planned
+  class DifferentialSet,DifferentialSensitivities,Discrepancy,AbsoluteSensitivity,ObservationCovariance external
+```
+
+A point $k$ is kept when its incident energy lies on the 51-group grid and its
+released sensitivity row is non-zero. The released row has 52 columns; column
+$g \le 50$ is energy group $g$ and column 51 must be zero. The data set names
+the QID its row lands on; nu-bar lands on MT452 (coordinator instruction).
+Measured and calculated values are used as released, so the existing rules
+apply unchanged:
+
+$$
+s_{k,(\text{QID},g)} = s^{\text{rel}}_{k,g},
+\qquad
+\Delta_k = E_k - C_k,
+\qquad
+S_{k,(\text{QID},g)} = \frac{C_k\, s^{\text{rel}}_{k,g}}{\mu_{i,(\text{QID},g)}}
+$$
+
+| Node | Meaning | Terms | Status |
+|---|---|---|---|
+| `DifferentialSelection` | Keep the points of a data set that lie on the 51-group grid and have a non-zero sensitivity row, in released order; give each a response ID | differential point, response ID, energy group | planned |
+| `NubarAsTotal` | Nu-bar data adjust MT452 (total nu-bar), though Marini measured prompt nu-bar; MT456 receives no sensitivity | as-MT452 rule, MT452, MT456 | planned |
+| `DifferentialAlignment` | Place each released 52-column sensitivity row on the state of its QID and energy group; reject a non-zero column 51 | differential sensitivity, state vector | planned |
+| `DifferentialSet` | See Release data | | external |
+| `DifferentialSensitivities` | See Release data | | external |
+| `Discrepancy` | See Observations | | external |
+| `AbsoluteSensitivity` | See Observations | | external |
+| `ObservationCovariance` | See Observations | | external |
 
 ### L2 · GLLS update (`Glls`)
 

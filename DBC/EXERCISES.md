@@ -48,7 +48,8 @@ PFNS normalization deviation $1.10 \times 10^{-6}$ (flagged); no negative
 states. Same posterior as the release 2 run within $4 \times 10^{-11}$ in
 relative adjustment (`total_uncert` was the component quadrature here); only
 the reporting changed. Packaged as `UU_Erik_Aurora_SG52_v3`; the release 2
-submission is kept as `_v2`.
+submission is kept as `_v2`. `_v3` received by the coordinators
+(Andry Monlon, 2026-10-23).
 
 **Concepts:** `ResponseSelection` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `AbsolutePriorCovariance` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -70,7 +71,8 @@ observation covariance). Sensitivity uncertainties are not propagated.
 EUCLID 3x2 0.99983 → 1.0001537; EUCLID 1x8 0.99800 → 0.9990169. Largest PFNS
 normalization deviation $1.61 \times 10^{-4}$ (flagged); no negative states.
 Same posterior as the release 2 run within $2 \times 10^{-9}$ in relative
-adjustment; only the reporting changed. Packaged as `_v3`.
+adjustment; only the reporting changed. Packaged as `_v3`; received by the
+coordinators 2026-10-23.
 
 **Concepts:** `ResponseSelection` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -99,7 +101,8 @@ the 15 leakage-spectrum uncertainties are now 2.4–3.2 times smaller than the
 release 2 `total_uncert`. Relative adjustments moved by up to 0.078 and
 posterior standard deviations by up to 22 % (one-off comparison of the
 posterior with the `_v2` absolute workbook and the release 2 observation file,
-2026-10-22, the same comparison as for Exercises 1 and 2). Packaged as `_v3`.
+2026-10-22, the same comparison as for Exercises 1 and 2). Packaged as `_v3`;
+received by the coordinators 2026-10-23.
 
 **Concepts:** `ResponseSelection` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `UncertaintyAudit` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -107,18 +110,59 @@ posterior with the `_v2` absolute workbook and the release 2 observation file,
 
 ## Exercise 4 · Add Marini nu-bar
 
-**Data:** Exercise 3's integral responses plus Marini nu-bar (EXFOR
-14799002) with its differential sensitivities.
+**Data:** Prior as Exercise 1. Exercise 3's 29 integral responses in the same
+order, then the 25 Marini nu-bar points (0.973–19.9 MeV) in released order,
+$m = 54$. Marini fields in
+`Adjustement set/Differential/Marini nubar/nubar_Marini2021.json`: $E$ =
+`experimental data.values` (n/f), $u$ = `experimental data.uncertainties`
+(relative), $\rho$ = `experimental data.correlations` (25 × 25, row-major),
+point energies = `experimental data.structure.limits` (MeV), $C$ =
+`evaluated data.values` (ENDF/B-VIII.0 MT456), $s^\text{rel}$ =
+`sensitivities.values` (25 × 52). Response IDs `marini-nubar-00` to
+`marini-nubar-24`. The specification cites EXFOR 14799002; the file says
+private communication. Observation HDF5 keeps Exercise 3's layout (`/delta`,
+`/cov`, `/sens`, `/responses/*`) with $\sigma_C = 0$ for the Marini rows.
+Workflow in `Exercise_4/`.
 
-**Assumptions:** To be fixed before work starts.
+**Assumptions:** The as-MT452 rule (coordinator instruction, 2026-10-23):
+Marini sensitivity rows land on MT452; $E$ and $C$ are used as released (both
+prompt), so the discrepancy carries no delayed-nu-bar offset; MT456 stays at
+the prior. No calculation uncertainty for the Marini points. Independent data
+sets (no covariance between the integral block and the Marini block). No
+covariance between integral responses, as in Exercise 3. Sensitivity
+uncertainties are not propagated.
 
-**Acceptance:** The shared checks; to be extended before work starts.
+**Acceptance:** The shared checks, plus:
 
-**Result today:** Not started.
+- The first 29 rows of `/delta` and `/sens` and the integral block of `/cov`
+  equal Exercise 3's observation file exactly.
+- Every Marini `/sens` row has one non-zero entry, on the MT452 state of the
+  point's group (groups 31–50), equal to $C_k / \mu_{i,(452,g)}$; every MT456
+  column is zero in all 54 rows.
+- The Marini covariance block is $D_{\sigma_E} \rho D_{\sigma_E}$ with
+  $\sigma_E = u E$, symmetric and positive definite; the integral–Marini
+  blocks are zero.
+- `nda` runs on the 54 × 54 correlated $\Sigma_E$, and the analysis reproduces
+  its posterior from the inputs.
+- The analysis report gives prior and linearized-posterior C/E for all 54
+  observations and states the as-MT452 rule, the unadjusted MT456 and every
+  assumption.
+- The questions sheet's answer 3 describes the block-diagonal $\Sigma_E$
+  (integral diagonal, Marini full correlation); the comment sheet states the
+  as-MT452 rule.
 
-**Concepts:** `DifferentialSet` `DifferentialSensitivities` `DifferentialObservations`
+**Result today:** Contract fixed 2026-10-23; not built.
 
-**Comments:** —
+**Concepts:** `ResponseSelection` `DifferentialSet` `DifferentialSensitivities` `DifferentialObservations` `DifferentialSelection` `NubarAsTotal` `DifferentialAlignment` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
+
+**Comments:** 2026-10-23, orchestrator: Marini measured prompt nu-bar (JSON
+`reaction = "nubar-prompt"`; its `evaluated data` matches ENDF/B-VIII.0 MF1
+MT456 within $1.4 \times 10^{-5}$, MT452 only within $2.1 \times 10^{-3}$),
+while the specification, the integral sensitivities and the template use
+MT452, and ENDF/B-VIII.0 MF31 has no MT452–MT456 covariance. **Resolved** the
+same day by Andry Monlon (`Update_email.pdf`): use the Marini data as if they
+were MT452, as agreed before we joined. Corrected total nu-bar data derived
+from Marini may be released later; Exercise 4 would then need a rerun.
 
 ## Exercise 5 · Add Marini and Keegan PFNS
 
