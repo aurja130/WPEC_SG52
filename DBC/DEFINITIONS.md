@@ -80,6 +80,7 @@ unresolved question.
 | questions sheet | The release 3 template sheet of five method questions every participant answers; the shared answers are in [EXERCISES](EXERCISES.md) | feedback |
 | prior sheets | The release 3 template sheets `prior_abs` (absolute prior mean as ingested) and `prior_cov_rel_to_prior` (prior covariance normalized on prior) | feedback |
 | submission | The filled output template for one exercise, sent to the NEA | spec |
+| submission version | The package `Submission_to_NEA/UU_Erik_Aurora_SG52_v<N>/`, one `Ex<k>/` folder per exercise. `<N>` is the data release the results use, so every exercise run on release 3 goes into `_v3`, including later additions; a new release starts a new version | Captain |
 | template state selection | The 928 states the release 3 template holds, in its axis order: MT2, 4, 16, 17, 18, 37, 102 (51 groups each), ten mubar, MT452, ten PFNS slices; all states except MT456. Before 2026-10-22, split into 418 cross-section and mubar plus 510 PFNS states for the release 2 template | Captain |
 | relative mean adjustment | $(\mu_f - \mu_i)/\mu_i$ per state | spec |
 | absolute workbook | Our own workbook with all 979 states, prior and posterior means and full absolute covariances | Captain |

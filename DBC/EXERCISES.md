@@ -160,9 +160,9 @@ observation standard deviation: 41 of 54 before, 35 after (integral 20 → 24,
 Marini 21 → 11). MT452 lowered in every group, by at most 1.84 % (group 50);
 MT456 unchanged. Largest PFNS normalization deviation
 $1.40 \times 10^{-3}$ (flagged; $1.38 \times 10^{-3}$ in Exercise 3); no
-negative states. Completion review passed after one fix. Packaged
-2026-10-26 as `UU_Erik_Aurora_SG52_v4` (Ex1–3 copied unchanged from `_v3`,
-plus Ex4) for the Captain to send; coordinator comments go into the next round.
+negative states. Completion review passed after one fix. Added 2026-10-26 to
+`UU_Erik_Aurora_SG52_v3` (`Ex4/`; Ex1–3 unchanged, archives rebuilt) for the
+Captain to send; coordinator comments go into the next round.
 
 **Concepts:** `ResponseSelection` `DifferentialSet` `DifferentialSensitivities` `DifferentialObservations` `DifferentialSelection` `NubarAsTotal` `DifferentialAlignment` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
