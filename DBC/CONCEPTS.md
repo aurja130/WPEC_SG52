@@ -77,9 +77,9 @@ flowchart LR
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
-| `ReleaseData` | The coordinators' input package: prior covariances, integral and differential data with sensitivities, validation benchmarks and the output template. Prior, integral data and Marini nu-bar are used; the other differential sets and validation data are not yet | release, release data | partial |
+| `ReleaseData` | The coordinators' input package: prior covariances, integral and differential data with sensitivities, validation benchmarks and the output template. Prior, integral data, Marini nu-bar and both PFNS sets are used; Snyder, Dongwi and validation data are not yet | release, release data | partial |
 | `Prior` | ENDF/B-VIII.0 Pu-239 means and absolute covariance on the state vector | prior, state vector | implemented |
-| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses. Integral responses and Marini nu-bar are built; PFNS and fission cross-section data are not | observation, integral response, differential measurement | partial |
+| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses. Integral responses, Marini nu-bar and Marini and Keegan PFNS are built; fission cross-section data are not | observation, integral response, differential measurement | partial |
 | `Glls` | Linear Bayesian update of the prior with the observations, in absolute form | GLLS, posterior | implemented |
 | `Diagnostics` | Checks and summaries of the update: reproduction, linearized responses, uncertainty reduction, covariance health, PFNS normalization and positivity. Comparison with ENDF/B-VIII.1 is not built | linearized prediction, PFNS normalization | partial |
 | `Submission` | Relative and absolute results filled into the release 4 output template, normalized on the prior mean. The release 3 template until 2026-11-23; before 2026-10-22 the release 2 template, with the posterior relative covariance normalized on the posterior mean | output template, submission | implemented |
@@ -117,8 +117,8 @@ flowchart LR
 | `PriorCovariances` | Released ENDF/B-VIII.0 Pu-239 group means and relative covariance blocks, one file per QID pair | relative covariance, QID | implemented |
 | `IntegralSet` | JEZEBEL and EUCLID responses: measured and calculated values with their uncertainties, in released row order | integral response, experimental uncertainty, calculation uncertainty | implemented |
 | `IntegralSensitivities` | Relative sensitivities of each integral response to every released nuclide parameter | relative sensitivity | implemented |
-| `DifferentialSet` | Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi fission ratios, SACS-Cf, with their covariances. Marini nu-bar is read; the others are not yet | differential measurement, EXFOR | partial |
-| `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector: one-hot rows released for nu-bar and the fission sets, and for PFNS since release 4 (none in release 3). Used for nu-bar; PFNS planned | relative sensitivity, differential sensitivity | partial |
+| `DifferentialSet` | Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi fission ratios, SACS-Cf, with their covariances. Marini nu-bar and both PFNS sets are read; the others are not yet | differential measurement, EXFOR | partial |
+| `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector: one-hot rows released for nu-bar and the fission sets, and for PFNS since release 4 (none in release 3). Used for nu-bar and PFNS; fission sets not yet | relative sensitivity, differential sensitivity | partial |
 | `ValidationSet` | SNEAK-7A/B models and measured responses | validation benchmark, SNEAK | planned |
 | `OutputTemplate` | The NEA results workbook, release 4 version: questions (eleven, six of them on differential data), groups, prior sheets and full 928-state covariance sheets. The release 3 version until 2026-11-23 had the first five questions only | output template, questions sheet, prior sheets | implemented |
 | `Prior` | See L1 | | external |
@@ -238,7 +238,7 @@ construction.
 | `SensitivityAlignment` | Map each released Pu-239 sensitivity column to its state; reject duplicates and unknown parameters | relative sensitivity, state vector | implemented |
 | `AbsoluteSensitivity` | Convert relative sensitivities to absolute derivatives with the calculated value and the prior mean | absolute sensitivity | implemented |
 | `ObservationCovariance` | Covariance of the discrepancies, block-diagonal over data sets: the integral block from the experimental and calculation uncertainties (method rule), each differential block from its released correlations. Used the published total uncertainty before 2026-10-22; integral responses only before 2026-10-23 | observation covariance, assumption | implemented |
-| `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules. Built for data sets with released one-group sensitivity rows; the PFNS observation model is not | differential measurement, differential point | partial |
+| `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules. Built for nu-bar and PFNS; the fission cross-section sets are not | differential measurement, differential point | partial |
 | `IntegralSet` | See Release data | | external |
 | `IntegralSensitivities` | See Release data | | external |
 | `DifferentialSet` | See Release data | | external |
@@ -306,16 +306,16 @@ flowchart LR
   AbsoluteSensitivity["Absolute sensitivity"]
   ObservationCovariance["Observation covariance"]
   PfnsObservationModel["PFNS observation model"]
+  CrossSectionShapeModel["Fission cross-section shape model"]
   DifferentialSet & DifferentialSensitivities --> DifferentialSelection
   DifferentialSelection --> Discrepancy & ObservationCovariance
-  DifferentialSelection & NubarAsTotal & PfnsObservationModel --> DifferentialAlignment
-  PfnsObservationModel --> Discrepancy
+  DifferentialSelection & NubarAsTotal & PfnsObservationModel & CrossSectionShapeModel --> DifferentialAlignment
+  PfnsObservationModel & CrossSectionShapeModel --> Discrepancy
   DifferentialAlignment --> AbsoluteSensitivity
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class DifferentialSelection,DifferentialAlignment partial
-  class PfnsObservationModel planned
+  class CrossSectionShapeModel planned
   class DifferentialSet,DifferentialSensitivities,Discrepancy,AbsoluteSensitivity,ObservationCovariance external
 ```
 
@@ -353,10 +353,11 @@ $$
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
-| `DifferentialSelection` | Keep the points of a data set that lie on the group grids, have a non-zero sensitivity row and a calculated value, in released order; give each a response ID. Built for nu-bar; PFNS selection planned | differential point, response ID, energy group | partial |
+| `DifferentialSelection` | Keep the points of a data set that lie on the group grids, have a non-zero sensitivity row and a calculated value, in released order; give each a response ID | differential point, response ID, energy group | implemented |
 | `NubarAsTotal` | Nu-bar data adjust MT452 (total nu-bar), though Marini measured prompt nu-bar; MT456 receives no sensitivity | as-MT452 rule, MT452, MT456 | implemented |
-| `DifferentialAlignment` | Place each released one-hot sensitivity row on its state: QID and energy group for nu-bar (52 columns, column 51 zero), PFNS slice and outgoing group for PFNS ($10 \times 51$). Built for nu-bar; PFNS planned | differential sensitivity, one-hot sensitivity, state vector | partial |
-| `PfnsObservationModel` | PFNS points use the released block-normalized calculated values and one-hot rows on (PFNS slice, outgoing group), with no free normalization factor and no block-normalization term in the sensitivity. Before 2026-11-23 an open design question, because release 3 gave the PFNS files neither calculated values nor sensitivities | PFNS observation model, PFNS block, block-normalized calculated value | planned |
+| `DifferentialAlignment` | Place each released one-hot sensitivity row on its state: QID and energy group for nu-bar (52 columns, column 51 zero), PFNS slice and outgoing group for PFNS ($10 \times 51$), checked against a lookup of the point's energies | differential sensitivity, one-hot sensitivity, state vector | implemented |
+| `PfnsObservationModel` | PFNS points use the released block-normalized calculated values and one-hot rows on (PFNS slice, outgoing group), with no free normalization factor and no block-normalization term in the sensitivity. Before 2026-11-23 an open design question, because release 3 gave the PFNS files neither calculated values nor sensitivities | PFNS observation model, PFNS block, block-normalized calculated value | implemented |
+| `CrossSectionShapeModel` | How the Snyder and Dongwi shape data sets (Pu-239 fission cross section, normalization component removed from the covariance) enter: their released calculated values and sensitivity rows, and how the missing normalization is handled. **Open:** design not fixed (Exercises 6 and 8) | shape data set, differential sensitivity | planned |
 | `DifferentialSet` | See Release data | | external |
 | `DifferentialSensitivities` | See Release data | | external |
 | `Discrepancy` | See Observations | | external |

@@ -17,8 +17,8 @@ nu-bar); `Exercise_1/` to `Exercise_3/` differ in which responses they select.
 | `PriorCovariances` | `Exercise_3/ex3_prior.py` `DEFAULT_SOURCE_DIRECTORY` `validate_source_inventory` `load_mean` `load_covariance` `parse_covariance_filename` | Same in `ex1_prior.py` and `ex2_prior.py`. Points at release 3 |
 | `IntegralSet` | `Exercise_3/ex3_observations.py` `OBSERVATION_COLUMNS` `read_csv` `load_observations` | Reads the release 3 columns `expt`, `expt_uncert`, `sim`, `sim_uncert` |
 | `IntegralSensitivities` | `Exercise_3/ex3_observations.py` `load_sensitivities` | |
-| `DifferentialSet` | `Exercise_4/ex4_observations.py` `DEFAULT_MARINI_PATH` `load_marini_nubar` `float_array_at` | Marini nu-bar only |
-| `DifferentialSensitivities` | `Exercise_4/ex4_observations.py` `load_marini_nubar` `MARINI_SENSITIVITY_COLUMNS` | Marini nu-bar only |
+| `DifferentialSet` | `Exercise_5/ex5_observations.py` `DEFAULT_MARINI_PATH` `DEFAULT_MARINI_PFNS_PATH` `DEFAULT_KEEGAN_PFNS_PATH` `load_marini_nubar` `load_pfns` `nullable_float_array_at` | Marini nu-bar, Marini and Keegan PFNS; `Exercise_4/ex4_observations.py` reads Marini nu-bar only |
+| `DifferentialSensitivities` | `Exercise_5/ex5_observations.py` `load_marini_nubar` `load_pfns` `MARINI_SENSITIVITY_COLUMNS` `PFNS_INCIDENT_BIN_COUNT` `PFNS_OUTGOING_GROUP_COUNT` | Nu-bar 52 columns; PFNS $10 \times 51$ |
 | `OutputTemplate` | `Exercise_3/export_ex3_excel.py` `TEMPLATE_PATH` `locate_mean_table` `locate_covariance_axes` `question_row` | Release 4 template, same in all four export scripts; data stay release 3 |
 
 ## Prior
@@ -38,12 +38,13 @@ nu-bar); `Exercise_1/` to `Exercise_3/` differ in which responses they select.
 | `SensitivityAlignment` | `Exercise_3/ex3_observations.py` `parameter_to_prior_index` `build_inputs` | |
 | `AbsoluteSensitivity` | `Exercise_3/ex3_observations.py` `build_inputs` | $S = D_C\, s\, D_{\mu_i}^{-1}$ |
 | `ObservationCovariance` | `Exercise_3/ex3_observations.py` `build_inputs` `write_observations` `Exercise_4/ex4_observations.py` `build_marini_inputs` `combine_inputs` `require_positive_definite` | Integral block $\operatorname{diag}(\sigma_E^2 + \sigma_C^2)$, checked against the components by the analysis; Marini block $D_{\sigma_E}\rho D_{\sigma_E}$ |
-| `DifferentialObservations` | `Exercise_4/ex4_observations.py` `load_marini_nubar` `build_marini_inputs` `combine_inputs` | Marini rows appended after the 29 integral rows |
-| `DifferentialSelection` | `Exercise_4/ex4_observations.py` `load_marini_nubar` `MARINI_ENERGY_LIMIT_MEV` `MARINI_RESPONSE_PREFIX` | Drops points above 20 MeV or with a zero sensitivity row |
-| `NubarAsTotal` | `Exercise_4/ex4_observations.py` `total_nubar_prior_index` | |
-| `DifferentialAlignment` | `Exercise_4/ex4_observations.py` `load_marini_nubar` `build_marini_inputs` | Rejects a non-zero column 51 and rows that are not one-hot |
-| `DifferentialCovariance` | `Exercise_4/ex4_observations.py` `build_marini_inputs` `require_positive_definite` | |
-| `IndependentDataSets` | `Exercise_4/ex4_observations.py` `combine_inputs` | |
+| `DifferentialObservations` | `Exercise_5/ex5_observations.py` `load_marini_nubar` `build_marini_inputs` `load_pfns` `build_pfns_inputs` `combine_inputs` | Rows after the 29 integral rows: Marini nu-bar, Marini PFNS, Keegan PFNS. Same nu-bar code in `Exercise_4/ex4_observations.py` |
+| `DifferentialSelection` | `Exercise_5/ex5_observations.py` `load_marini_nubar` `load_pfns` `MARINI_ENERGY_LIMIT_MEV` `PFNS_ENERGY_LIMIT_MEV` `MARINI_PFNS_PREFIX` `KEEGAN_PFNS_PREFIX` | Drops points above 20 MeV, with a zero sensitivity row or (PFNS) a `null` calculated value |
+| `NubarAsTotal` | `Exercise_5/ex5_observations.py` `total_nubar_prior_index` | Same in `Exercise_4/ex4_observations.py` |
+| `DifferentialAlignment` | `Exercise_5/ex5_observations.py` `load_marini_nubar` `build_marini_inputs` `load_pfns` `build_pfns_inputs` | Rejects rows that are not one-hot; nu-bar rejects a non-zero column 51; PFNS checks the one-hot state against an energy lookup |
+| `PfnsObservationModel` | `Exercise_5/ex5_observations.py` `load_pfns` `build_pfns_inputs` `PfnsPoints` | Released block-normalized $C$; one-hot row on `94239_<slice MT>_<group>`, $S = C/\mu_i$ |
+| `DifferentialCovariance` | `Exercise_5/ex5_observations.py` `build_marini_inputs` `build_pfns_inputs` `require_positive_definite` | One block per data set |
+| `IndependentDataSets` | `Exercise_5/ex5_observations.py` `combine_inputs` | Block-diagonal over any number of data sets |
 
 ## GLLS update
 
