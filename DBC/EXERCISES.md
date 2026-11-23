@@ -35,8 +35,9 @@ Questions sheet answers, shared by Exercises 1–3 (Captain, 2026-10-22):
 5. Sensitivity uncertainties: no, they are not propagated (assumption).
 
 Questions sheet answers 6–11, added by the release 4 template (orchestrator
-draft, 2026-11-23; **open:** Captain to confirm the wording). Exercises 1–3:
-all six not applicable, integral responses only.
+draft, 2026-11-23; wording accepted by the Captain the same day, pending
+coordinator feedback on submission). Exercises 1–3: all six not applicable,
+integral responses only.
 Exercise 4:
 
 6. Pointwise inclusion: yes; each Marini point has its own residual
@@ -50,7 +51,7 @@ Exercise 4:
 10. Their normalization: not applicable.
 11. Snyder–Dongwi correlation: not applicable, not used.
 
-Exercise 5 (same open marker):
+Exercise 5:
 
 6. Pointwise inclusion: yes, for Marini nu-bar and both PFNS sets; the
    Marini PFNS points at 27.88 MeV have no evaluated value and are not used.
@@ -387,7 +388,9 @@ sensitivities.
 **Acceptance:** C/E of every SNEAK response with prior and adjusted data;
 to be extended before work starts.
 
-**Result today:** Not started.
+**Result today:** Not started. Ignored by decision of the 2026-10-26 meeting
+(`SG52_materials_release_4/email_for_v4.pdf`, Andry Monlon, 2026-11-06); the
+release 4 template's folder example has no `Ex7/`.
 
 **Concepts:** `ValidationSet` `AdjustedLibrary` `SneakCalculation` `SneakComparison`
 
