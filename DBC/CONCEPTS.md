@@ -118,7 +118,7 @@ flowchart LR
 | `IntegralSet` | JEZEBEL and EUCLID responses: measured and calculated values with their uncertainties, in released row order | integral response, experimental uncertainty, calculation uncertainty | implemented |
 | `IntegralSensitivities` | Relative sensitivities of each integral response to every released nuclide parameter | relative sensitivity | implemented |
 | `DifferentialSet` | Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi fission ratios, SACS-Cf, with their covariances. Marini nu-bar is read; the others are not yet | differential measurement, EXFOR | partial |
-| `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector. Released for nu-bar and the fission sets (used for nu-bar); the PFNS files have none | relative sensitivity, differential sensitivity | partial |
+| `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector: one-hot rows released for nu-bar and the fission sets, and for PFNS since release 4 (none in release 3). Used for nu-bar; PFNS planned | relative sensitivity, differential sensitivity | partial |
 | `ValidationSet` | SNEAK-7A/B models and measured responses | validation benchmark, SNEAK | planned |
 | `OutputTemplate` | The NEA results workbook, release 4 version: questions (eleven, six of them on differential data), groups, prior sheets and full 928-state covariance sheets. The release 3 version until 2026-11-23 had the first five questions only | output template, questions sheet, prior sheets | implemented |
 | `Prior` | See L1 | | external |
@@ -308,22 +308,25 @@ flowchart LR
   PfnsObservationModel["PFNS observation model"]
   DifferentialSet & DifferentialSensitivities --> DifferentialSelection
   DifferentialSelection --> Discrepancy & ObservationCovariance
-  DifferentialSelection & NubarAsTotal --> DifferentialAlignment
+  DifferentialSelection & NubarAsTotal & PfnsObservationModel --> DifferentialAlignment
+  PfnsObservationModel --> Discrepancy
   DifferentialAlignment --> AbsoluteSensitivity
-  DifferentialSet --> PfnsObservationModel
-  PfnsObservationModel --> Discrepancy & AbsoluteSensitivity & ObservationCovariance
   classDef planned stroke-dasharray: 6 4
+  classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
+  class DifferentialSelection,DifferentialAlignment partial
   class PfnsObservationModel planned
   class DifferentialSet,DifferentialSensitivities,Discrepancy,AbsoluteSensitivity,ObservationCovariance external
 ```
 
-A point $k$ is kept when its incident energy lies on the 51-group grid and its
-released sensitivity row is non-zero. The released row has 52 columns; column
-$g \le 50$ is energy group $g$ and column 51 must be zero. The data set names
-the QID its row lands on; nu-bar lands on MT452 (coordinator instruction).
-Measured and calculated values are used as released, so the existing rules
-apply unchanged:
+A point $k$ is kept when its energies lie on the group grids, its released
+sensitivity row is non-zero and its calculated value is not `null`. A nu-bar
+row has 52 columns: column $g \le 50$ is energy group $g$ and column 51 must be
+zero, and the row lands on MT452 (coordinator instruction). A PFNS row is
+$10 \times 51$: PFNS slice $p$ (the pseudo-MT holding $E_\text{in}$) by
+outgoing group $g$ (holding $E_\text{out}$). Measured and calculated values
+are used as released, so the existing rules apply unchanged, with QID the
+data set's QID or, for PFNS, the slice's pseudo-MT:
 
 $$
 s_{k,(\text{QID},g)} = s^{\text{rel}}_{k,g},
@@ -333,12 +336,27 @@ s_{k,(\text{QID},g)} = s^{\text{rel}}_{k,g},
 S_{k,(\text{QID},g)} = \frac{C_k\, s^{\text{rel}}_{k,g}}{\mu_{i,(\text{QID},g)}}
 $$
 
+The released PFNS calculated value is block-normalized: the prior spectrum
+$\chi_i$, a density normalized to one over all outgoing energies, at the
+point, times the data's own integral $I_b$ over the block's measured outgoing
+range (trapezoid rule). The block's $C$ therefore integrates to slightly less
+than $I_b$ over that range (0.95–0.96 of it for Marini, 0.985–0.998 for
+Keegan):
+
+$$
+C_k = \chi_i\!\left(E_{\text{out},k} \mid E_{\text{in},k}\right) I_b,
+\qquad
+\int \chi_i \, dE_\text{out} = 1,
+\qquad
+I_b = \int_b E \, dE_\text{out}
+$$
+
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
-| `DifferentialSelection` | Keep the points of a data set that lie on the 51-group grid and have a non-zero sensitivity row, in released order; give each a response ID | differential point, response ID, energy group | implemented |
+| `DifferentialSelection` | Keep the points of a data set that lie on the group grids, have a non-zero sensitivity row and a calculated value, in released order; give each a response ID. Built for nu-bar; PFNS selection planned | differential point, response ID, energy group | partial |
 | `NubarAsTotal` | Nu-bar data adjust MT452 (total nu-bar), though Marini measured prompt nu-bar; MT456 receives no sensitivity | as-MT452 rule, MT452, MT456 | implemented |
-| `DifferentialAlignment` | Place each released 52-column sensitivity row on the state of its QID and energy group; reject a non-zero column 51 | differential sensitivity, state vector | implemented |
-| `PfnsObservationModel` | How pointwise PFNS points, released without sensitivities or calculated values, map onto the PFNS slices. **Open:** design not fixed | PFNS observation model | planned |
+| `DifferentialAlignment` | Place each released one-hot sensitivity row on its state: QID and energy group for nu-bar (52 columns, column 51 zero), PFNS slice and outgoing group for PFNS ($10 \times 51$). Built for nu-bar; PFNS planned | differential sensitivity, one-hot sensitivity, state vector | partial |
+| `PfnsObservationModel` | PFNS points use the released block-normalized calculated values and one-hot rows on (PFNS slice, outgoing group), with no free normalization factor and no block-normalization term in the sensitivity. Before 2026-11-23 an open design question, because release 3 gave the PFNS files neither calculated values nor sensitivities | PFNS observation model, PFNS block, block-normalized calculated value | planned |
 | `DifferentialSet` | See Release data | | external |
 | `DifferentialSensitivities` | See Release data | | external |
 | `Discrepancy` | See Observations | | external |
@@ -411,8 +429,10 @@ flowchart TD
   EndfComparison["ENDF/B-VIII.1 comparison"]
   Glls --> GllsReproduction & LinearizedResponses & UncertaintyReduction & CovarianceHealth & PfnsChecks & UncertaintyAudit & EndfComparison
   classDef planned stroke-dasharray: 6 4
+  classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
   class EndfComparison planned
+  class LinearizedResponses partial
   class Glls external
 ```
 
@@ -444,7 +464,7 @@ $$
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
 | `GllsReproduction` | Recompute the update independently and compare with the program's posterior | GLLS | implemented |
-| `LinearizedResponses` | Posterior responses predicted to first order, C/E before and after, and the residual identity | linearized prediction, residual identity, C/E | implemented |
+| `LinearizedResponses` | Posterior responses predicted to first order, C/E before and after, and the residual identity; per data set, $\chi^2/m$ before and after and the count within one observation standard deviation. The per-data-set summary is planned | linearized prediction, residual identity, C/E, $\chi^2/m$ | partial |
 | `UncertaintyReduction` | Prior and posterior standard deviations per state, family and QID, and each response's variance split by QID | uncertainty reduction | implemented |
 | `CovarianceHealth` | Symmetry error and eigenvalue range of the prior and posterior covariances | absolute covariance | implemented |
 | `PfnsChecks` | Normalization of each posterior PFNS slice and sign of every posterior state; flags only, no correction | PFNS normalization, positivity | implemented |

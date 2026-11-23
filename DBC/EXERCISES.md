@@ -10,13 +10,14 @@ and signed; any agent may add one.
 
 Acceptance checks shared by every exercise, from the method rules:
 
-- Release 3 data, the experimental and calculation uncertainties (never
-  `total_uncert`), and absolute GLLS.
+- Release data, the experimental and calculation uncertainties (never
+  `total_uncert`), and absolute GLLS. Exercises 1–4 use release 3 data;
+  Exercise 5 on uses release 4, whose prior and integral files are identical.
 - Relative mean adjustment and posterior relative covariance normalized on the
   prior mean.
 - The newest output template, including the prior and questions sheets, in
   scientific format with 11 significant digits: release 4 since 2026-11-23
-  (release 3 before), with release 3 data.
+  (release 3 before).
 - The analysis report states PFNS normalization and positivity flags, and every
   assumption.
 - The workflow reruns from the repository root and the exercise's tests pass.
@@ -229,17 +230,88 @@ release 3; moving it to release 4 is a separate task.
 
 ## Exercise 5 · Add Marini and Keegan PFNS
 
-**Data:** Exercise 4's data plus Marini PFNS (EXFOR 14684002) and Keegan PFNS.
+**Data:** Release 4 throughout. Its prior covariances and integral files are
+byte-identical to release 3, and its Marini nu-bar values to release 3's, so
+Exercise 4's 54 rows carry over unchanged (Marini nu-bar now from
+`Marini nubar/nubar-Marini2021.json`). Then two PFNS data sets, each a list of
+(incident, outgoing energy) pairs in released order:
+Marini PFNS (`Marini PFNS/PFNS_CEAcor.json`, EXFOR 14684002, 1281 points,
+21 PFNS blocks) and Keegan PFNS (`Keegan PFNS/PFNS_ChiNuPu9_Oct2020.json`,
+Chi-Nu, K.J. Kelly, 1277 points, 20 PFNS blocks). Fields per file: $E$ =
+`data.values`, $u$ = `data.uncertainties` (relative), $\rho$ =
+`data.correlations` ($N \times N$, row-major), incident and outgoing
+energies = `data.structure[0].limits` and `data.structure[1].limits` (MeV),
+$C$ = `evaluated data.values` (`null` above 20 MeV), $s^\text{rel}$ =
+`sensitivities.values` ($N \times 10 \times 51$: PFNS slice
+`sensitivities.structure[0].mt` × outgoing group). Kept: the 1220 Marini
+points with $E_\text{in} \le 20$ MeV (the 61 points of the 27.88 MeV block
+have $C$ `null` and zero rows) and all 1277 Keegan points, so
+$m = 54 + 1220 + 1277 = 2551$. Response IDs `marini-pfns-0000` …
+`marini-pfns-1219` and `keegan-pfns-0000` … `keegan-pfns-1276` (released
+index). Row order: Exercise 4's 54 rows, Marini PFNS, Keegan PFNS.
+Observation HDF5 keeps Exercise 4's layout (`/delta`, `/cov`, `/sens`,
+`/responses/*`) with $\sigma_C = 0$ for every differential row. Workflow in
+`Exercise_5/`.
 
-**Assumptions:** To be fixed before work starts.
+**Assumptions:**
+- Exercise 4's assumptions carry over: the as-MT452 rule for Marini nu-bar, no
+  covariance between integral responses, sensitivity uncertainties not
+  propagated, no calculation uncertainty for differential points.
+- PFNS calculated values are the released block-normalized values, used as
+  released: no free normalization factor, no renormalization on the prior.
+  This is how the PFNS shape data are handled. It also makes Marini's
+  multiplicity-weighted convention harmless, because each block's $C$ is
+  scaled to its own data.
+- PFNS sensitivities are the released one-hot rows (value 1 on the PFNS slice
+  holding $E_\text{in}$ and the outgoing group holding $E_\text{out}$), with
+  no term for the block normalization, as released.
+- Each PFNS set's covariance is $D_{\sigma_E} \rho D_{\sigma_E}$ with
+  $\sigma_E = uE$, as for Marini nu-bar; no Peelle's Pertinent Puzzle
+  correction.
+- Independent data sets: no covariance between the integral block, Marini
+  nu-bar, Marini PFNS and Keegan PFNS. The two PFNS files share an EXFOR
+  number but are independent experiments (release README).
 
-**Acceptance:** The shared checks; to be extended before work starts.
+**Acceptance:** The shared checks, plus:
 
-**Result today:** Not started.
+- The first 54 rows of `/delta`, `/sens`, `/responses/*` and the leading
+  54 × 54 block of `/cov` equal Exercise 4's observation file exactly.
+- Every PFNS `/sens` row has one non-zero entry, on the state of the PFNS
+  slice holding $E_\text{in}$ and the outgoing group holding $E_\text{out}$,
+  equal to $C_k / \mu_{i,j}$; that state agrees with a lookup of both
+  energies in the released `sensitivities.structure` limits; every other
+  entry is zero.
+- Each PFNS block of `/cov` is $D_{\sigma_E} \rho D_{\sigma_E}$ with
+  $\sigma_E = uE$, symmetric and positive definite; every block between
+  data sets is zero.
+- `nda` runs on the 2551 × 2551 $\Sigma_E$, and the analysis reproduces its
+  posterior from the inputs.
+- The analysis report gives, per data set (integral, Marini nu-bar, Marini
+  PFNS, Keegan PFNS): count, prior and linearized-posterior $\chi^2/m$, C/E
+  range and the number within one observation standard deviation. It writes
+  every response's row to a CSV, gives PFNS normalization and positivity
+  flags, and names every assumption.
+- The questions sheet answers 6–11 for the PFNS data; the comment sheet
+  states the as-MT452 rule and the PFNS rules.
 
-**Concepts:** `DifferentialSet` `DifferentialSensitivities` `DifferentialObservations` `PfnsChecks`
+**Result today:** Not started (contract 2026-11-23).
 
-**Comments:** —
+**Concepts:** `DifferentialSet` `DifferentialSensitivities` `DifferentialSelection` `NubarAsTotal` `PfnsObservationModel` `DifferentialAlignment` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `GllsReproduction` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
+
+**Comments:** 2026-11-23, orchestrator: release 4 adds `evaluated data` and
+one-hot `sensitivities` to both PFNS files (release 3 had neither), which is
+what makes Exercise 5 possible. Checked before work: the one-hot state of
+every kept point matches a lookup of its energies in the released limits;
+no kept point lands on a zero prior mean; both kept correlation matrices are
+positive definite (smallest eigenvalue 0.79 Marini, 0.097 Keegan). Keegan
+has 45 points with relative uncertainty above 1 (up to 346), so they carry
+almost no weight. Each block's released $C$ integrates to 0.952–0.956
+(Marini) and 0.985–0.998 (Keegan) of the data's integral over the block's
+measured outgoing range, because the prior spectrum is normalized over all
+outgoing energies. Taken as released, the PFNS discrepancies therefore carry
+a positive block-level offset (about 4.5 % for Marini). The PFNS
+normalization flags will show whether the update turns that offset into
+slice mass.
 
 ## Exercise 6 · Add Snyder, compare with ENDF/B-VIII.1
 
