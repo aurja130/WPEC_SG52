@@ -185,7 +185,7 @@ class MariniPoints:
 
 @dataclass(frozen=True)
 class PfnsPoints:
-    """Released PFNS points kept by the Exercise 8 selection and alignment rules."""
+    """Released PFNS points kept by the PFNS selection rules (unchanged since Exercise 5)."""
 
     response_indices: tuple[str, ...]
     released_indices: tuple[int, ...]

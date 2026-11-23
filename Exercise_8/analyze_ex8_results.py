@@ -1321,7 +1321,9 @@ def analyze(args: AnalysisArgs) -> str:
     )
     add(
         "(x) Snyder and Dongwi independent of all other data sets and of each other "
-        + "(checked: cross blocks exactly zero; no Snyder-Dongwi covariance is released)."
+        + "(checked: cross blocks exactly zero). The release declares Snyder and Dongwi "
+        + "correlated (CorrelatedData) but gives no covariance between them, so their "
+        + "independence is an approximation."
     )
     add()
     add("INPUT DIMENSIONS")

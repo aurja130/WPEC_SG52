@@ -57,7 +57,7 @@ Snyder and Dongwi selection: incident energy at or below 20 MeV and a non-zero s
 - Exercise 6's assumptions carry over, except the ENDF/B-VIII.1 comparison.
 - Dongwi shape normalization: a free normalization factor with prior uncertainty s_N = 1.34 % (the normalization error removed from the shape file, release 4 Differential README), marginalized into the Dongwi covariance as D_σ ρ D_σ + s_N² E Eᵀ; no renormalization on the prior.
 - Snyder shape normalization as in Exercise 6: s_N = 1.17 %.
-- Snyder and Dongwi are independent: no cross-covariance is released between them (the files only flag each other in `CorrelatedData`), so none is applied.
+- Snyder and Dongwi are independent: the release declares the two data sets correlated (`CorrelatedData`) but gives no covariance between them; this is an approximation, so none is applied.
 
 ## Tests
 

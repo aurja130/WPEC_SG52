@@ -712,7 +712,7 @@ RELATIVE_COMMENT_LINES = (
     "Snyder shape normalization: a normalization factor with prior uncertainty 1.17 % (the normalization error removed from the shape file, release 4 Differential README) is marginalized into the Snyder covariance block: D_sigma rho D_sigma + 0.0117^2 E E^T.",
     "Dongwi fission cross section (shape file nfcs_Dongwi2025_shape.json, 91 points up to 19.395 MeV): each point is its own observation, residual E_k - C_k with C_k the released evaluated value (ENDF/B-VIII.0 MT18); one-hot sensitivity on the MT18 group holding E_in, S = C_k / mu_prior.",
     "Dongwi shape normalization: a normalization factor with prior uncertainty 1.34 % (the normalization error removed from the shape file, release 4 Differential README) is marginalized into the Dongwi covariance block: D_sigma rho D_sigma + 0.0134^2 E E^T.",
-    "Snyder and Dongwi are treated as independent: no cross-covariance between them is released (the files only flag each other in CorrelatedData).",
+    "Snyder and Dongwi are treated as independent: the release declares the two data sets correlated (CorrelatedData) but gives no covariance between them; this is an approximation.",
     "Observation covariance is block-diagonal over the six data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder, Dongwi); each differential block except Snyder and Dongwi is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; the Snyder and Dongwi blocks add s_N^2 E E^T (0.0117 and 0.0134).",
 )
 
@@ -769,7 +769,7 @@ QUESTION_ANSWERS = (
     ),
     (
         "For differential data, are you including them as point measurements, computing the residual on the evaluated values available in the json files ? (see pictures below)",
-        "Yes. Every Marini nu-bar, Marini PFNS, Keegan PFNS and Snyder and Dongwi point is its own observation with residual E_k - C_k, C_k = the released 'evaluated data' value from the json file (ENDF/B-VIII.0). Marini nu-bar follows the as-MT452 rule. Marini PFNS points at 27.88 MeV and the Snyder and Dongwi points at 20.54 MeV (no sensitivity) are not used.",
+        "Yes. Every Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder and Dongwi point is its own observation with residual E_k - C_k, C_k = the released 'evaluated data' value from the json file (ENDF/B-VIII.0). Marini nu-bar follows the as-MT452 rule. Marini PFNS points at 27.88 MeV and the Snyder and Dongwi points at 20.54 MeV (no sensitivity) are not used.",
     ),
     (
         "For differential data, are you using a onehot relative sensitivity matrix as the ones included in the json files ? (see pictures below)",
@@ -789,7 +789,7 @@ QUESTION_ANSWERS = (
     ),
     (
         "Do you take into account the correlation between Snyder and Dongwi datasets ?",
-        "No. Snyder and Dongwi are treated as independent: the release gives no covariance between them; the files only flag each other in CorrelatedData.",
+        "No. The release declares the two data sets correlated (CorrelatedData) but gives no covariance between them, so Snyder and Dongwi are treated as independent; this is an approximation.",
     ),
 )
 
@@ -901,7 +901,7 @@ def add_absolute_comment_sheet(workbook: Workbook, pfns_line: str) -> None:
         "Snyder shape normalization: a normalization factor with prior uncertainty 1.17 % (the normalization error removed from the shape file, release 4 Differential README) is marginalized into the Snyder covariance block: D_sigma rho D_sigma + 0.0117^2 E E^T.",
         "Dongwi fission cross section (shape file nfcs_Dongwi2025_shape.json, 91 points up to 19.395 MeV): each point is its own observation, residual E_k - C_k with C_k the released evaluated value (ENDF/B-VIII.0 MT18); one-hot sensitivity on the MT18 group holding E_in, S = C_k / mu_prior.",
         "Dongwi shape normalization: a normalization factor with prior uncertainty 1.34 % (the normalization error removed from the shape file, release 4 Differential README) is marginalized into the Dongwi covariance block: D_sigma rho D_sigma + 0.0134^2 E E^T.",
-        "Snyder and Dongwi are treated as independent: no cross-covariance between them is released (the files only flag each other in CorrelatedData).",
+        "Snyder and Dongwi are treated as independent: the release declares the two data sets correlated (CorrelatedData) but gives no covariance between them; this is an approximation.",
         "Observation covariance is block-diagonal over the six data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder, Dongwi); each differential block except Snyder and Dongwi is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; the Snyder and Dongwi blocks add s_N^2 E E^T (0.0117 and 0.0134).",
         pfns_line,
     ]

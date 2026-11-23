@@ -546,9 +546,10 @@ ENDF/B-VIII.1 comparison: the specification asks for it only in Exercise 6
 - Dongwi shape normalization as for Snyder: a factor with prior uncertainty
   $s_N = 1.34\,\%$, marginalized: $\Sigma_E^{(D)} = D_{\sigma_E}\rho
   D_{\sigma_E} + s_N^2 E E^\top$, $\sigma_E = uE$.
-- Snyder and Dongwi are independent: no cross-covariance, because none is
-  released (the files only flag each other in `CorrelatedData`); the
-  questions sheet answers "No" and says why (Captain, 2026-11-23).
+- Snyder and Dongwi are independent: no cross-covariance. The release
+  declares them correlated (`CorrelatedData`) but gives no covariance
+  between them, so independence is an approximation; the questions sheet
+  answers "No" and says why (Captain, 2026-11-23).
 
 **Acceptance:** The shared checks, plus:
 
@@ -565,7 +566,7 @@ ENDF/B-VIII.1 comparison: the specification asks for it only in Exercise 6
   comment sheet states the Dongwi rule.
 
 **Result today:** Built 2026-11-23 on release 4, m = 2733. Gate green: 85
-tests across Exercises 1–8; full workflow rerun from a clean state with
+tests across Exercises 1–6 and 8; full workflow rerun from a clean state with
 identical HDF5 datasets; `nda` reproduced by the analysis to
 $9 \times 10^{-13}$; rows 0–2641 equal to Exercise 6's. $\chi^2/m$ prior →
 posterior: integral 1.25 → 1.19; Marini nu-bar 7.55 → 1.41; Marini PFNS
@@ -574,9 +575,20 @@ posterior: integral 1.25 → 1.19; Marini nu-bar 7.55 → 1.41; Marini PFNS
 linearized posterior: JEZEBEL $k_\text{eff}$ 1.00044 → 1.00037; EUCLID 3x2
 0.99983 → 1.00196; EUCLID 1x8 0.99800 → 1.00094. PFNS normalization largest
 deviation $2.38 \times 10^{-3}$ (slice 01418), flagged; no negative states;
-largest mean shift 2.72 prior standard deviations. Completion review
-pending.
+largest mean shift 2.72 prior standard deviations. Adding Dongwi lowers the
+smallest MT18 relative adjustment in groups 27–50 from +0.31 % (Exercise 6)
+to +0.04 %; the largest stays about +1.34 %. Completion review passed with no
+blockers (2026-11-23).
 
 **Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `DifferentialCovariance` `IndependentDataSets` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
 
-**Comments:** —
+**Comments:** 2026-11-23, orchestrator: completion review (one round): no
+blockers; the reviewer independently confirmed rows 0–2641, the shared
+shape loader (Snyder rows unchanged), the Dongwi rows, sensitivities and
+block, the zero Snyder–Dongwi block and every "Result today" number. Fixed:
+the Snyder–Dongwi wording (the release declares them correlated, no
+covariance given), the point-measurement answer and a docstring. Size of the
+independence approximation (reviewer's one-off check): with fully
+correlated normalization terms ($0.0117 \cdot 0.0134\, E_S E_D^\top$) the
+MT18 relative adjustment changes by at most $3.9 \times 10^{-4}$ and its
+posterior standard deviation grows by at most 1.4 %.
