@@ -315,7 +315,7 @@ flowchart LR
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class CrossSectionShapeModel planned
+  class CrossSectionShapeModel partial
   class DifferentialSet,DifferentialSensitivities,Discrepancy,AbsoluteSensitivity,ObservationCovariance external
 ```
 
@@ -369,7 +369,7 @@ $$
 | `NubarAsTotal` | Nu-bar data adjust MT452 (total nu-bar), though Marini measured prompt nu-bar; MT456 receives no sensitivity | as-MT452 rule, MT452, MT456 | implemented |
 | `DifferentialAlignment` | Place each released one-hot sensitivity row on its state: QID and energy group for nu-bar (52 columns, column 51 zero), PFNS slice and outgoing group for PFNS ($10 \times 51$), checked against a lookup of the point's energies | differential sensitivity, one-hot sensitivity, state vector | implemented |
 | `PfnsObservationModel` | PFNS points use the released block-normalized calculated values and one-hot rows on (PFNS slice, outgoing group), with no free normalization factor and no block-normalization term in the sensitivity. Before 2026-11-23 an open design question, because release 3 gave the PFNS files neither calculated values nor sensitivities | PFNS observation model, PFNS block, block-normalized calculated value | implemented |
-| `CrossSectionShapeModel` | A fission cross-section shape data set (Snyder; Dongwi later) uses its released calculated values and one-hot MT18 rows; its missing normalization is a factor with prior uncertainty equal to the removed normalization error, marginalized into its covariance block as $s_N^2 E E^\top$. Before 2026-11-23 an open design question | shape data set, shape normalization uncertainty, differential sensitivity | planned |
+| `CrossSectionShapeModel` | A fission cross-section shape data set (Snyder; Dongwi later) uses its released calculated values and one-hot MT18 rows; its missing normalization is a factor with prior uncertainty equal to the removed normalization error, marginalized into its covariance block as $s_N^2 E E^\top$. Before 2026-11-23 an open design question. Built for Snyder; Dongwi planned | shape data set, shape normalization uncertainty, differential sensitivity | partial |
 | `DifferentialSet` | See Release data | | external |
 | `DifferentialSensitivities` | See Release data | | external |
 | `Discrepancy` | See Observations | | external |
@@ -444,7 +444,7 @@ flowchart TD
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class EndfComparison planned
+  class EndfComparison partial
   class Glls external
 ```
 
@@ -481,7 +481,7 @@ $$
 | `CovarianceHealth` | Symmetry error and eigenvalue range of the prior and posterior covariances | absolute covariance | implemented |
 | `PfnsChecks` | Normalization of each posterior PFNS slice and sign of every posterior state; flags only, no correction | PFNS normalization, positivity | implemented |
 | `UncertaintyAudit` | Check that each observation standard deviation equals the quadrature of its experimental and calculation uncertainties; fails otherwise. Before 2026-10-22 it compared the release 2 published total uncertainty with that quadrature | experimental uncertainty, calculation uncertainty | implemented |
-| `EndfComparison` | Compare the posterior with ENDF/B-VIII.1 on the same state vector: reference group values of both libraries, a reproduction gate against the released prior, and per-QID target adjustment and consistency | ENDF/B-VIII.1, target adjustment | planned |
+| `EndfComparison` | Compare the posterior with ENDF/B-VIII.1 on the same state vector: reference group values of both libraries, a reproduction gate against the released prior, and per-QID target adjustment and consistency | ENDF/B-VIII.1, target adjustment | partial |
 | `Glls` | See L1 | | external |
 
 #### L3 · ENDF/B-VIII.1 comparison (`EndfComparison`)
@@ -499,7 +499,7 @@ flowchart LR
   Glls --> TargetAdjustment & PosteriorConsistency
   classDef planned stroke-dasharray: 6 4
   classDef external opacity: 0.6
-  class ReferenceGroupValues,ReproductionGate,TargetAdjustment,PosteriorConsistency planned
+  class TargetAdjustment,PosteriorConsistency planned
   class PriorMean,Glls external
 ```
 
@@ -520,8 +520,8 @@ $$
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
-| `ReferenceGroupValues` | Group values of a reference library on the 979-state layout, from NJOY with the release's processing input: GROUPR for cross sections and nu-bar, ERRORR for mubar and for PFNS spectra, PFNS slices averaged over the input's incident energies | reference group values, ENDF/B-VIII.1 | planned |
-| `ReproductionGate` | Compare a QID with VIII.1 only if the same processing of VIII.0 reproduces the released prior means on that QID; list the QIDs that fail, with their error | reproduction gate | planned |
+| `ReferenceGroupValues` | Group values of a reference library on the 979-state layout, from NJOY with the release's processing input: GROUPR for cross sections and nu-bar, ERRORR for mubar and for PFNS spectra, PFNS slices averaged over the input's incident energies | reference group values, ENDF/B-VIII.1 | implemented |
+| `ReproductionGate` | Compare a QID with VIII.1 only if the same processing of VIII.0 reproduces the released prior means on that QID; list the QIDs that fail, with their error | reproduction gate | implemented |
 | `TargetAdjustment` | Relative change from the prior to VIII.1 per state, set against the relative mean adjustment; count the states the update moved toward VIII.1 | target adjustment, relative mean adjustment | planned |
 | `PosteriorConsistency` | VIII.1's distance from the posterior mean in posterior standard deviations per state; count states within one and two | consistency pull | planned |
 | `PriorMean` | See Prior | | external |

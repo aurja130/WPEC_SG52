@@ -6,6 +6,7 @@ tmp/
 *.h5
 *.xlsx
 ex*_analysis/
+ex*_njoy/
 Submission_to_NEA/
 omp.sh
 

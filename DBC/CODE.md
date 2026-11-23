@@ -17,8 +17,8 @@ nu-bar); `Exercise_1/` to `Exercise_3/` differ in which responses they select.
 | `PriorCovariances` | `Exercise_3/ex3_prior.py` `DEFAULT_SOURCE_DIRECTORY` `validate_source_inventory` `load_mean` `load_covariance` `parse_covariance_filename` | Same in `ex1_prior.py` and `ex2_prior.py`. Points at release 3 |
 | `IntegralSet` | `Exercise_3/ex3_observations.py` `OBSERVATION_COLUMNS` `read_csv` `load_observations` | Reads the release 3 columns `expt`, `expt_uncert`, `sim`, `sim_uncert` |
 | `IntegralSensitivities` | `Exercise_3/ex3_observations.py` `load_sensitivities` | |
-| `DifferentialSet` | `Exercise_5/ex5_observations.py` `DEFAULT_MARINI_PATH` `DEFAULT_MARINI_PFNS_PATH` `DEFAULT_KEEGAN_PFNS_PATH` `load_marini_nubar` `load_pfns` `nullable_float_array_at` | Marini nu-bar, Marini and Keegan PFNS; `Exercise_4/ex4_observations.py` reads Marini nu-bar only |
-| `DifferentialSensitivities` | `Exercise_5/ex5_observations.py` `load_marini_nubar` `load_pfns` `MARINI_SENSITIVITY_COLUMNS` `PFNS_INCIDENT_BIN_COUNT` `PFNS_OUTGOING_GROUP_COUNT` | Nu-bar 52 columns; PFNS $10 \times 51$ |
+| `DifferentialSet` | `Exercise_6/ex6_observations.py` `DEFAULT_MARINI_PATH` `DEFAULT_MARINI_PFNS_PATH` `DEFAULT_KEEGAN_PFNS_PATH` `DEFAULT_SNYDER_PATH` `load_marini_nubar` `load_pfns` `load_snyder` `nullable_float_array_at` | Marini nu-bar, Marini and Keegan PFNS, Snyder shape; earlier exercises read subsets |
+| `DifferentialSensitivities` | `Exercise_6/ex6_observations.py` `load_marini_nubar` `load_pfns` `load_snyder` `MARINI_SENSITIVITY_COLUMNS` `SNYDER_SENSITIVITY_COLUMNS` `PFNS_INCIDENT_BIN_COUNT` `PFNS_OUTGOING_GROUP_COUNT` | Nu-bar and Snyder 52 columns; PFNS $10 \times 51$ |
 | `OutputTemplate` | `Exercise_3/export_ex3_excel.py` `TEMPLATE_PATH` `locate_mean_table` `locate_covariance_axes` `question_row` | Release 4 template, same in all four export scripts; data stay release 3 |
 
 ## Prior
@@ -38,13 +38,14 @@ nu-bar); `Exercise_1/` to `Exercise_3/` differ in which responses they select.
 | `SensitivityAlignment` | `Exercise_3/ex3_observations.py` `parameter_to_prior_index` `build_inputs` | |
 | `AbsoluteSensitivity` | `Exercise_3/ex3_observations.py` `build_inputs` | $S = D_C\, s\, D_{\mu_i}^{-1}$ |
 | `ObservationCovariance` | `Exercise_3/ex3_observations.py` `build_inputs` `write_observations` `Exercise_4/ex4_observations.py` `build_marini_inputs` `combine_inputs` `require_positive_definite` | Integral block $\operatorname{diag}(\sigma_E^2 + \sigma_C^2)$, checked against the components by the analysis; Marini block $D_{\sigma_E}\rho D_{\sigma_E}$ |
-| `DifferentialObservations` | `Exercise_5/ex5_observations.py` `load_marini_nubar` `build_marini_inputs` `load_pfns` `build_pfns_inputs` `combine_inputs` | Rows after the 29 integral rows: Marini nu-bar, Marini PFNS, Keegan PFNS. Same nu-bar code in `Exercise_4/ex4_observations.py` |
-| `DifferentialSelection` | `Exercise_5/ex5_observations.py` `load_marini_nubar` `load_pfns` `MARINI_ENERGY_LIMIT_MEV` `PFNS_ENERGY_LIMIT_MEV` `MARINI_PFNS_PREFIX` `KEEGAN_PFNS_PREFIX` | Drops points above 20 MeV, with a zero sensitivity row or (PFNS) a `null` calculated value |
-| `NubarAsTotal` | `Exercise_5/ex5_observations.py` `total_nubar_prior_index` | Same in `Exercise_4/ex4_observations.py` |
-| `DifferentialAlignment` | `Exercise_5/ex5_observations.py` `load_marini_nubar` `build_marini_inputs` `load_pfns` `build_pfns_inputs` | Rejects rows that are not one-hot; nu-bar rejects a non-zero column 51; PFNS checks the one-hot state against an energy lookup |
-| `PfnsObservationModel` | `Exercise_5/ex5_observations.py` `load_pfns` `build_pfns_inputs` `PfnsPoints` | Released block-normalized $C$; one-hot row on `94239_<slice MT>_<group>`, $S = C/\mu_i$ |
-| `DifferentialCovariance` | `Exercise_5/ex5_observations.py` `build_marini_inputs` `build_pfns_inputs` `require_positive_definite` | One block per data set |
-| `IndependentDataSets` | `Exercise_5/ex5_observations.py` `combine_inputs` | Block-diagonal over any number of data sets |
+| `DifferentialObservations` | `Exercise_6/ex6_observations.py` `load_marini_nubar` `build_marini_inputs` `load_pfns` `build_pfns_inputs` `load_snyder` `build_snyder_inputs` `combine_inputs` | Rows after the 29 integral rows: Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder. Exercises 4 and 5 hold the earlier subsets |
+| `DifferentialSelection` | `Exercise_6/ex6_observations.py` `load_marini_nubar` `load_pfns` `load_snyder` `MARINI_ENERGY_LIMIT_MEV` `PFNS_ENERGY_LIMIT_MEV` `SNYDER_ENERGY_LIMIT_MEV` `MARINI_PFNS_PREFIX` `KEEGAN_PFNS_PREFIX` `SNYDER_RESPONSE_PREFIX` | Drops points above 20 MeV, with a zero sensitivity row or (PFNS) a `null` calculated value |
+| `NubarAsTotal` | `Exercise_6/ex6_observations.py` `total_nubar_prior_index` | Same in Exercises 4 and 5 |
+| `DifferentialAlignment` | `Exercise_6/ex6_observations.py` `load_marini_nubar` `build_marini_inputs` `load_pfns` `build_pfns_inputs` `load_snyder` `build_snyder_inputs` | Rejects rows that are not one-hot; nu-bar and Snyder reject a non-zero column 51; PFNS and Snyder check the one-hot state against an energy lookup |
+| `PfnsObservationModel` | `Exercise_6/ex6_observations.py` `load_pfns` `build_pfns_inputs` `PfnsPoints` | Released block-normalized $C$; one-hot row on `94239_<slice MT>_<group>`, $S = C/\mu_i$; same in Exercise 5 |
+| `CrossSectionShapeModel` | `Exercise_6/ex6_observations.py` `load_snyder` `build_snyder_inputs` `SNYDER_NORMALIZATION_UNCERTAINTY` | Snyder only; block $D_{\sigma_E}\rho D_{\sigma_E} + s_N^2 E E^\top$, `/responses/experimental_uncertainty` keeps the shape-only $\sigma_E$ |
+| `DifferentialCovariance` | `Exercise_6/ex6_observations.py` `build_marini_inputs` `build_pfns_inputs` `build_snyder_inputs` `require_positive_definite` | One block per data set |
+| `IndependentDataSets` | `Exercise_6/ex6_observations.py` `combine_inputs` | Block-diagonal over any number of data sets |
 
 ## GLLS update
 
@@ -67,6 +68,9 @@ nu-bar); `Exercise_1/` to `Exercise_3/` differ in which responses they select.
 | `CovarianceHealth` | `Exercise_3/analyze_ex3_results.py` `matrix_symmetry_error` `eig_diagnostics` | |
 | `PfnsChecks` | `Exercise_3/analyze_ex3_results.py` `PfnsRow` `analyze` | Report section "PFNS normalization / positivity" |
 | `UncertaintyAudit` | `Exercise_3/analyze_ex3_results.py` `analyze` | Only in the Exercise 3 analysis; report section "Observation uncertainty" |
+| `EndfComparison` | `Exercise_6/ex6_endf_reference.py` `main` `write_output` | Reference values and gate built; the comparison metrics in the analysis are planned |
+| `ReferenceGroupValues` | `Exercise_6/ex6_endf_reference.py` `run_njoy` `read_njoy_input` `gendf_mf3` `errorr_mf3` `errorr_mf5` `slice_average` `build_library_values` `verify_endf_file` | NJOY work dirs `Exercise_6/ex6_njoy/`; output `Exercise_6/ex6_endf_reference.hdf5` |
+| `ReproductionGate` | `Exercise_6/ex6_endf_reference.py` `reproduction_error` `is_reproduced` `enforce_gate` `REPRODUCTION_TOLERANCE` `EXPECTED_UNREPRODUCED` | Fails loudly if a QID outside the expected three stops reproducing |
 
 ## Submission
 
