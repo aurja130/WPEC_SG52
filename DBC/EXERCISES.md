@@ -475,6 +475,26 @@ README run and gate details. Noted, not acted on: NJOY RECONR on VIII.1
 prints "Error in quantum numbers for Group Number 2 and Channel Number 2"
 for its second resolved range (5–30 keV, LRF = 7, SAMMY); no effect on the
 values was found, and these groups lie below the fast range.
+2026-11-23, orchestrator: **why the posterior moves away from VIII.1**
+(one-off numpy diagnostics on the Exercise 6 files; the GLLS rerun
+reproduces `nda` to $9 \times 10^{-13}$). Of the 247 states that leave the
+two-standard-deviation band, 230 are PFNS; 178 leave only because
+$\sigma_f$ shrank (median $\sigma_f/\sigma_i$ 0.19) with the posterior mean
+still within two prior standard deviations of VIII.1, and 211 moved away.
+Updating with one data set group at a time: integral only keeps 510 of 626
+in the band, integral + nu-bar + Snyder 502, PFNS only 323, so the PFNS
+data alone produce the loss. Rescaling each PFNS block's $C$ to the data
+integral (or a free 10 % block normalization) recovers only 324 → 347.
+Under our observation model the data prefer the posterior to VIII.1:
+linearized $\chi^2/m$ (posterior vs VIII.1) integral 1.18 vs 22.4, Marini
+nu-bar 1.42 vs 9.51, Marini PFNS 0.31 vs 0.47, Keegan PFNS 0.89 vs 1.00,
+Snyder 1.22 vs 1.25. The integral value comes mostly from PFNS slice 01118
+(incident 0.64 eV–0.5 MeV, no differential data): VIII.1 raises its
+0.03–0.5 MeV outgoing mass by 5–8 %, and with the released sensitivities
+(about −0.8 to −1.0 per group) this alone lowers the EUCLID leakage C/E at
+2.4 MeV by 10–22 % (linearized; VIII.0 for every other nuclide). Caveats:
+linearization of changes this large, other nuclides held at VIII.0, and the
+VIII.1 PFNS slices averaged on VIII.0's incident energies.
 
 ## Exercise 7 · SNEAK-7A/B validation
 
