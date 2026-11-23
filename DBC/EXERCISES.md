@@ -488,11 +488,13 @@ integral (or a free 10 % block normalization) recovers only 324 → 347.
 Under our observation model the data prefer the posterior to VIII.1:
 linearized $\chi^2/m$ (posterior vs VIII.1) integral 1.18 vs 22.4, Marini
 nu-bar 1.42 vs 9.51, Marini PFNS 0.31 vs 0.47, Keegan PFNS 0.89 vs 1.00,
-Snyder 1.22 vs 1.25. The integral value comes mostly from PFNS slice 01118
-(incident 0.64 eV–0.5 MeV, no differential data): VIII.1 raises its
-0.03–0.5 MeV outgoing mass by 5–8 %, and with the released sensitivities
-(about −0.8 to −1.0 per group) this alone lowers the EUCLID leakage C/E at
-2.4 MeV by 10–22 % (linearized; VIII.0 for every other nuclide). Caveats:
+Snyder 1.22 vs 1.25. The 15 leakage-spectrum responses give 74 % of VIII.1's
+integral $\chi^2$ (the EUCLID 3x2 U238 capture ratio alone another 17 %), and
+PFNS slice 01118 (incident 0.64 eV–0.5 MeV, no differential data) gives
+83–91 % of their linear change: VIII.1 raises its 0.03–0.5 MeV outgoing mass
+by 5–8 %, and with the released sensitivities (about −0.8 to −1.0 per group)
+this lowers the EUCLID leakage C/E at 2.4 MeV by 10–22 % (linearized; VIII.0
+for every other nuclide). Caveats:
 linearization of changes this large, other nuclides held at VIII.0, and the
 VIII.1 PFNS slices averaged on VIII.0's incident energies.
 
