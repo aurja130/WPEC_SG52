@@ -29,7 +29,7 @@ cards, and HDF5 dataset expectations.
 
 Run each workflow from the repository root. Exercises 1–4 read the release 3
 data in `../SG52_materials/SG52_materials_release_3/` (release 3 replaces
-release 2; the first submission used release 2); Exercises 5 and 6 read
+release 2; the first submission used release 2); Exercises 5, 6 and 8 read
 release 4, whose prior and integral files are identical to release 3's and
 which adds calculated values and sensitivities to the PFNS data. Exercise 6
 also needs NJOY and the ENDF/B-VIII.0 and VIII.1 Pu-239 files (see its
@@ -42,3 +42,7 @@ differential data to the release 3 one:
 - [Exercise 4 — integral responses and Marini nu-bar](Exercise_4/README.md)
 - [Exercise 5 — adds Marini and Keegan PFNS](Exercise_5/README.md)
 - [Exercise 6 — adds Snyder; ENDF/B-VIII.1 comparison](Exercise_6/README.md)
+- [Exercise 8 — adds Dongwi](Exercise_8/README.md)
+
+Exercise 7 (SNEAK-7A/B validation) is ignored by decision of the
+2026-10-26 coordinators' meeting.

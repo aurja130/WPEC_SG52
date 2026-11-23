@@ -564,7 +564,18 @@ ENDF/B-VIII.1 comparison: the specification asks for it only in Exercise 6
 - The questions sheet answers the shape and Snyder–Dongwi questions; the
   comment sheet states the Dongwi rule.
 
-**Result today:** Not started (contract 2026-11-23).
+**Result today:** Built 2026-11-23 on release 4, m = 2733. Gate green: 85
+tests across Exercises 1–8; full workflow rerun from a clean state with
+identical HDF5 datasets; `nda` reproduced by the analysis to
+$9 \times 10^{-13}$; rows 0–2641 equal to Exercise 6's. $\chi^2/m$ prior →
+posterior: integral 1.25 → 1.19; Marini nu-bar 7.55 → 1.41; Marini PFNS
+0.64 → 0.31; Keegan PFNS 1.82 → 0.89; Snyder 1.37 → 1.19; Dongwi 1.47 →
+1.30 (within one observation standard deviation 43 → 76 of 91). C/E prior →
+linearized posterior: JEZEBEL $k_\text{eff}$ 1.00044 → 1.00037; EUCLID 3x2
+0.99983 → 1.00196; EUCLID 1x8 0.99800 → 1.00094. PFNS normalization largest
+deviation $2.38 \times 10^{-3}$ (slice 01418), flagged; no negative states;
+largest mean shift 2.72 prior standard deviations. Completion review
+pending.
 
 **Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `DifferentialCovariance` `IndependentDataSets` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
 
