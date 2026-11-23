@@ -71,15 +71,15 @@ flowchart LR
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class ReleaseData,Observations partial
+  class ReleaseData partial
   class Validation planned
 ```
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
-| `ReleaseData` | The coordinators' input package: prior covariances, integral and differential data with sensitivities, validation benchmarks and the output template. Prior, integral data, Marini nu-bar, both PFNS sets and Snyder are used; Dongwi and validation data are not yet | release, release data | partial |
+| `ReleaseData` | The coordinators' input package: prior covariances, integral and differential data with sensitivities, validation benchmarks and the output template. Prior, integral data and every released differential set are used; the validation data are not (the SNEAK validation step is ignored by decision of the 2026-10-26 meeting) | release, release data | partial |
 | `Prior` | ENDF/B-VIII.0 Pu-239 means and absolute covariance on the state vector | prior, state vector | implemented |
-| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses. Integral responses, Marini nu-bar, Marini and Keegan PFNS and Snyder are built; Dongwi is not | observation, integral response, differential measurement | partial |
+| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses: integral responses, Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi | observation, integral response, differential measurement | implemented |
 | `Glls` | Linear Bayesian update of the prior with the observations, in absolute form | GLLS, posterior | implemented |
 | `Diagnostics` | Checks and summaries of the update: reproduction, linearized responses, uncertainty reduction, covariance health, PFNS normalization and positivity, and the comparison with ENDF/B-VIII.1 | linearized prediction, PFNS normalization, target adjustment | implemented |
 | `Submission` | Relative and absolute results filled into the release 4 output template, normalized on the prior mean. The release 3 template until 2026-11-23; before 2026-10-22 the release 2 template, with the posterior relative covariance normalized on the posterior mean | output template, submission | implemented |
@@ -107,7 +107,6 @@ flowchart LR
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class DifferentialSet,DifferentialSensitivities partial
   class ValidationSet planned
   class Prior,Observations,Validation,Submission external
 ```
@@ -117,8 +116,8 @@ flowchart LR
 | `PriorCovariances` | Released ENDF/B-VIII.0 Pu-239 group means and relative covariance blocks, one file per QID pair | relative covariance, QID | implemented |
 | `IntegralSet` | JEZEBEL and EUCLID responses: measured and calculated values with their uncertainties, in released row order | integral response, experimental uncertainty, calculation uncertainty | implemented |
 | `IntegralSensitivities` | Relative sensitivities of each integral response to every released nuclide parameter | relative sensitivity | implemented |
-| `DifferentialSet` | Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi fission cross sections, SACS-Cf, with their covariances. Marini nu-bar, both PFNS sets and Snyder are read; Dongwi and SACS-Cf are not yet | differential measurement, EXFOR | partial |
-| `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector: one-hot rows released for nu-bar and the fission sets, and for PFNS since release 4 (none in release 3). Used for nu-bar, PFNS and Snyder; Dongwi not yet | relative sensitivity, differential sensitivity | partial |
+| `DifferentialSet` | Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi fission cross sections, with their covariances; all are read. SACS-Cf is listed in the specification but not released | differential measurement, EXFOR | implemented |
+| `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector: one-hot rows released for nu-bar and the fission sets, and for PFNS since release 4 (none in release 3); all are used | relative sensitivity, differential sensitivity | implemented |
 | `ValidationSet` | SNEAK-7A/B models and measured responses | validation benchmark, SNEAK | planned |
 | `OutputTemplate` | The NEA results workbook, release 4 version: questions (eleven, six of them on differential data), groups, prior sheets and full 928-state covariance sheets. The release 3 version until 2026-11-23 had the first five questions only | output template, questions sheet, prior sheets | implemented |
 | `Prior` | See L1 | | external |
@@ -194,7 +193,6 @@ flowchart LR
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class DifferentialObservations partial
   class IntegralSet,IntegralSensitivities,DifferentialSet,DifferentialSensitivities,PriorMean,Glls external
 ```
 
@@ -238,7 +236,7 @@ construction.
 | `SensitivityAlignment` | Map each released Pu-239 sensitivity column to its state; reject duplicates and unknown parameters | relative sensitivity, state vector | implemented |
 | `AbsoluteSensitivity` | Convert relative sensitivities to absolute derivatives with the calculated value and the prior mean | absolute sensitivity | implemented |
 | `ObservationCovariance` | Covariance of the discrepancies, block-diagonal over data sets: the integral block from the experimental and calculation uncertainties (method rule), each differential block from its released correlations. Used the published total uncertainty before 2026-10-22; integral responses only before 2026-10-23 | observation covariance, assumption | implemented |
-| `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules. Built for nu-bar, PFNS and Snyder; Dongwi is not | differential measurement, differential point | partial |
+| `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules. Built for nu-bar, PFNS, Snyder and Dongwi | differential measurement, differential point | implemented |
 | `IntegralSet` | See Release data | | external |
 | `IntegralSensitivities` | See Release data | | external |
 | `DifferentialSet` | See Release data | | external |
@@ -315,7 +313,6 @@ flowchart LR
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class CrossSectionShapeModel partial
   class DifferentialSet,DifferentialSensitivities,Discrepancy,AbsoluteSensitivity,ObservationCovariance external
 ```
 
@@ -369,7 +366,7 @@ $$
 | `NubarAsTotal` | Nu-bar data adjust MT452 (total nu-bar), though Marini measured prompt nu-bar; MT456 receives no sensitivity | as-MT452 rule, MT452, MT456 | implemented |
 | `DifferentialAlignment` | Place each released one-hot sensitivity row on its state: QID and energy group for nu-bar (52 columns, column 51 zero), PFNS slice and outgoing group for PFNS ($10 \times 51$), checked against a lookup of the point's energies | differential sensitivity, one-hot sensitivity, state vector | implemented |
 | `PfnsObservationModel` | PFNS points use the released block-normalized calculated values and one-hot rows on (PFNS slice, outgoing group), with no free normalization factor and no block-normalization term in the sensitivity. Before 2026-11-23 an open design question, because release 3 gave the PFNS files neither calculated values nor sensitivities | PFNS observation model, PFNS block, block-normalized calculated value | implemented |
-| `CrossSectionShapeModel` | A fission cross-section shape data set (Snyder; Dongwi later) uses its released calculated values and one-hot MT18 rows; its missing normalization is a factor with prior uncertainty equal to the removed normalization error, marginalized into its covariance block as $s_N^2 E E^\top$. Before 2026-11-23 an open design question. Built for Snyder; Dongwi planned | shape data set, shape normalization uncertainty, differential sensitivity | partial |
+| `CrossSectionShapeModel` | A fission cross-section shape data set (Snyder, Dongwi) uses its released calculated values and one-hot MT18 rows; its missing normalization is a factor with prior uncertainty equal to the removed normalization error, marginalized into its covariance block as $s_N^2 E E^\top$. Before 2026-11-23 an open design question | shape data set, shape normalization uncertainty, differential sensitivity | implemented |
 | `DifferentialSet` | See Release data | | external |
 | `DifferentialSensitivities` | See Release data | | external |
 | `Discrepancy` | See Observations | | external |

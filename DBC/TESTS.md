@@ -4,7 +4,7 @@ Reference set: [CONCEPTS](CONCEPTS.md) · [CODE](CODE.md) ·
 [DEFINITIONS](DEFINITIONS.md) · [EXERCISES](EXERCISES.md)
 
 Every test, what it checks and the concept nodes it guards. Run all with
-`pytest Exercise_1 Exercise_2 Exercise_3 Exercise_4 Exercise_5` from the repository root. The GLLS
+`pytest Exercise_1 Exercise_2 Exercise_3 Exercise_4 Exercise_5 Exercise_6 Exercise_8` from the repository root. The GLLS
 program has no tests yet.
 
 "Needs" says what a test reads: **synthetic** tests write their own inputs;
@@ -29,3 +29,5 @@ program has no tests yet.
 | `Exercise_6/test_ex6_endf_reference.py::SliceAverageTest` | synthetic | PFNS slice average: a single spectrum is used as is, unequal spacing gives the trapezoid weights, bounds are included, an empty slice raises | `ReferenceGroupValues` |
 | `Exercise_6/test_ex6_endf_reference.py::ReproductionGateTest` | synthetic | The gate passes $5 \times 10^{-7}$ and fails $2 \times 10^{-6}$; a QID outside the expected unreproduced set raises | `ReproductionGate` |
 | `Exercise_6/test_ex6_endf_reference.py::OutputFileTest` | generated output | If `ex6_endf_reference.hdf5` exists: shapes, and every QID outside the expected three reproduces; skipped with a reason when the file is absent | `ReferenceGroupValues` `ReproductionGate` |
+| `Exercise_8/test_ex8_prior.py::PriorCovarianceUnitsTest` | synthetic | Same as the Exercise 1 prior test, on the Exercise 8 copy | `AbsolutePriorCovariance` `StateVector` |
+| `Exercise_8/test_ex8_observations.py::ExerciseEightObservationTest` | release 4 | Rows 0–2641 equal Exercise 6's builder output exactly; `dongwi-00`…`90` follow with released $E$, $C$, $\sigma_E = uE$; each Dongwi sensitivity row has one entry, $C/\mu$, on the MT18 state found by an independent energy lookup; the Dongwi block is $D_{\sigma_E}\rho D_{\sigma_E} + 0.0134^2 E E^\top$ and all blocks between the six data sets are zero, Snyder–Dongwi included; the 20.54 MeV point is dropped; a two-hot row is rejected and a missing Dongwi file fails; the Exercise 6 checks carried over | `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `DifferentialCovariance` `IndependentDataSets` |
