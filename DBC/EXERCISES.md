@@ -485,6 +485,10 @@ Updating with one data set group at a time: integral only keeps 510 of 626
 in the band, integral + nu-bar + Snyder 502, PFNS only 323, so the PFNS
 data alone produce the loss. Rescaling each PFNS block's $C$ to the data
 integral (or a free 10 % block normalization) recovers only 324 → 347.
+Building every differential $\sigma_E$ on $C$ instead of $E$ (a PPP-style
+variant, as in the coordinators' own Exercise 6 slide; left aside for
+submissions by the 2026-10-26 meeting) gives 375 in the band and 283 of 541
+changed states moved toward VIII.1 (186 as submitted).
 Under our observation model the data prefer the posterior to VIII.1:
 linearized $\chi^2/m$ (posterior vs VIII.1) integral 1.18 vs 22.4, Marini
 nu-bar 1.42 vs 9.51, Marini PFNS 0.31 vs 0.47, Keegan PFNS 0.89 vs 1.00,
