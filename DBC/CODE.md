@@ -68,7 +68,9 @@ nu-bar); `Exercise_1/` to `Exercise_3/` differ in which responses they select.
 | `CovarianceHealth` | `Exercise_3/analyze_ex3_results.py` `matrix_symmetry_error` `eig_diagnostics` | |
 | `PfnsChecks` | `Exercise_3/analyze_ex3_results.py` `PfnsRow` `analyze` | Report section "PFNS normalization / positivity" |
 | `UncertaintyAudit` | `Exercise_3/analyze_ex3_results.py` `analyze` | Only in the Exercise 3 analysis; report section "Observation uncertainty" |
-| `EndfComparison` | `Exercise_6/ex6_endf_reference.py` `main` `write_output` | Reference values and gate built; the comparison metrics in the analysis are planned |
+| `EndfComparison` | `Exercise_6/ex6_endf_reference.py` `main` `write_output` `Exercise_6/analyze_ex6_results.py` `read_endf_reference` `compare_with_endf` `endf_stats` | Report section "ENDF/B-VIII.1 comparison"; `endf_comparison_states.csv`, `endf_comparison_qids.csv`, `target_vs_adjustment.png` |
+| `TargetAdjustment` | `Exercise_6/analyze_ex6_results.py` `compare_with_endf` `endf_stats` `make_plots` | $t$, $r$ and "moved toward" per state and QID |
+| `PosteriorConsistency` | `Exercise_6/analyze_ex6_results.py` `compare_with_endf` `endf_stats` | $z_i$, $z_f$ per state; counts within one and two per QID |
 | `ReferenceGroupValues` | `Exercise_6/ex6_endf_reference.py` `run_njoy` `read_njoy_input` `gendf_mf3` `errorr_mf3` `errorr_mf5` `slice_average` `build_library_values` `verify_endf_file` | NJOY work dirs `Exercise_6/ex6_njoy/`; output `Exercise_6/ex6_endf_reference.hdf5` |
 | `ReproductionGate` | `Exercise_6/ex6_endf_reference.py` `reproduction_error` `is_reproduced` `enforce_gate` `REPRODUCTION_TOLERANCE` `EXPECTED_UNREPRODUCED` | Fails loudly if a QID outside the expected three stops reproducing |
 

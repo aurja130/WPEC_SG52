@@ -427,7 +427,26 @@ processed with NJOY 2016.78 and the ERRORR part of the release's
   set, normalization factor with 1.17 % prior uncertainty); the comment sheet
   states the Snyder rule.
 
-**Result today:** Not started (contract 2026-11-23).
+**Result today:** Built 2026-11-23 on release 4, m = 2642. Gate green: 61
+tests across Exercises 1–6; full workflow including both NJOY runs rerun from
+a clean state with identical HDF5 datasets and attributes; `nda` reproduced
+by the analysis to $9 \times 10^{-13}$; rows 0–2550 equal to Exercise 5's.
+$\chi^2/m$ prior → posterior: integral 1.25 → 1.18; Marini nu-bar 7.55 →
+1.42; Marini PFNS 0.64 → 0.31; Keegan PFNS 1.82 → 0.89; Snyder 1.37 → 1.22
+(within one observation standard deviation 60 → 84 of 91). C/E prior →
+linearized posterior: JEZEBEL $k_\text{eff}$ 1.00044 → 1.00038; EUCLID 3x2
+0.99983 → 1.00204; EUCLID 1x8 0.99800 → 1.00108. PFNS normalization largest
+deviation $2.39 \times 10^{-3}$ (slice 01418), flagged; no negative states;
+largest mean shift 2.72 prior standard deviations.
+ENDF/B-VIII.1 comparison over the 826 states of the 26 QIDs that pass the
+gate: the update moved 186 of the 644 states where VIII.1 differs from the
+prior toward VIII.1; states within two standard deviations of VIII.1 fell
+from 568 (prior) to 324 (posterior), of 626 with finite posterior standard
+deviation. MT18 in the Snyder groups 27–50: target adjustment within
+±0.9 %, relative adjustment up to 1.4 %, 7 of 24 states moved toward
+VIII.1, 16 of 24 within two posterior standard deviations (24 of 24 before).
+Not compared: PFNS slices 01318, 01518, 01618 (reproduction error
+$1.5$–$2.8 \times 10^{-3}$). Workbooks exported; completion review pending.
 
 **Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `DifferentialCovariance` `IndependentDataSets` `EndfComparison` `ReferenceGroupValues` `ReproductionGate` `TargetAdjustment` `PosteriorConsistency` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
 

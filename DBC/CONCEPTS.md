@@ -71,17 +71,17 @@ flowchart LR
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class ReleaseData,Observations,Diagnostics partial
+  class ReleaseData,Observations partial
   class Validation planned
 ```
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
-| `ReleaseData` | The coordinators' input package: prior covariances, integral and differential data with sensitivities, validation benchmarks and the output template. Prior, integral data, Marini nu-bar and both PFNS sets are used; Snyder, Dongwi and validation data are not yet | release, release data | partial |
+| `ReleaseData` | The coordinators' input package: prior covariances, integral and differential data with sensitivities, validation benchmarks and the output template. Prior, integral data, Marini nu-bar, both PFNS sets and Snyder are used; Dongwi and validation data are not yet | release, release data | partial |
 | `Prior` | ENDF/B-VIII.0 Pu-239 means and absolute covariance on the state vector | prior, state vector | implemented |
-| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses. Integral responses, Marini nu-bar and Marini and Keegan PFNS are built; fission cross-section data are not | observation, integral response, differential measurement | partial |
+| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses. Integral responses, Marini nu-bar, Marini and Keegan PFNS and Snyder are built; Dongwi is not | observation, integral response, differential measurement | partial |
 | `Glls` | Linear Bayesian update of the prior with the observations, in absolute form | GLLS, posterior | implemented |
-| `Diagnostics` | Checks and summaries of the update: reproduction, linearized responses, uncertainty reduction, covariance health, PFNS normalization and positivity. Comparison with ENDF/B-VIII.1 is not built | linearized prediction, PFNS normalization | partial |
+| `Diagnostics` | Checks and summaries of the update: reproduction, linearized responses, uncertainty reduction, covariance health, PFNS normalization and positivity, and the comparison with ENDF/B-VIII.1 | linearized prediction, PFNS normalization, target adjustment | implemented |
 | `Submission` | Relative and absolute results filled into the release 4 output template, normalized on the prior mean. The release 3 template until 2026-11-23; before 2026-10-22 the release 2 template, with the posterior relative covariance normalized on the posterior mean | output template, submission | implemented |
 | `Validation` | Predict the validation benchmarks with the adjusted data and compare with measurement | validation benchmark | planned |
 
@@ -117,8 +117,8 @@ flowchart LR
 | `PriorCovariances` | Released ENDF/B-VIII.0 Pu-239 group means and relative covariance blocks, one file per QID pair | relative covariance, QID | implemented |
 | `IntegralSet` | JEZEBEL and EUCLID responses: measured and calculated values with their uncertainties, in released row order | integral response, experimental uncertainty, calculation uncertainty | implemented |
 | `IntegralSensitivities` | Relative sensitivities of each integral response to every released nuclide parameter | relative sensitivity | implemented |
-| `DifferentialSet` | Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi fission ratios, SACS-Cf, with their covariances. Marini nu-bar and both PFNS sets are read; the others are not yet | differential measurement, EXFOR | partial |
-| `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector: one-hot rows released for nu-bar and the fission sets, and for PFNS since release 4 (none in release 3). Used for nu-bar and PFNS; fission sets not yet | relative sensitivity, differential sensitivity | partial |
+| `DifferentialSet` | Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi fission cross sections, SACS-Cf, with their covariances. Marini nu-bar, both PFNS sets and Snyder are read; Dongwi and SACS-Cf are not yet | differential measurement, EXFOR | partial |
+| `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector: one-hot rows released for nu-bar and the fission sets, and for PFNS since release 4 (none in release 3). Used for nu-bar, PFNS and Snyder; Dongwi not yet | relative sensitivity, differential sensitivity | partial |
 | `ValidationSet` | SNEAK-7A/B models and measured responses | validation benchmark, SNEAK | planned |
 | `OutputTemplate` | The NEA results workbook, release 4 version: questions (eleven, six of them on differential data), groups, prior sheets and full 928-state covariance sheets. The release 3 version until 2026-11-23 had the first five questions only | output template, questions sheet, prior sheets | implemented |
 | `Prior` | See L1 | | external |
@@ -238,7 +238,7 @@ construction.
 | `SensitivityAlignment` | Map each released Pu-239 sensitivity column to its state; reject duplicates and unknown parameters | relative sensitivity, state vector | implemented |
 | `AbsoluteSensitivity` | Convert relative sensitivities to absolute derivatives with the calculated value and the prior mean | absolute sensitivity | implemented |
 | `ObservationCovariance` | Covariance of the discrepancies, block-diagonal over data sets: the integral block from the experimental and calculation uncertainties (method rule), each differential block from its released correlations. Used the published total uncertainty before 2026-10-22; integral responses only before 2026-10-23 | observation covariance, assumption | implemented |
-| `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules. Built for nu-bar and PFNS; the fission cross-section sets are not | differential measurement, differential point | partial |
+| `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules. Built for nu-bar, PFNS and Snyder; Dongwi is not | differential measurement, differential point | partial |
 | `IntegralSet` | See Release data | | external |
 | `IntegralSensitivities` | See Release data | | external |
 | `DifferentialSet` | See Release data | | external |
@@ -441,10 +441,7 @@ flowchart TD
   UncertaintyAudit["Observation uncertainty audit"]
   EndfComparison["ENDF/B-VIII.1 comparison"]
   Glls --> GllsReproduction & LinearizedResponses & UncertaintyReduction & CovarianceHealth & PfnsChecks & UncertaintyAudit & EndfComparison
-  classDef planned stroke-dasharray: 6 4
-  classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class EndfComparison partial
   class Glls external
 ```
 
@@ -481,7 +478,7 @@ $$
 | `CovarianceHealth` | Symmetry error and eigenvalue range of the prior and posterior covariances | absolute covariance | implemented |
 | `PfnsChecks` | Normalization of each posterior PFNS slice and sign of every posterior state; flags only, no correction | PFNS normalization, positivity | implemented |
 | `UncertaintyAudit` | Check that each observation standard deviation equals the quadrature of its experimental and calculation uncertainties; fails otherwise. Before 2026-10-22 it compared the release 2 published total uncertainty with that quadrature | experimental uncertainty, calculation uncertainty | implemented |
-| `EndfComparison` | Compare the posterior with ENDF/B-VIII.1 on the same state vector: reference group values of both libraries, a reproduction gate against the released prior, and per-QID target adjustment and consistency | ENDF/B-VIII.1, target adjustment | partial |
+| `EndfComparison` | Compare the posterior with ENDF/B-VIII.1 on the same state vector: reference group values of both libraries, a reproduction gate against the released prior, and per-QID target adjustment and consistency | ENDF/B-VIII.1, target adjustment | implemented |
 | `Glls` | See L1 | | external |
 
 #### L3 · ENDF/B-VIII.1 comparison (`EndfComparison`)
@@ -497,9 +494,7 @@ flowchart LR
   ReferenceGroupValues & PriorMean --> ReproductionGate
   ReproductionGate --> TargetAdjustment & PosteriorConsistency
   Glls --> TargetAdjustment & PosteriorConsistency
-  classDef planned stroke-dasharray: 6 4
   classDef external opacity: 0.6
-  class TargetAdjustment,PosteriorConsistency planned
   class PriorMean,Glls external
 ```
 
@@ -522,8 +517,8 @@ $$
 |---|---|---|---|
 | `ReferenceGroupValues` | Group values of a reference library on the 979-state layout, from NJOY with the release's processing input: GROUPR for cross sections and nu-bar, ERRORR for mubar and for PFNS spectra, PFNS slices averaged over the input's incident energies | reference group values, ENDF/B-VIII.1 | implemented |
 | `ReproductionGate` | Compare a QID with VIII.1 only if the same processing of VIII.0 reproduces the released prior means on that QID; list the QIDs that fail, with their error | reproduction gate | implemented |
-| `TargetAdjustment` | Relative change from the prior to VIII.1 per state, set against the relative mean adjustment; count the states the update moved toward VIII.1 | target adjustment, relative mean adjustment | planned |
-| `PosteriorConsistency` | VIII.1's distance from the posterior mean in posterior standard deviations per state; count states within one and two | consistency pull | planned |
+| `TargetAdjustment` | Relative change from the prior to VIII.1 per state, set against the relative mean adjustment; count the states the update moved toward VIII.1 | target adjustment, relative mean adjustment | implemented |
+| `PosteriorConsistency` | VIII.1's distance from the posterior mean in posterior standard deviations per state; count states within one and two | consistency pull | implemented |
 | `PriorMean` | See Prior | | external |
 | `Glls` | See L1 | | external |
 
