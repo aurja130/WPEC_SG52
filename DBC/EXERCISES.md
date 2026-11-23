@@ -68,8 +68,8 @@ the reporting changed. Packaged as `UU_Erik_Aurora_SG52_v3`; the release 2
 submission is kept as `_v2`. `_v3` received by the coordinators
 (Andry Monlon, 2026-10-23). Re-exported 2026-11-23 into the release 4
 template: only the questions sheet changed (answers 6–11); every other sheet
-and the absolute workbook are cell-identical to the previous export. Not
-packaged yet.
+and the absolute workbook are cell-identical to the previous export.
+Packaged as `UU_Erik_Aurora_SG52_v4` for the Captain to send.
 
 **Concepts:** `ResponseSelection` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `AbsolutePriorCovariance` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -94,7 +94,7 @@ Same posterior as the release 2 run within $2 \times 10^{-9}$ in relative
 adjustment; only the reporting changed. Packaged as `_v3`; received by the
 coordinators 2026-10-23. Re-exported 2026-11-23 into the release 4 template:
 only the questions sheet changed; every other sheet and the absolute workbook
-are cell-identical to the previous export. Not packaged yet.
+are cell-identical to the previous export. Packaged as `_v4`.
 
 **Concepts:** `ResponseSelection` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -126,8 +126,8 @@ posterior with the `_v2` absolute workbook and the release 2 observation file,
 2026-10-22, the same comparison as for Exercises 1 and 2). Packaged as `_v3`;
 received by the coordinators 2026-10-23. Re-exported 2026-11-23 into the
 release 4 template: only the questions sheet changed; every other sheet and
-the absolute workbook are cell-identical to the previous export. Not packaged
-yet.
+the absolute workbook are cell-identical to the previous export. Packaged as
+`_v4`.
 
 **Concepts:** `ResponseSelection` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `UncertaintyAudit` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -190,7 +190,7 @@ negative states. Completion review passed after one fix. Added 2026-10-26 to
 Captain to send; coordinator comments go into the next round. Re-exported
 2026-11-23 into the release 4 template: only the questions sheet changed
 (answers 6–11); every other sheet and the absolute workbook are
-cell-identical to the previous export. Not packaged yet.
+cell-identical to the previous export. Packaged as `_v4`.
 
 **Concepts:** `ResponseSelection` `DifferentialSet` `DifferentialSensitivities` `DifferentialObservations` `DifferentialSelection` `NubarAsTotal` `DifferentialAlignment` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
