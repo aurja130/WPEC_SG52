@@ -326,8 +326,8 @@ slice's sum rises except 01618; largest deviation $2.40 \times 10^{-3}$
 (slice 01418; Exercise 4 had $1.40 \times 10^{-3}$), flagged. No negative
 states; MT456 unchanged; largest mean shift 2.72 prior standard deviations
 (PFNS states with means near $10^{-8}$). Completion review passed with no
-blockers (2026-11-23). Workbooks in `Exercise_5/Submission/`, not yet copied
-to a submission package.
+blockers (2026-11-23). Added 2026-11-23 to `UU_Erik_Aurora_SG52_v4` (`Ex5/`;
+Ex1–4 unchanged, archives rebuilt) for the Captain to send.
 
 **Concepts:** `DifferentialSet` `DifferentialSensitivities` `DifferentialSelection` `NubarAsTotal` `PfnsObservationModel` `DifferentialAlignment` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `GllsReproduction` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
