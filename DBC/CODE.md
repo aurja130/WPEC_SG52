@@ -19,7 +19,7 @@ nu-bar); `Exercise_1/` to `Exercise_3/` differ in which responses they select.
 | `IntegralSensitivities` | `Exercise_3/ex3_observations.py` `load_sensitivities` | |
 | `DifferentialSet` | `Exercise_4/ex4_observations.py` `DEFAULT_MARINI_PATH` `load_marini_nubar` `float_array_at` | Marini nu-bar only |
 | `DifferentialSensitivities` | `Exercise_4/ex4_observations.py` `load_marini_nubar` `MARINI_SENSITIVITY_COLUMNS` | Marini nu-bar only |
-| `OutputTemplate` | `Exercise_3/export_ex3_excel.py` `TEMPLATE_PATH` `locate_mean_table` `locate_covariance_axes` `question_row` | Release 3 template |
+| `OutputTemplate` | `Exercise_3/export_ex3_excel.py` `TEMPLATE_PATH` `locate_mean_table` `locate_covariance_axes` `question_row` | Release 4 template, same in all four export scripts; data stay release 3 |
 
 ## Prior
 

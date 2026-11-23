@@ -40,6 +40,9 @@ unresolved question.
 | differential covariance | $D_{\sigma_E}\, \rho\, D_{\sigma_E}$ for one differential data set, with $\sigma_E = u E$ from the released relative uncertainties $u$ and correlation matrix $\rho$. No calculation uncertainty: the release gives none (assumption) | release, Captain |
 | independent data sets | Assumption: zero covariance between the integral responses and each differential data set, and between differential data sets | Captain |
 | differential sensitivity | A released 52-column sensitivity row of a differential point: column $g \le 50$ is the relative sensitivity to energy group $g$, column 51 is always zero. Rows for the cross-section and nu-bar sets are one-hot | release |
+| one-hot sensitivity | A differential sensitivity row with a single non-zero entry, equal to 1, on one energy group: no interpolation between groups (the template's alternative, "chain rule", spreads a point over two groups). The release 4 specification requires it; the released Marini nu-bar rows are one-hot | spec, release |
+| pointwise inclusion | Each differential point is its own observation with residual $E_k - C_k$, $C_k$ the released `evaluated data` value at the point's energy, instead of a group-averaged measurement. Required by the release 4 specification; Exercise 4 does it | spec |
+| Peelle's Pertinent Puzzle (PPP) | A least-squares fit with a strongly correlated relative experimental covariance built on the measured values, $\sigma_E = uE$, can fall below all the data; corrections build $\sigma_E$ on calculated or fitted values. Exercise 4 applies no correction | literature, Captain |
 | PFNS observation model | How the pointwise, shape-only PFNS points (Marini, Keegan), released without sensitivities or calculated values, are predicted from the PFNS slices of the state vector. **Open:** design not fixed | Captain |
 | response covariance | $V = S \Sigma_i S^\top + \Sigma_E$, the covariance of the discrepancies including prior nuclear-data uncertainty | Captain |
 | linearized prediction | A response recomputed to first order, $C + S(\mu_f - \mu_i)$; not a transport calculation | Captain |
@@ -48,7 +51,7 @@ unresolved question.
 | uncertainty reduction | Posterior over prior standard deviation, per state, QID or response | Captain |
 | PFNS normalization | Each PFNS slice sums to one over its 51 outgoing groups. GLLS does not enforce it; deviations above $10^{-6}$ are flagged | Captain |
 | positivity | Every posterior state is non-negative. GLLS does not enforce it; negative states are flagged | Captain |
-| method rule | A rule on how to compute results, set by the coordinators: absolute GLLS with consistent normalization in any relative form; normalized on prior; experimental and calculation uncertainties instead of `total_uncert`; the release 3 template with 11 significant digits | feedback |
+| method rule | A rule on how to compute results, set by the coordinators: absolute GLLS with consistent normalization in any relative form; normalized on prior; experimental and calculation uncertainties instead of `total_uncert`; the newest output template (release 4 since 2026-11-23, release 3 before) with 11 significant digits | feedback |
 | assumption | A modelling choice the specification does not make, named in the exercise README, the analysis report and [EXERCISES](EXERCISES.md); e.g. zero covariance between integral responses | Captain |
 | input card | One `CARD … END` block naming an HDF5 file and dataset for the GLLS program | Captain |
 
@@ -56,7 +59,7 @@ unresolved question.
 
 | Term | Meaning | Source |
 |---|---|---|
-| release, release data | One coordinator input package. Release 3 (2026-09-30) replaces release 2; release 2 is kept only to reproduce earlier submissions | feedback |
+| release, release data | One coordinator input package. Release 3 (2026-09-30) replaces release 2; release 2 is kept only to reproduce earlier submissions. Release 4 changes the output template and the differential files (Marini nu-bar renamed `nubar-Marini2021.json`, values unchanged); Exercises 1–4 use release 3 data with the release 4 output template (Captain, 2026-11-23) | feedback, release, Captain |
 | observation | One measured quantity used in the update, with its calculated value, uncertainties and sensitivities | Captain |
 | integral response, response | A benchmark quantity: $k_\text{eff}$, reaction-rate ratio or neutron-leakage-spectrum point of JEZEBEL or EUCLID | spec |
 | response ID | Release identifier of an integral response, e.g. `PU-MET-FAST-001-001-s`, `euclid-3x2-crit`; for a differential point, the data set name and its zero-based index in released order, e.g. `marini-nubar-00` | release, Captain |
@@ -76,12 +79,12 @@ unresolved question.
 
 | Term | Meaning | Source |
 |---|---|---|
-| output template | The NEA results workbook. Release 3 adds sheets for the prior and the questions and allows the full covariance | feedback |
-| questions sheet | The release 3 template sheet of five method questions every participant answers; the shared answers are in [EXERCISES](EXERCISES.md) | feedback |
-| prior sheets | The release 3 template sheets `prior_abs` (absolute prior mean as ingested) and `prior_cov_rel_to_prior` (prior covariance normalized on prior) | feedback |
+| output template | The NEA results workbook. Release 3 adds sheets for the prior and the questions and allows the full covariance; release 4 adds six questions on differential data, illustrated by the organizers' in-cell pictures. Our exports drop those pictures (openpyxl cannot keep them; the cells show `#VALUE!` in Excel; Captain, 2026-11-23) | feedback, release, Captain |
+| questions sheet | The template sheet of method questions every participant answers: five in release 3, eleven in release 4 (six on differential data). The answers are in [EXERCISES](EXERCISES.md) | feedback, release |
+| prior sheets | The release 3 and 4 template sheets `prior_abs` (absolute prior mean as ingested) and `prior_cov_rel_to_prior` (prior covariance normalized on prior) | feedback |
 | submission | The filled output template for one exercise, sent to the NEA | spec |
 | submission version | The package `Submission_to_NEA/UU_Erik_Aurora_SG52_v<N>/`, one `Ex<k>/` folder per exercise. `<N>` is the data release the results use, so every exercise run on release 3 goes into `_v3`, including later additions; a new release starts a new version | Captain |
-| template state selection | The 928 states the release 3 template holds, in its axis order: MT2, 4, 16, 17, 18, 37, 102 (51 groups each), ten mubar, MT452, ten PFNS slices; all states except MT456. Before 2026-10-22, split into 418 cross-section and mubar plus 510 PFNS states for the release 2 template | Captain |
+| template state selection | The 928 states the release 3 and 4 templates hold, in their axis order: MT2, 4, 16, 17, 18, 37, 102 (51 groups each), ten mubar, MT452, ten PFNS slices; all states except MT456. Before 2026-10-22, split into 418 cross-section and mubar plus 510 PFNS states for the release 2 template | Captain |
 | relative mean adjustment | $(\mu_f - \mu_i)/\mu_i$ per state | spec |
 | absolute workbook | Our own workbook with all 979 states, prior and posterior means and full absolute covariances | Captain |
 

@@ -32,7 +32,7 @@ The GLLS executable writes the posterior mean and covariance to
 PFNS normalization checks, and plots. The adjusted criticality value reported
 there is a linearized prediction, not a new transport calculation.
 
-`Submission/Ex1_relative_results.xlsx` fills the release 3 output template
+`Submission/Ex1_relative_results.xlsx` fills the release 4 output template
 (928 states): questions, absolute prior mean, prior and posterior relative
 covariances normalized on the prior mean, and relative mean adjustments, in
 scientific format with 11 significant digits. `Submission/Ex1_absolute_results.xlsx`

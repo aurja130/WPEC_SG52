@@ -82,7 +82,7 @@ flowchart LR
 | `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses. Integral responses and Marini nu-bar are built; PFNS and fission cross-section data are not | observation, integral response, differential measurement | partial |
 | `Glls` | Linear Bayesian update of the prior with the observations, in absolute form | GLLS, posterior | implemented |
 | `Diagnostics` | Checks and summaries of the update: reproduction, linearized responses, uncertainty reduction, covariance health, PFNS normalization and positivity. Comparison with ENDF/B-VIII.1 is not built | linearized prediction, PFNS normalization | partial |
-| `Submission` | Relative and absolute results filled into the release 3 output template, normalized on the prior mean. Before 2026-10-22 it used the release 2 template and normalized the posterior relative covariance on the posterior mean | output template, submission | implemented |
+| `Submission` | Relative and absolute results filled into the release 4 output template, normalized on the prior mean. The release 3 template until 2026-11-23; before 2026-10-22 the release 2 template, with the posterior relative covariance normalized on the posterior mean | output template, submission | implemented |
 | `Validation` | Predict the validation benchmarks with the adjusted data and compare with measurement | validation benchmark | planned |
 
 ### L2 · Release data (`ReleaseData`)
@@ -120,7 +120,7 @@ flowchart LR
 | `DifferentialSet` | Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi fission ratios, SACS-Cf, with their covariances. Marini nu-bar is read; the others are not yet | differential measurement, EXFOR | partial |
 | `DifferentialSensitivities` | Sensitivities of each differential measurement to the state vector. Released for nu-bar and the fission sets (used for nu-bar); the PFNS files have none | relative sensitivity, differential sensitivity | partial |
 | `ValidationSet` | SNEAK-7A/B models and measured responses | validation benchmark, SNEAK | planned |
-| `OutputTemplate` | The NEA results workbook, release 3 version: questions, groups, prior sheets and full 928-state covariance sheets | output template, questions sheet, prior sheets | implemented |
+| `OutputTemplate` | The NEA results workbook, release 4 version: questions (eleven, six of them on differential data), groups, prior sheets and full 928-state covariance sheets. The release 3 version until 2026-11-23 had the first five questions only | output template, questions sheet, prior sheets | implemented |
 | `Prior` | See L1 | | external |
 | `Observations` | See L1 | | external |
 | `Validation` | See L1 | | external |
@@ -501,7 +501,7 @@ including the cross-section–PFNS blocks.
 | `RelativeMeanAdjustment` | Posterior minus prior mean, divided by the prior mean | relative mean adjustment | implemented |
 | `RelativePosteriorCovariance` | Posterior (and prior) covariance divided by the product of two prior means | normalized on prior, relative covariance | implemented |
 | `AbsoluteWorkbook` | All 979 states with prior and posterior means, standard deviations and full absolute covariances | absolute workbook | implemented |
-| `UpdatedTemplate` | The release 3 template filled: questions sheet, prior sheets, relative mean adjustment, full posterior relative covariance, scientific format with 11 significant digits | output template, questions sheet, prior sheets, method rule | implemented |
+| `UpdatedTemplate` | The release 4 template filled (release 3 until 2026-11-23): questions sheet, prior sheets, relative mean adjustment, full posterior relative covariance, scientific format with 11 significant digits | output template, questions sheet, prior sheets, method rule | implemented |
 | `Prior` | See L1 | | external |
 | `Glls` | See L1 | | external |
 | `OutputTemplate` | See Release data | | external |

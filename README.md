@@ -29,7 +29,8 @@ cards, and HDF5 dataset expectations.
 
 Run each workflow from the repository root with the release 3 data in
 `../SG52_materials/SG52_materials_release_3/` (release 3 replaces release 2;
-the first submission used release 2):
+the first submission used release 2). Exercises 1–4 fill the release 4 output
+template, which adds six questions on differential data to the release 3 one:
 
 - [Exercise 1 — JEZEBEL criticality](Exercise_1/README.md)
 - [Exercise 2 — JEZEBEL and EUCLID criticalities](Exercise_2/README.md)

@@ -28,7 +28,7 @@ observation covariance is diagonal; the released sensitivity uncertainties
 (`sens_unc_rel.csv`) are not propagated.
 
 Outputs: `ex2_results.hdf5`, diagnostics in `ex2_analysis/`, and in
-`Submission/` the release 3 template (relative results normalized on the prior
+`Submission/` the release 4 template (relative results normalized on the prior
 mean, 11 significant digits) plus the full-state absolute workbook. Check the
 analysis report for PFNS normalization and positivity; linear GLLS does not
 enforce either constraint.

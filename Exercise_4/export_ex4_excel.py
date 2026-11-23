@@ -32,7 +32,7 @@ EXERCISE_DIRECTORY = Path(__file__).resolve().parent
 TEMPLATE_PATH = (
     REPOSITORY_ROOT.parent
     / "SG52_materials"
-    / "SG52_materials_release_3"
+    / "SG52_materials_release_4"
     / "Output template"
     / "Output_example.xlsx"
 )
@@ -739,6 +739,30 @@ QUESTION_ANSWERS = (
         "Are you taking into account the sensitivity uncertainties ? If yes, elaborate briefly on how you do it.",
         "No. The sensitivity uncertainties of the integral responses (sens_unc_rel.csv) are not propagated; the sensitivities are treated as exact (assumption). The Marini nu-bar file provides no sensitivity uncertainties.",
     ),
+    (
+        "For differential data, are you including them as point measurements, computing the residual on the evaluated values available in the json files ? (see pictures below)",
+        "Yes. Each of the 25 Marini nu-bar points is its own observation with residual E_k - C_k, E_k = 'experimental data'.values and C_k = 'evaluated data'.values (ENDF/B-VIII.0 MT456) from the json file. Under the as-MT452 rule the adjustment is applied to MT452.",
+    ),
+    (
+        "For differential data, are you using a onehot relative sensitivity matrix as the ones included in the json files ? (see pictures below)",
+        "Yes. The relative sensitivities are the released one-hot rows ('sensitivities'.values: one entry equal to 1 per point, no interpolation between groups), placed on MT452 and converted to absolute ones with S[k,j] = C_k * s_rel[k,j] / mu_prior,j.",
+    ),
+    (
+        "Are you correcting the Peelle's Pertinent Puzzle for differential data ?",
+        "No. The Marini covariance is built on the measured values, sigma_k = relative uncertainty x E_k, with the released 25 x 25 correlations; no Peelle's Pertinent Puzzle correction is applied.",
+    ),
+    (
+        "Are you including Marini/Keegan PFNS, Snyder and Dongwi datasets as shape datasets ?",
+        "Not applicable: Exercise 4 uses no PFNS, Snyder or Dongwi data; its only differential data set is Marini nu-bar, used as absolute values.",
+    ),
+    (
+        "If so, do you renormalize them to prior, do you add a free normalization factor, or do you use a different approach ?",
+        "Not applicable: Exercise 4 uses no shape data set.",
+    ),
+    (
+        "Do you take into account the correlation between Snyder and Dongwi datasets ?",
+        "Not applicable: Exercise 4 uses neither Snyder nor Dongwi data.",
+    ),
 )
 
 
@@ -770,7 +794,7 @@ def populate_relative_workbook(
     selection: TemplateSelection,
     index_by_label: dict[str, int],
 ) -> None:
-    """Load the NEA release-3 template, populate mapped cells, and preserve its structure."""
+    """Load the NEA release-4 template, populate mapped cells, and preserve its structure."""
     if not TEMPLATE_PATH.is_file():
         raise FileNotFoundError(
             f"Required Excel template does not exist: {TEMPLATE_PATH}"

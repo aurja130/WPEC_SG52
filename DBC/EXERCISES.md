@@ -14,8 +14,9 @@ Acceptance checks shared by every exercise, from the method rules:
   `total_uncert`), and absolute GLLS.
 - Relative mean adjustment and posterior relative covariance normalized on the
   prior mean.
-- The release 3 output template, including the prior and questions sheets, in
-  scientific format with 11 significant digits.
+- The newest output template, including the prior and questions sheets, in
+  scientific format with 11 significant digits: release 4 since 2026-11-23
+  (release 3 before), with release 3 data.
 - The analysis report states PFNS normalization and positivity flags, and every
   assumption.
 - The workflow reruns from the repository root and the exercise's tests pass.
@@ -31,6 +32,22 @@ Questions sheet answers, shared by Exercises 1–3 (Captain, 2026-10-22):
    sensitivities are made absolute with $C$ and the prior mean.
 4. Posterior covariance normalized on the prior mean: yes.
 5. Sensitivity uncertainties: no, they are not propagated (assumption).
+
+Questions sheet answers 6–11, added by the release 4 template (orchestrator
+draft, 2026-11-23; **open:** Captain to confirm the wording). Exercises 1–3:
+all six not applicable, integral responses only.
+Exercise 4:
+
+6. Pointwise inclusion: yes; each Marini point has its own residual
+   $E_k - C_k$ with $C_k$ the released evaluated value; the as-MT452 rule
+   applies.
+7. One-hot sensitivity: yes, the released rows, made absolute with $C$ and
+   the prior mean on MT452.
+8. Peelle's Pertinent Puzzle: no correction; $\sigma_E = uE$.
+9. Shape data sets (Marini/Keegan PFNS, Snyder, Dongwi): not applicable, not
+   used.
+10. Their normalization: not applicable.
+11. Snyder–Dongwi correlation: not applicable, not used.
 
 ## Exercise 1 · JEZEBEL criticality
 
@@ -49,7 +66,10 @@ states. Same posterior as the release 2 run within $4 \times 10^{-11}$ in
 relative adjustment (`total_uncert` was the component quadrature here); only
 the reporting changed. Packaged as `UU_Erik_Aurora_SG52_v3`; the release 2
 submission is kept as `_v2`. `_v3` received by the coordinators
-(Andry Monlon, 2026-10-23).
+(Andry Monlon, 2026-10-23). Re-exported 2026-11-23 into the release 4
+template: only the questions sheet changed (answers 6–11); every other sheet
+and the absolute workbook are cell-identical to the previous export. Not
+packaged yet.
 
 **Concepts:** `ResponseSelection` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `AbsolutePriorCovariance` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -72,7 +92,9 @@ EUCLID 3x2 0.99983 → 1.0001537; EUCLID 1x8 0.99800 → 0.9990169. Largest PFNS
 normalization deviation $1.61 \times 10^{-4}$ (flagged); no negative states.
 Same posterior as the release 2 run within $2 \times 10^{-9}$ in relative
 adjustment; only the reporting changed. Packaged as `_v3`; received by the
-coordinators 2026-10-23.
+coordinators 2026-10-23. Re-exported 2026-11-23 into the release 4 template:
+only the questions sheet changed; every other sheet and the absolute workbook
+are cell-identical to the previous export. Not packaged yet.
 
 **Concepts:** `ResponseSelection` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -102,7 +124,10 @@ release 2 `total_uncert`. Relative adjustments moved by up to 0.078 and
 posterior standard deviations by up to 22 % (one-off comparison of the
 posterior with the `_v2` absolute workbook and the release 2 observation file,
 2026-10-22, the same comparison as for Exercises 1 and 2). Packaged as `_v3`;
-received by the coordinators 2026-10-23.
+received by the coordinators 2026-10-23. Re-exported 2026-11-23 into the
+release 4 template: only the questions sheet changed; every other sheet and
+the absolute workbook are cell-identical to the previous export. Not packaged
+yet.
 
 **Concepts:** `ResponseSelection` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `UncertaintyAudit` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -162,7 +187,10 @@ MT456 unchanged. Largest PFNS normalization deviation
 $1.40 \times 10^{-3}$ (flagged; $1.38 \times 10^{-3}$ in Exercise 3); no
 negative states. Completion review passed after one fix. Added 2026-10-26 to
 `UU_Erik_Aurora_SG52_v3` (`Ex4/`; Ex1–3 unchanged, archives rebuilt) for the
-Captain to send; coordinator comments go into the next round.
+Captain to send; coordinator comments go into the next round. Re-exported
+2026-11-23 into the release 4 template: only the questions sheet changed
+(answers 6–11); every other sheet and the absolute workbook are
+cell-identical to the previous export. Not packaged yet.
 
 **Concepts:** `ResponseSelection` `DifferentialSet` `DifferentialSensitivities` `DifferentialObservations` `DifferentialSelection` `NubarAsTotal` `DifferentialAlignment` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -192,6 +220,12 @@ questions-sheet answer 5 and the README now name the unpropagated integral
 sensitivity uncertainties and the uncorrelated integral responses. Nits fixed:
 the sensitivity test uses distinct prior means and checks MT456 in all 54 rows;
 the report states that the Marini $\sigma_E$ is built on $E$.
+2026-11-23, orchestrator: release 4 renames the Marini file to
+`nubar-Marini2021.json`. Against release 3, `experimental data`,
+`evaluated data` and `sensitivities.values` (still 25 × 52) are identical;
+only 22 of the 52 `sensitivities.structure.limits` are rounded (largest
+change 0.005 MeV), and the README now says 25 × 51. The workflow still reads
+release 3; moving it to release 4 is a separate task.
 
 ## Exercise 5 · Add Marini and Keegan PFNS
 

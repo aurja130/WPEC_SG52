@@ -23,7 +23,7 @@ python3 -m pytest Exercise_4 -q
 - `Exercise_4/ex4_observations.hdf5`: `/delta`, `/cov`, `/sens`, `/responses/*` for the 54 responses.
 - `Exercise_4/ex4_results.hdf5`: GLLS posterior.
 - `Exercise_4/ex4_analysis/`: analysis report and plots.
-- `Exercise_4/Submission/Ex4_relative_results.xlsx` and `Exercise_4/Submission/Ex4_absolute_results.xlsx`.
+- `Exercise_4/Submission/Ex4_relative_results.xlsx` (release 4 output template) and `Exercise_4/Submission/Ex4_absolute_results.xlsx`.
 
 ## Response set
 

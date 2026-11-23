@@ -38,7 +38,7 @@ CSVs, PFNS normalization data, and four plots. The report reproduces the
 multivariate GLLS update and its coupled residual identity. Its adjusted
 responses are *linearized predictions*, not new transport simulations.
 
-`Submission/Ex3_relative_results.xlsx` fills the release 3 output template
+`Submission/Ex3_relative_results.xlsx` fills the release 4 output template
 (928 states): questions, absolute prior mean, prior and posterior relative
 covariances normalized on the prior mean, and relative mean adjustments, in
 scientific format with 11 significant digits. `Submission/Ex3_absolute_results.xlsx`

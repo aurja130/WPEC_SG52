@@ -32,7 +32,7 @@ EXERCISE_DIRECTORY = Path(__file__).resolve().parent
 TEMPLATE_PATH = (
     REPOSITORY_ROOT.parent
     / "SG52_materials"
-    / "SG52_materials_release_3"
+    / "SG52_materials_release_4"
     / "Output template"
     / "Output_example.xlsx"
 )
@@ -714,6 +714,8 @@ def append_relative_comment(ws: Worksheet) -> None:
             cell.font = Font(bold=True)
 
 
+NO_DIFFERENTIAL_DATA = "Not applicable: Exercise 3 uses integral responses only; no differential data set is included."
+
 QUESTION_ANSWERS = (
     (
         "Are you considering the input covariances as relative covariances ?",
@@ -734,6 +736,30 @@ QUESTION_ANSWERS = (
     (
         "Are you taking into account the sensitivity uncertainties ? If yes, elaborate briefly on how you do it.",
         "No. The sensitivity uncertainties (sens_unc_rel.csv) are not propagated; the sensitivities are treated as exact.",
+    ),
+    (
+        "For differential data, are you including them as point measurements, computing the residual on the evaluated values available in the json files ? (see pictures below)",
+        NO_DIFFERENTIAL_DATA,
+    ),
+    (
+        "For differential data, are you using a onehot relative sensitivity matrix as the ones included in the json files ? (see pictures below)",
+        NO_DIFFERENTIAL_DATA,
+    ),
+    (
+        "Are you correcting the Peelle's Pertinent Puzzle for differential data ?",
+        NO_DIFFERENTIAL_DATA,
+    ),
+    (
+        "Are you including Marini/Keegan PFNS, Snyder and Dongwi datasets as shape datasets ?",
+        NO_DIFFERENTIAL_DATA,
+    ),
+    (
+        "If so, do you renormalize them to prior, do you add a free normalization factor, or do you use a different approach ?",
+        NO_DIFFERENTIAL_DATA,
+    ),
+    (
+        "Do you take into account the correlation between Snyder and Dongwi datasets ?",
+        NO_DIFFERENTIAL_DATA,
     ),
 )
 
@@ -766,7 +792,7 @@ def populate_relative_workbook(
     selection: TemplateSelection,
     index_by_label: dict[str, int],
 ) -> None:
-    """Load the NEA release-3 template, populate mapped cells, and preserve its structure."""
+    """Load the NEA release-4 template, populate mapped cells, and preserve its structure."""
     if not TEMPLATE_PATH.is_file():
         raise FileNotFoundError(
             f"Required Excel template does not exist: {TEMPLATE_PATH}"
