@@ -208,6 +208,7 @@ RELEASE_DIFFERENTIAL_DIRECTORY = (
 )
 MARINI_PFNS_JSON = RELEASE_DIFFERENTIAL_DIRECTORY / "Marini PFNS/PFNS_CEAcor.json"
 KEEGAN_PFNS_JSON = RELEASE_DIFFERENTIAL_DIRECTORY / "Keegan PFNS/PFNS_ChiNuPu9_Oct2020.json"
+MARINI_NUBAR_JSON = RELEASE_DIFFERENTIAL_DIRECTORY / "Marini nubar/nubar-Marini2021.json"
 
 
 def response_family(response_id: str) -> str:
@@ -457,15 +458,23 @@ def read_inputs(
     )
 
 
+def read_released_json(path: Path) -> dict[str, object]:
+    if not path.is_file():
+        raise FileNotFoundError(f"Released file missing: {path}")
+    return cast(dict[str, object], json.loads(path.read_text(encoding="utf-8")))
+
+
+def released_value_count(path: Path, section: str) -> int:
+    """Return the number of released points in the section's values list."""
+    section_data = cast(dict[str, object], read_released_json(path)[section])
+    return len(cast(list[object], section_data["values"]))
+
+
 def read_incident_energies(path: Path) -> FloatArray:
     """Return the released incident energy of each point (data.structure[0].limits)."""
-    if not path.is_file():
-        raise FileNotFoundError(f"Released PFNS file missing: {path}")
-    document = cast(
-        dict[str, dict[str, list[dict[str, list[float]]]]],
-        json.loads(path.read_text(encoding="utf-8")),
-    )
-    return np.asarray(document["data"]["structure"][0]["limits"], dtype=np.float64)
+    data = cast(dict[str, object], read_released_json(path)["data"])
+    structure = cast(list[dict[str, list[float]]], data["structure"])
+    return np.asarray(structure[0]["limits"], dtype=np.float64)
 
 
 
@@ -746,6 +755,33 @@ def analyze(args: AnalysisArgs) -> str:
     validate_observation_covariance(Sigma_E)
     validate_sensitivities(S, metadata)
     kept_counts = {name: count_kept_rows(S, rows) for name, rows in DATA_SETS[1:]}
+    released_counts = {
+        "marini-nubar": released_value_count(MARINI_NUBAR_JSON, "experimental data"),
+        "marini-pfns": released_value_count(MARINI_PFNS_JSON, "data"),
+        "keegan-pfns": released_value_count(KEEGAN_PFNS_JSON, "data"),
+    }
+
+    # Marini PFNS: released indices absent from the response IDs were dropped.
+    marini_pfns_energies = read_incident_energies(MARINI_PFNS_JSON)
+    if marini_pfns_energies.size != released_counts["marini-pfns"]:
+        raise ValueError("Marini PFNS released values and energy structure differ in length")
+    kept_pfns_index: IntArray = np.asarray(
+        [int(rid[-4:]) for rid in response_ids[MARINI_PFNS_ROWS]], dtype=np.intp
+    )
+    dropped_pfns_index: IntArray = np.setdiff1d(
+        np.arange(released_counts["marini-pfns"], dtype=np.intp), kept_pfns_index
+    )
+    dropped_energies = np.unique(marini_pfns_energies[dropped_pfns_index])
+    kept_max_energy = float(np.max(marini_pfns_energies[kept_pfns_index]))
+    if dropped_pfns_index.size:
+        pfns_dropped_text = (
+            f"dropped {dropped_pfns_index.size} at incident "
+            + ("energy " if dropped_energies.size == 1 else "energies ")
+            + ", ".join(f"{float(energy):g}" for energy in dropped_energies)
+            + " MeV"
+        )
+    else:
+        pfns_dropped_text = "dropped 0"
 
     # ----------------------
     # Reproduce GLLS update
@@ -1159,7 +1195,8 @@ def analyze(args: AnalysisArgs) -> str:
     add(
         "(i) As-MT452 rule: Marini nu-bar sensitivities are placed on total-nu-bar "
         + "(MT452, 94239_00452_*) prior states, per coordinator instruction 2026-10-23 "
-        + "(Update_email.pdf in the release root)."
+        + "(recorded in Update_email.pdf of release 3; the Marini nu-bar values are "
+        + "unchanged in release 4)."
     )
     add(
         "(ii) E and C used as released for every data set; PFNS C is the released "
@@ -1193,12 +1230,11 @@ def analyze(args: AnalysisArgs) -> str:
         + "(sens_unc_rel.csv) are ignored; the differential files provide none."
     )
     add(
-        "(viii) Selection: Marini PFNS keeps the 1220 points with E_in <= 20 MeV and a "
-        + "calculated value (61 at 27.88 MeV dropped); all 1277 Keegan points kept; "
-        + "kept counts read from data: "
-        + f"marini-nubar {kept_counts['marini-nubar']} of {EXPECTED_MARINI_RESPONSES}, "
-        + f"marini-pfns {kept_counts['marini-pfns']} of {EXPECTED_MARINI_PFNS_RESPONSES}, "
-        + f"keegan-pfns {kept_counts['keegan-pfns']} of {EXPECTED_KEEGAN_PFNS_RESPONSES}."
+        "(viii) Selection: kept counts from released data: "
+        + f"marini-nubar {kept_counts['marini-nubar']} of {released_counts['marini-nubar']}, "
+        + f"marini-pfns {kept_counts['marini-pfns']} of {released_counts['marini-pfns']} "
+        + f"(kept E_in <= {kept_max_energy:g} MeV; {pfns_dropped_text}), "
+        + f"keegan-pfns {kept_counts['keegan-pfns']} of {released_counts['keegan-pfns']}."
     )
     add()
     add("INPUT DIMENSIONS")

@@ -50,6 +50,21 @@ Exercise 4:
 10. Their normalization: not applicable.
 11. Snyder–Dongwi correlation: not applicable, not used.
 
+Exercise 5 (same open marker):
+
+6. Pointwise inclusion: yes, for Marini nu-bar and both PFNS sets; the
+   Marini PFNS points at 27.88 MeV have no evaluated value and are not used.
+7. One-hot sensitivity: yes, the released rows; nu-bar on MT452, PFNS on
+   (slice holding $E_\text{in}$, outgoing group holding $E_\text{out}$).
+8. Peelle's Pertinent Puzzle: no correction; $\sigma_E = uE$ for every
+   differential set.
+9. Shape data sets: yes for both PFNS sets ("Clean ratio shape"); Snyder and
+   Dongwi not used. This is a judgment: the level comes from the released
+   block-normalized $C$, and no normalization parameter is fitted.
+10. Their normalization: the released block-normalized $C$ as is; no free
+    normalization factor, no renormalization on the prior.
+11. Snyder–Dongwi correlation: not applicable, not used.
+
 ## Exercise 1 · JEZEBEL criticality
 
 **Data:** Prior from the release covariances. One integral response: JEZEBEL
@@ -310,8 +325,9 @@ linearized posterior: JEZEBEL $k_\text{eff}$ 1.00044 → 1.00038; EUCLID 3x2
 slice's sum rises except 01618; largest deviation $2.40 \times 10^{-3}$
 (slice 01418; Exercise 4 had $1.40 \times 10^{-3}$), flagged. No negative
 states; MT456 unchanged; largest mean shift 2.72 prior standard deviations
-(PFNS states with means near $10^{-8}$). Workbooks exported, not yet
-packaged; completion review pending.
+(PFNS states with means near $10^{-8}$). Completion review passed with no
+blockers (2026-11-23). Workbooks in `Exercise_5/Submission/`, not yet copied
+to a submission package.
 
 **Concepts:** `DifferentialSet` `DifferentialSensitivities` `DifferentialSelection` `NubarAsTotal` `PfnsObservationModel` `DifferentialAlignment` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `GllsReproduction` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -329,6 +345,17 @@ outgoing energies. Taken as released, the PFNS discrepancies therefore carry
 a positive block-level offset (about 4.5 % for Marini). The PFNS
 normalization flags will show whether the update turns that offset into
 slice mass.
+2026-11-23, orchestrator: completion review (one round): no blockers;
+reviewer independently confirmed rows 0–53, selection, alignment, $S = C/\mu$,
+covariance blocks and every "Result today" number. Nits fixed: the questions
+sheet's normalization answer and the block-normalized definition now say that
+$C$ integrates to less than the data over the measured range; the comment
+sheets carry the script-computed posterior PFNS slice sums instead of
+pointing to the analysis report, which the NEA does not receive; report
+assumption (viii) reads its kept/released counts and dropped energies from
+the JSON; (i) names release 3's `Update_email.pdf`. Open proposal:
+`state_summary.csv` is 21 MB because it carries 2 × 2551 per-response
+columns.
 
 ## Exercise 6 · Add Snyder, compare with ENDF/B-VIII.1
 

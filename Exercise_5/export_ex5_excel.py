@@ -709,17 +709,36 @@ RELATIVE_COMMENT_LINES = (
     "PFNS data (Marini PFNS, 1220 points up to 20 MeV; Keegan PFNS, 1277 points): each point is its own observation, residual E_k - C_k with C_k the released block-normalized evaluated value (ENDF/B-VIII.0 spectrum normalized to one over all outgoing energies, times the trapezoid integral of the measured values over the block's measured outgoing range).",
     "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term, no free normalization factor.",
     "Observation covariance is block-diagonal over the four data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS); each differential block is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations.",
-    "GLLS does not enforce PFNS normalization; see the PFNS normalization flags in the analysis report.",
 )
 
 
-def append_relative_comment(ws: Worksheet) -> None:
+def append_relative_comment(ws: Worksheet, pfns_line: str) -> None:
     start_row = ws.max_row + 2
-    for offset, line in enumerate(RELATIVE_COMMENT_LINES):
+    for offset, line in enumerate((*RELATIVE_COMMENT_LINES, pfns_line)):
         cell = ws.cell(start_row + offset, 1, line)
         cell.alignment = Alignment(wrap_text=True, vertical="top")
         if offset == 0:
             cell.font = Font(bold=True)
+
+
+def pfns_normalization_comment(index_by_label: dict[str, int], mu_f: FloatArray) -> str:
+    """Summarize posterior PFNS normalization from the posterior mean; no renormalization."""
+    slice_sums: dict[str, float] = {}
+    for qid in PRIOR_PFNS_IDS:
+        indices = [
+            index_by_label[f"{ZAID}_{qid}_{group}"] for group in range(N_GROUPS)
+        ]
+        slice_sums[qid] = float(np.sum(mu_f[indices]))
+    worst_qid = max(slice_sums, key=lambda qid: abs(slice_sums[qid] - 1.0))
+    largest_deviation = abs(slice_sums[worst_qid] - 1.0)
+    negative_count = int(np.count_nonzero(mu_f < 0.0))
+    sum_text = ", ".join(f"{qid} {total:#.11g}" for qid, total in slice_sums.items())
+    return (
+        "GLLS does not enforce PFNS normalization and the posterior is not renormalized. "
+        + f"Posterior PFNS slice sums: {sum_text}; "
+        + f"largest |sum - 1| = {largest_deviation:.10e} (slice {worst_qid}); "
+        + f"negative posterior states: {negative_count}."
+    )
 
 
 QUESTION_ANSWERS = (
@@ -761,7 +780,7 @@ QUESTION_ANSWERS = (
     ),
     (
         "If so, do you renormalize them to prior, do you add a free normalization factor, or do you use a different approach ?",
-        "We use the released evaluated values as calculated values: the prior spectrum is put on the level of each measured block by the organizers (unit-normalized ENDF/B-VIII.0 spectrum times the trapezoid integral of the block's measured values). No free normalization factor and no renormalization on the prior; the one-hot sensitivities carry no block-normalization term.",
+        "We use the released evaluated values as calculated values: the released evaluated value is the ENDF/B-VIII.0 spectrum normalized to one over all outgoing energies, times the trapezoid integral of the block's measured values over the measured outgoing range; over that range it integrates to slightly less than the data (the spectrum's mass outside the measured range). No free normalization factor and no renormalization on the prior; the one-hot sensitivities carry no block-normalization term.",
     ),
     (
         "Do you take into account the correlation between Snyder and Dongwi datasets ?",
@@ -797,6 +816,7 @@ def populate_relative_workbook(
     relative: RelativeOutputs,
     selection: TemplateSelection,
     index_by_label: dict[str, int],
+    pfns_line: str,
 ) -> None:
     """Load the NEA release-4 template, populate mapped cells, and preserve its structure."""
     if not TEMPLATE_PATH.is_file():
@@ -831,7 +851,7 @@ def populate_relative_workbook(
         selection.axis_labels,
         relative.posterior_covariance,
     )
-    append_relative_comment(cast(Worksheet, workbook["Comment"]))
+    append_relative_comment(cast(Worksheet, workbook["Comment"]), pfns_line)
 
     workbook.save(RELATIVE_OUTPUT_PATH)
     workbook.close()
@@ -857,7 +877,7 @@ def write_only_cell(
     return cell
 
 
-def add_absolute_comment_sheet(workbook: Workbook) -> None:
+def add_absolute_comment_sheet(workbook: Workbook, pfns_line: str) -> None:
     ws = cast(Worksheet, workbook.create_sheet("Comment"))
     ws.column_dimensions["A"].width = 120
     lines = [
@@ -873,7 +893,7 @@ def add_absolute_comment_sheet(workbook: Workbook) -> None:
         "PFNS data (Marini PFNS, 1220 points up to 20 MeV; Keegan PFNS, 1277 points): each point is its own observation, residual E_k - C_k with C_k the released block-normalized evaluated value (ENDF/B-VIII.0 spectrum normalized to one over all outgoing energies, times the trapezoid integral of the measured values over the block's measured outgoing range).",
         "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term, no free normalization factor.",
         "Observation covariance is block-diagonal over the four data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS); each differential block is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations.",
-        "GLLS does not enforce PFNS normalization; see the PFNS normalization flags in the analysis report.",
+        pfns_line,
     ]
     for index, line in enumerate(lines):
         style = "absolute_header" if index == 0 else None
@@ -966,7 +986,9 @@ def add_absolute_covariance_sheet(
         ws.append(row)
 
 
-def populate_absolute_workbook(metadata: list[StateMeta], data: InputData) -> None:
+def populate_absolute_workbook(
+    metadata: list[StateMeta], data: InputData, pfns_line: str
+) -> None:
     """Create the complete absolute workbook in constant-memory write-only mode."""
     workbook = Workbook(write_only=True)
     workbook.add_named_style(NamedStyle(name="absolute_header", font=Font(bold=True)))
@@ -974,7 +996,7 @@ def populate_absolute_workbook(metadata: list[StateMeta], data: InputData) -> No
         NamedStyle(name="absolute_scientific", number_format=SCIENTIFIC_FORMAT)
     )
 
-    add_absolute_comment_sheet(workbook)
+    add_absolute_comment_sheet(workbook, pfns_line)
     add_state_values_sheet(workbook, metadata, data)
     labels = [item.label for item in metadata]
     add_absolute_covariance_sheet(
@@ -1018,10 +1040,11 @@ def main() -> None:
     selection = build_template_selection(index_by_label)
     relative = calculate_relative_outputs(data, selection)
     diagnostics = validate_relative_outputs(data, selection, relative)
+    pfns_line = pfns_normalization_comment(index_by_label, data.mu_f)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    populate_relative_workbook(data, relative, selection, index_by_label)
-    populate_absolute_workbook(metadata, data)
+    populate_relative_workbook(data, relative, selection, index_by_label, pfns_line)
+    populate_absolute_workbook(metadata, data, pfns_line)
     validate_outputs()
 
     print(f"Loaded {EXPECTED_STATE_SIZE}-state, 2551-response Exercise-5 result.")
