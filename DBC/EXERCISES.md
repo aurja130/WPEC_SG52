@@ -578,7 +578,8 @@ deviation $2.38 \times 10^{-3}$ (slice 01418), flagged; no negative states;
 largest mean shift 2.72 prior standard deviations. Adding Dongwi lowers the
 smallest MT18 relative adjustment in groups 27–50 from +0.31 % (Exercise 6)
 to +0.04 %; the largest stays about +1.34 %. Completion review passed with no
-blockers (2026-11-23).
+blockers (2026-11-23). Added 2026-11-23 to `UU_Erik_Aurora_SG52_v4` (`Ex8/`;
+Ex1–6 unchanged, archives rebuilt) for the Captain to send.
 
 **Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `DifferentialCovariance` `IndependentDataSets` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
 
