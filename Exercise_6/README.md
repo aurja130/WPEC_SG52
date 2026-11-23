@@ -22,6 +22,8 @@ python3 -m pytest Exercise_6 -q
 
 `ex6_endf_reference.py` runs NJOY twice (ENDF/B-VIII.0 and ENDF/B-VIII.1); it takes about 5 minutes.
 
+`python3 Exercise_6/ex6_endf_reference.py --skip-njoy` reuses the existing NJOY work dirs in `Exercise_6/ex6_njoy/` instead of rerunning NJOY.
+
 ## Requirements for the reference step
 
 - `njoy` (NJOY2016, BSD-3-Clause license, https://github.com/njoy/NJOY2016) on `PATH`.
@@ -64,11 +66,11 @@ Snyder selection: incident energy at or below 20 MeV and a non-zero sensitivity 
 ## ENDF/B-VIII.1 comparison
 
 - Reference group values: GENDF (GROUPR) MF3 for cross sections and nu-bar; ERRORR MF34 output for mubar; ERRORR MF35 output spectra for PFNS, each PFNS slice being the trapezoid average over the input's `efmean` incident energies inside the slice's range (bounds included). The same procedure is applied to ENDF/B-VIII.1.
-- Reproduction gate: a QID enters the comparison only if the ENDF/B-VIII.0 reference group values reproduce the released prior means of that QID to 10⁻⁶ of the QID's largest value. QIDs that fail the gate are listed with their reproduction error and not compared.
+- Reproduction gate: a QID enters the comparison only if the ENDF/B-VIII.0 reference group values reproduce the released prior means of that QID to 10⁻⁶ of the QID's largest value. QIDs that fail the gate are listed with their reproduction error and not compared; the PFNS slices 01318, 01518 and 01618 are excluded by the gate.
 - Target adjustment: t = (x⁽¹⁾ − μ_i) / μ_i per state, the relative change from the prior to the ENDF/B-VIII.1 reference group values.
 - Relative adjustment: r = (μ_f − μ_i) / μ_i per state, the relative change from the prior to the posterior.
 - Consistency pull: z = (x⁽¹⁾ − μ_f) / σ_f per state, how many posterior standard deviations the ENDF/B-VIII.1 value lies from the posterior mean.
-- Moved toward ENDF/B-VIII.1: |μ_f − x⁽¹⁾| < |μ_i − x⁽¹⁾|. Reported per compared QID as the number of states moved toward, together with the number of states with |z| ≤ 1 and |z| ≤ 2.
+- Moved toward ENDF/B-VIII.1: |μ_f − x⁽¹⁾| < |μ_i − x⁽¹⁾|. Reported per compared QID and in total as the number of states moved toward, out of the states where ENDF/B-VIII.1 differs from the prior (x⁽¹⁾ ≠ μ_i) and the update changed the mean (μ_f ≠ μ_i), with the number of differing states alongside; together with the number of states with |z| ≤ 1 and |z| ≤ 2. The report flags when the posterior is less consistent with VIII.1 than the prior and when fewer than half the changed states moved toward VIII.1.
 
 ## Assumptions
 
@@ -76,7 +78,7 @@ Snyder selection: incident energy at or below 20 MeV and a non-zero sensitivity 
 - Snyder shape normalization: a free normalization factor with prior uncertainty s_N = 1.17 % (the normalization error removed from the shape file, release 4 Differential README), marginalized into the Snyder covariance as D_σ ρ D_σ + s_N² E Eᵀ; no renormalization on the prior.
 - Snyder is independent of every other data set; Dongwi is not used.
 - Reference group values as above; the same procedure is applied to ENDF/B-VIII.1 although its PFNS incident grid differs from ENDF/B-VIII.0's.
-- Reproduction gate as above: every cross-section, nu-bar and mubar QID reproduces exactly; PFNS slices that do not reproduce to the gate tolerance are listed as not compared.
+- Reproduction gate as above: every cross-section, nu-bar and mubar QID reproduces exactly; the PFNS slices 01318, 01518 and 01618 are excluded by the gate and listed as not compared.
 - ENDF/B-VIII.1's ERRORR cross-section output has no MT17 or MT37; the GENDF tape is the source for cross sections.
 
 ## Tests

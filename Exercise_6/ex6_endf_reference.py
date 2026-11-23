@@ -46,7 +46,6 @@ PLAINTEXT_DIRECTORY: Final = COVARIANCE_DIRECTORY / "plaintext"
 NJOY_INPUT_PATH: Final = COVARIANCE_DIRECTORY / "NJOY_input"
 PFNS_ENERGY_PATH: Final = PLAINTEXT_DIRECTORY / "pfns_incident_energies.txt"
 PRIOR_PATH: Final = EXERCISE_DIRECTORY / "ex6_prior.hdf5"
-FALLBACK_PRIOR_PATH: Final = REPOSITORY_ROOT / "Exercise_5" / "ex5_prior.hdf5"
 NJOY_ROOT: Final = EXERCISE_DIRECTORY / "ex6_njoy"
 OUTPUT_PATH: Final = EXERCISE_DIRECTORY / "ex6_endf_reference.hdf5"
 
@@ -331,8 +330,11 @@ def state_position(state_id: str) -> tuple[str, int]:
 
 def load_state_ids() -> tuple[str, ...]:
     """Return the 979 state IDs in the prior's order."""
-    path = PRIOR_PATH if PRIOR_PATH.is_file() else FALLBACK_PRIOR_PATH
-    with h5py.File(path, "r") as h5:
+    if not PRIOR_PATH.is_file():
+        raise FileNotFoundError(
+            f"{PRIOR_PATH} missing; run `python3 Exercise_6/ex6_prior.py` first"
+        )
+    with h5py.File(PRIOR_PATH, "r") as h5:
         dataset = cast(h5py.Dataset, h5["mean/row_indices"])
         raw = cast(list[bytes | str], np.asarray(dataset[()]).tolist())
     return tuple(v.decode("utf-8") if isinstance(v, bytes) else v for v in raw)
@@ -452,9 +454,10 @@ def main() -> None:
         errors[qid] = reproduction_error(values["viii0"][mask], released[qid])
     flags = enforce_gate(errors)
 
+    njoy_input_source = NJOY_INPUT_PATH.relative_to(REPOSITORY_ROOT.parent).as_posix()
     attributes = {
         "njoy_version": versions["viii0"],
-        "njoy_input_source": str(NJOY_INPUT_PATH),
+        "njoy_input_source": njoy_input_source,
         "viii0_endf_sha256": LIBRARIES[0].sha256,
         "viii1_endf_sha256": LIBRARIES[1].sha256,
     }

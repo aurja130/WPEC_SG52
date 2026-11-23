@@ -710,7 +710,7 @@ RELATIVE_COMMENT_LINES = (
     "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term, no free normalization factor.",
     "Snyder fission cross section (shape file nfcs_Snyder2021_shape.json, 91 points up to 19.4 MeV): each point is its own observation, residual E_k - C_k with C_k the released evaluated value (ENDF/B-VIII.0 MT18); one-hot sensitivity on the MT18 group holding E_in, S = C_k / mu_prior.",
     "Snyder shape normalization: a normalization factor with prior uncertainty 1.17 % (the normalization error removed from the shape file, release 4 Differential README) is marginalized into the Snyder covariance block: D_sigma rho D_sigma + 0.0117^2 E E^T.",
-    "Observation covariance is block-diagonal over the five data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder); each differential block is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations.",
+    "Observation covariance is block-diagonal over the five data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder); each differential block except Snyder is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; the Snyder block adds 0.0117^2 E E^T.",
 )
 
 
@@ -896,7 +896,7 @@ def add_absolute_comment_sheet(workbook: Workbook, pfns_line: str) -> None:
         "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term, no free normalization factor.",
         "Snyder fission cross section (shape file nfcs_Snyder2021_shape.json, 91 points up to 19.4 MeV): each point is its own observation, residual E_k - C_k with C_k the released evaluated value (ENDF/B-VIII.0 MT18); one-hot sensitivity on the MT18 group holding E_in, S = C_k / mu_prior.",
         "Snyder shape normalization: a normalization factor with prior uncertainty 1.17 % (the normalization error removed from the shape file, release 4 Differential README) is marginalized into the Snyder covariance block: D_sigma rho D_sigma + 0.0117^2 E E^T.",
-        "Observation covariance is block-diagonal over the five data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder); each differential block is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations.",
+        "Observation covariance is block-diagonal over the five data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder); each differential block except Snyder is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; the Snyder block adds 0.0117^2 E E^T.",
         pfns_line,
     ]
     for index, line in enumerate(lines):

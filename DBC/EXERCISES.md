@@ -439,14 +439,16 @@ linearized posterior: JEZEBEL $k_\text{eff}$ 1.00044 → 1.00038; EUCLID 3x2
 deviation $2.39 \times 10^{-3}$ (slice 01418), flagged; no negative states;
 largest mean shift 2.72 prior standard deviations.
 ENDF/B-VIII.1 comparison over the 826 states of the 26 QIDs that pass the
-gate: the update moved 186 of the 644 states where VIII.1 differs from the
-prior toward VIII.1; states within two standard deviations of VIII.1 fell
-from 568 (prior) to 324 (posterior), of 626 with finite posterior standard
-deviation. MT18 in the Snyder groups 27–50: target adjustment within
-±0.9 %, relative adjustment up to 1.4 %, 7 of 24 states moved toward
-VIII.1, 16 of 24 within two posterior standard deviations (24 of 24 before).
-Not compared: PFNS slices 01318, 01518, 01618 (reproduction error
-$1.5$–$2.8 \times 10^{-3}$). Workbooks exported; completion review pending.
+gate: VIII.1 differs from the prior on 644 states, the update changed 541 of
+them and moved 186 toward VIII.1; states within two standard deviations of
+VIII.1 fell from 568 (prior) to 324 (posterior), of 626 with finite posterior
+standard deviation. Both are automatic flags in the report: the posterior is
+less consistent with VIII.1 than the prior. MT18 in groups 27–50 (22 of the
+24 groups carry Snyder points): target adjustment within ±0.9 %, relative
+adjustment +0.3 to +1.4 %, 7 of 24 states moved toward VIII.1, 16 of 24
+within two posterior standard deviations (24 of 24 before). Not compared:
+PFNS slices 01318, 01518, 01618 (reproduction error $1.5$–$2.8 \times
+10^{-3}$). Completion review passed with no blockers (2026-11-23).
 
 **Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `DifferentialCovariance` `IndependentDataSets` `EndfComparison` `ReferenceGroupValues` `ReproductionGate` `TargetAdjustment` `PosteriorConsistency` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
 
@@ -459,6 +461,18 @@ the GENDF tape is the source for cross sections. VIII.1 changes are large in
 the groups above 0.3 MeV: MT17 −13 to −93 %, MT37 −40 %, MT102 −51 to
 +18 %, MT4 −6 to +20 %, MT16 −10 to +2 %, MT18 within ±0.9 %; PFNS slices
 up to 25 % in groups holding more than $10^{-3}$ of the slice maximum.
+2026-11-23, orchestrator: completion review (one round): no blockers; the
+reviewer independently confirmed rows 0–2550, the Snyder rows and block,
+the GENDF/ERRORR values, the gate (no subset or plain mean of nearby
+`efmean` spectra reproduces the three excluded slices better than
+$2.9 \times 10^{-4}$), the metrics and every "Result today" number. Fixed:
+consistency and "moved toward" flags in the report, the changed-state
+denominator, a `group` column, the comment sheets' Snyder exception, no
+fallback to Exercise 5's prior, a repository-relative NJOY input path,
+README run and gate details. Noted, not acted on: NJOY RECONR on VIII.1
+prints "Error in quantum numbers for Group Number 2 and Channel Number 2"
+for its second resolved range (5–30 keV, LRF = 7, SAMMY); no effect on the
+values was found, and these groups lie below the fast range.
 
 ## Exercise 7 · SNEAK-7A/B validation
 

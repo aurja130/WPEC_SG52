@@ -642,6 +642,7 @@ def grouped_indices(
 class EndfComparison:
     compared: BoolArray
     moved: BoolArray
+    changed: BoolArray
     t: FloatArray
     r: FloatArray
     z_i: FloatArray
@@ -679,6 +680,7 @@ def compare_with_endf(
     compared: BoolArray = np.asarray([reproduced[meta.qid] for meta in metadata], dtype=np.bool_)
     x1 = reference.viii1
     moved: BoolArray = cast(BoolArray, x1 != mu_i)
+    changed: BoolArray = cast(BoolArray, mu_f != mu_i)
     nonzero_mu_i: BoolArray = cast(BoolArray, mu_i != 0.0)
     t: FloatArray = np.full(mu_i.shape, np.nan, dtype=np.float64)
     _ = np.divide(x1 - mu_i, mu_i, out=t, where=nonzero_mu_i)
@@ -692,6 +694,7 @@ def compare_with_endf(
     return EndfComparison(
         compared=compared,
         moved=moved,
+        changed=changed,
         t=t,
         r=r,
         z_i=z_i,
@@ -715,6 +718,7 @@ def endf_stats(endf: EndfComparison, mask: BoolArray) -> dict[str, float | int]:
         "n_finite_z_f": int(np.sum(np.isfinite(endf.z_f[mask]))),
         "n_moved_toward": int(np.sum(endf.toward[mask])),
         "n_x1_ne_mu_i": int(np.sum(endf.moved[mask])),
+        "n_changed": int(np.sum(endf.moved[mask] & endf.changed[mask])),
         "n_abs_z_i_le_2": int(np.sum(np.abs(endf.z_i[mask]) <= 2.0)),
         "n_abs_z_f_le_1": int(np.sum(np.abs(endf.z_f[mask]) <= 1.0)),
         "n_abs_z_f_le_2": int(np.sum(np.abs(endf.z_f[mask]) <= 2.0)),
@@ -1374,6 +1378,7 @@ def analyze(args: AnalysisArgs) -> str:
             {
                 "state": meta.label,
                 "qid": meta.qid,
+                "group": "" if meta.group is None else meta.group,
                 "compared": bool(endf.compared[i]),
                 "x0": float(endf_reference.viii0[i]),
                 "x1": float(endf_reference.viii1[i]),
@@ -1780,7 +1785,8 @@ def analyze(args: AnalysisArgs) -> str:
         add(
             f"{qid:>5s} n={int(stats['n_states']):3d} "
             + f"finite z_f={int(stats['n_finite_z_f']):3d} "
-            + f"moved toward={int(stats['n_moved_toward'])}/{int(stats['n_x1_ne_mu_i'])} "
+            + f"moved toward={int(stats['n_moved_toward'])}/{int(stats['n_changed'])} "
+            + f"(of {int(stats['n_x1_ne_mu_i'])} differing) "
             + f"|z_i|<=2={int(stats['n_abs_z_i_le_2'])} "
             + f"|z_f|<=1={int(stats['n_abs_z_f_le_1'])} "
             + f"|z_f|<=2={int(stats['n_abs_z_f_le_2'])} "
@@ -1790,8 +1796,9 @@ def analyze(args: AnalysisArgs) -> str:
     for qid in endf.not_compared_qids:
         add(f"NOT COMPARED {qid}: reproduction error={fmt(endf.reproduction_error[qid])}")
     add(
-        f"TOTAL ({endf_total['n_states']} compared states): moved toward "
-        + f"{endf_total['n_moved_toward']} of {endf_total['n_x1_ne_mu_i']} with x1 != mu_i; "
+        f"TOTAL ({endf_total['n_states']} compared states): moved toward="
+        + f"{endf_total['n_moved_toward']}/{endf_total['n_changed']} "
+        + f"(of {endf_total['n_x1_ne_mu_i']} differing); "
         + f"|z_i|<=2={endf_total['n_abs_z_i_le_2']} before, "
         + f"|z_f|<=2={endf_total['n_abs_z_f_le_2']} after "
         + f"(finite z_f={endf_total['n_finite_z_f']})."
@@ -1847,6 +1854,25 @@ def analyze(args: AnalysisArgs) -> str:
         flags.append(
             f"Posterior PFNS contains {total_pfns_negative} negative group values. "
             + "Linear GLLS does not enforce positivity."
+        )
+
+    finite_z_f: BoolArray = cast(BoolArray, endf.compared & np.isfinite(endf.z_f))
+    n_finite_z_f_compared = int(np.sum(finite_z_f))
+    n_prior_within_two = int(np.sum(np.abs(endf.z_i[finite_z_f]) <= 2.0))
+    n_posterior_within_two = int(np.sum(np.abs(endf.z_f[finite_z_f]) <= 2.0))
+    if n_posterior_within_two < n_prior_within_two:
+        flags.append(
+            "The posterior is less consistent with ENDF/B-VIII.1 than the prior: states within "
+            + f"two standard deviations of VIII.1 fall from {n_prior_within_two} (prior) to "
+            + f"{n_posterior_within_two} (posterior) of {n_finite_z_f_compared}."
+        )
+
+    n_changed_total = int(endf_total["n_changed"])
+    n_moved_toward_total = int(endf_total["n_moved_toward"])
+    if 2 * n_moved_toward_total < n_changed_total:
+        flags.append(
+            f"The update moved {n_moved_toward_total} of {n_changed_total} changed states "
+            + "toward ENDF/B-VIII.1."
         )
 
     max_pfns_norm_error = max(
