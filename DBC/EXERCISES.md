@@ -525,14 +525,47 @@ release 4 template's folder example has no `Ex7/`.
 
 ## Exercise 8 · Add Dongwi
 
-**Data:** Exercise 6's data plus the Dongwi fission ratio (EXFOR 14851002).
+**Data:** Release 4. Exercise 6's 2642 rows unchanged, then the Dongwi
+fission cross section, shape version (`Dongwi/nfcs_Dongwi2025_shape.json`,
+EXFOR 14851002, 92 points, same incident bins as Snyder within 0.005 MeV).
+Fields as for Snyder: $E$ = `experimental data.values` (b), $u$ =
+`experimental data.uncertainties`, $\rho$ = `experimental data.correlations`
+(92 × 92), incident energy = `experimental data.structure.limits`, $C$ =
+`evaluated data.values` (ENDF/B-VIII.0 MT18), $s^\text{rel}$ =
+`sensitivities.values` (92 × 52, one-hot, column 51 zero). Kept: 91 points;
+the 20.54 MeV point has a zero sensitivity row. Response IDs `dongwi-00` …
+`dongwi-90`; $m = 2733$. Sensitivities on `94239_00018_<group>`, $S =
+C/\mu$. Normalization uncertainty $s_N = 1.34\,\%$ from the release 4
+Differential README (release 3's absolute file gives 1.3426 %: absolute
+covariance = shape covariance + $(0.013426)^2 E E^\top$ exactly). No
+ENDF/B-VIII.1 comparison: the specification asks for it only in Exercise 6
+(Captain, 2026-11-23). Workflow in `Exercise_8/`.
 
-**Assumptions:** To be fixed before work starts.
+**Assumptions:**
+- Exercise 6's assumptions carry over, except the ENDF/B-VIII.1 comparison.
+- Dongwi shape normalization as for Snyder: a factor with prior uncertainty
+  $s_N = 1.34\,\%$, marginalized: $\Sigma_E^{(D)} = D_{\sigma_E}\rho
+  D_{\sigma_E} + s_N^2 E E^\top$, $\sigma_E = uE$.
+- Snyder and Dongwi are independent: no cross-covariance, because none is
+  released (the files only flag each other in `CorrelatedData`); the
+  questions sheet answers "No" and says why (Captain, 2026-11-23).
 
-**Acceptance:** The shared checks; to be extended before work starts.
+**Acceptance:** The shared checks, plus:
 
-**Result today:** Not started.
+- Rows 0–2641 of `/delta`, `/sens`, `/responses/*` and the leading
+  2642 × 2642 block of `/cov` equal Exercise 6's exactly.
+- Dongwi rows: released $E$, $C$, $\sigma_E = uE$; one non-zero sensitivity
+  per row, $C/\mu$ on the MT18 state found by an energy lookup; the block
+  equals $D_{\sigma_E}\rho D_{\sigma_E} + 0.0134^2 E E^\top$, is positive
+  definite, and every block between data sets (Snyder–Dongwi included) is
+  zero.
+- The analysis gives Exercise 6's sections for six data sets, without the
+  ENDF/B-VIII.1 comparison.
+- The questions sheet answers the shape and Snyder–Dongwi questions; the
+  comment sheet states the Dongwi rule.
 
-**Concepts:** `DifferentialSet` `DifferentialObservations`
+**Result today:** Not started (contract 2026-11-23).
+
+**Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `DifferentialCovariance` `IndependentDataSets` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
 
 **Comments:** —
