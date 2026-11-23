@@ -448,7 +448,9 @@ less consistent with VIII.1 than the prior. MT18 in groups 27–50 (22 of the
 adjustment +0.3 to +1.4 %, 7 of 24 states moved toward VIII.1, 16 of 24
 within two posterior standard deviations (24 of 24 before). Not compared:
 PFNS slices 01318, 01518, 01618 (reproduction error $1.5$–$2.8 \times
-10^{-3}$). Completion review passed with no blockers (2026-11-23).
+10^{-3}$). Completion review passed with no blockers (2026-11-23). Added
+2026-11-23 to `UU_Erik_Aurora_SG52_v4` (`Ex6/`; Ex1–5 unchanged, archives
+rebuilt) for the Captain to send.
 
 **Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `DifferentialCovariance` `IndependentDataSets` `EndfComparison` `ReferenceGroupValues` `ReproductionGate` `TargetAdjustment` `PosteriorConsistency` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
 
