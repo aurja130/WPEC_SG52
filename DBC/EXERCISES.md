@@ -294,7 +294,24 @@ Observation HDF5 keeps Exercise 4's layout (`/delta`, `/cov`, `/sens`,
 - The questions sheet answers 6–11 for the PFNS data; the comment sheet
   states the as-MT452 rule and the PFNS rules.
 
-**Result today:** Not started (contract 2026-11-23).
+**Result today:** Built 2026-11-23 on release 4, m = 2551. Gate green: 31
+tests across Exercises 1–5, the full workflow rerun from a clean state, a
+second run giving identical HDF5 datasets, `nda` reproduced by the analysis to
+$5 \times 10^{-13}$, rows 0–53 equal to Exercise 4's. $\chi^2/m$ prior →
+posterior (each set's own $\Sigma_E$ block; Exercise 4's comment used $V$,
+which gives 2.34 for Marini nu-bar): integral 1.25 → 1.16; Marini nu-bar
+7.55 → 1.42; Marini PFNS 0.64 → 0.31; Keegan PFNS 1.82 → 0.89. Within one
+observation standard deviation, prior → posterior: integral 20 → 22, Marini
+nu-bar 21 → 12, Marini PFNS 743 → 931, Keegan PFNS 716 → 586. C/E prior →
+linearized posterior: JEZEBEL $k_\text{eff}$ 1.00044 → 1.00038; EUCLID 3x2
+0.99983 → 1.00218; EUCLID 1x8 0.99800 → 1.00124; Marini nu-bar
+0.9909–1.0121 → 0.9822–0.9967. PFNS block mean C/E: Marini 0.936–1.075 →
+0.914–1.032, Keegan 0.891–2.964 → 0.863–2.512. PFNS normalization: every
+slice's sum rises except 01618; largest deviation $2.40 \times 10^{-3}$
+(slice 01418; Exercise 4 had $1.40 \times 10^{-3}$), flagged. No negative
+states; MT456 unchanged; largest mean shift 2.72 prior standard deviations
+(PFNS states with means near $10^{-8}$). Workbooks exported, not yet
+packaged; completion review pending.
 
 **Concepts:** `DifferentialSet` `DifferentialSensitivities` `DifferentialSelection` `NubarAsTotal` `PfnsObservationModel` `DifferentialAlignment` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `GllsReproduction` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 

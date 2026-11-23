@@ -27,11 +27,16 @@ cards, and HDF5 dataset expectations.
 
 ## Exercise workflows
 
-Run each workflow from the repository root with the release 3 data in
-`../SG52_materials/SG52_materials_release_3/` (release 3 replaces release 2;
-the first submission used release 2). Exercises 1–4 fill the release 4 output
-template, which adds six questions on differential data to the release 3 one:
+Run each workflow from the repository root. Exercises 1–4 read the release 3
+data in `../SG52_materials/SG52_materials_release_3/` (release 3 replaces
+release 2; the first submission used release 2); Exercise 5 reads release 4,
+whose prior and integral files are identical to release 3's and which adds
+calculated values and sensitivities to the PFNS data. All five fill the
+release 4 output template, which adds six questions on differential data to
+the release 3 one:
 
 - [Exercise 1 — JEZEBEL criticality](Exercise_1/README.md)
 - [Exercise 2 — JEZEBEL and EUCLID criticalities](Exercise_2/README.md)
 - [Exercise 3 — all JEZEBEL and EUCLID integral responses](Exercise_3/README.md)
+- [Exercise 4 — integral responses and Marini nu-bar](Exercise_4/README.md)
+- [Exercise 5 — adds Marini and Keegan PFNS](Exercise_5/README.md)

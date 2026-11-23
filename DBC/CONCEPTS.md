@@ -433,7 +433,6 @@ flowchart TD
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
   class EndfComparison planned
-  class LinearizedResponses partial
   class Glls external
 ```
 
@@ -465,7 +464,7 @@ $$
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
 | `GllsReproduction` | Recompute the update independently and compare with the program's posterior | GLLS | implemented |
-| `LinearizedResponses` | Posterior responses predicted to first order, C/E before and after, and the residual identity; per data set, $\chi^2/m$ before and after and the count within one observation standard deviation. The per-data-set summary is planned | linearized prediction, residual identity, C/E, $\chi^2/m$ | partial |
+| `LinearizedResponses` | Posterior responses predicted to first order, C/E before and after, and the residual identity; per data set, $\chi^2/m$ before and after and the count within one observation standard deviation | linearized prediction, residual identity, C/E, $\chi^2/m$ | implemented |
 | `UncertaintyReduction` | Prior and posterior standard deviations per state, family and QID, and each response's variance split by QID | uncertainty reduction | implemented |
 | `CovarianceHealth` | Symmetry error and eigenvalue range of the prior and posterior covariances | absolute covariance | implemented |
 | `PfnsChecks` | Normalization of each posterior PFNS slice and sign of every posterior state; flags only, no correction | PFNS normalization, positivity | implemented |

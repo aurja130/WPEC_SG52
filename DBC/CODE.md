@@ -62,7 +62,7 @@ nu-bar); `Exercise_1/` to `Exercise_3/` differ in which responses they select.
 | Node | Code | Notes |
 |---|---|---|
 | `GllsReproduction` | `Exercise_3/analyze_ex3_results.py` `analyze` `relative_frobenius_difference` `max_abs_difference` | Report section "Direct GLLS reproduction" |
-| `LinearizedResponses` | `Exercise_3/analyze_ex3_results.py` `analyze` `read_response_metadata` | Report section "All released responses" |
+| `LinearizedResponses` | `Exercise_3/analyze_ex3_results.py` `analyze` `read_response_metadata` `Exercise_5/analyze_ex5_results.py` `chi2_per_point` `row_data_set_names` | Report section "All released responses"; Exercise 5 adds "Data set summary" (`data_set_summary.csv`) and "PFNS blocks" (`pfns_block_summary.csv`) and lists PFNS rows only in `response_summary.csv` |
 | `UncertaintyReduction` | `Exercise_3/analyze_ex3_results.py` `analyze` `safe_std_from_cov` `grouped_indices` `make_plots` | Report sections "Uncertainty update summary" and "Response-variance decomposition" |
 | `CovarianceHealth` | `Exercise_3/analyze_ex3_results.py` `matrix_symmetry_error` `eig_diagnostics` | |
 | `PfnsChecks` | `Exercise_3/analyze_ex3_results.py` `PfnsRow` `analyze` | Report section "PFNS normalization / positivity" |
