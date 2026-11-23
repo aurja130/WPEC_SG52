@@ -360,20 +360,86 @@ columns.
 
 ## Exercise 6 · Add Snyder, compare with ENDF/B-VIII.1
 
-**Data:** Exercise 5's data plus the Snyder fission ratio (EXFOR 14721002).
-ENDF/B-VIII.1 Pu-239 for comparison.
+**Data:** Release 4. Exercise 5's 2551 rows unchanged, then the Snyder
+fission cross section, shape version (`Snyder/nfcs_Snyder2021_shape.json`,
+EXFOR 14721002, 92 points, `MeasurementType` "Shape clean ratio"). Fields:
+$E$ = `experimental data.values` (b), $u$ = `experimental data.uncertainties`
+(relative), $\rho$ = `experimental data.correlations` (92 × 92), incident
+energy = `experimental data.structure.limits` (MeV), $C$ =
+`evaluated data.values` (ENDF/B-VIII.0 MT18), $s^\text{rel}$ =
+`sensitivities.values` (92 × 52, one-hot, column 51 zero). Kept: the 91
+points up to 19.4 MeV; the 20.54 MeV point has a zero sensitivity row.
+Response IDs `snyder-00` … `snyder-90` (released index); $m = 2642$.
+Sensitivities land on `94239_00018_<group>` (groups 27–50), $S = C/\mu$.
+Normalization uncertainty $s_N = 1.17\,\%$ from the release 4 Differential
+README (release 3's absolute file gives 1.1727 %: its covariance equals the
+shape covariance plus $(0.011727)^2 E E^\top$ exactly).
+Reference libraries for the comparison: ENDF/B-VIII.0 and ENDF/B-VIII.1
+Pu-239 from the NNDC (`Resources/ENDF-B-VIII.0/n-094_Pu_239.endf`, sha256
+`eae697df…a48e684`, from `endf-b8.0/zips/ENDF-B-VIII.0_neutrons.zip`;
+`Resources/ENDF-B-VIII.1/n-094_Pu_239.endf`, sha256 `7e298d9e…49cda127`,
+from `releases/B-VIII.1/neutrons/neutrons-version.VIII.1.tar.gz`), both
+processed with NJOY 2016.78 and the ERRORR part of the release's
+`Covariances/NJOY_input` (from the second `moder`). Workflow in
+`Exercise_6/`.
 
-**Assumptions:** To be fixed before work starts.
+**Assumptions:**
+- Exercise 5's assumptions carry over.
+- Snyder shape normalization: a free normalization factor with prior
+  uncertainty equal to the removed normalization (systematic) error, $s_N =
+  1.17\,\%$, marginalized into the observation covariance, as on the
+  coordinators' Exercise 6 slide (2026-09-01 meeting): $\Sigma_E^{(S)} =
+  D_{\sigma_E} \rho D_{\sigma_E} + s_N^2 E E^\top$, $\sigma_E = uE$
+  (Captain, 2026-11-23).
+- Snyder is independent of every other data set (Dongwi is not used).
+- Reference group values: GENDF (GROUPR) MF3 for MT 2, 4, 16, 17, 18, 37,
+  102, 452, 456; ERRORR MF34 output for the ten mubar values; ERRORR MF35
+  output spectra at the input's 31 `efmean` values for PFNS, each PFNS
+  slice being the trapezoid average over the `efmean` values inside its
+  incident range (bounds included). The same procedure is applied to
+  VIII.1, although its PFNS incident grid differs from VIII.0's.
+- Reproduction gate: a QID is compared with VIII.1 only if the VIII.0 run
+  reproduces the released prior means of that QID to $10^{-6}$ of the QID's
+  largest value. Found before work: every cross-section, nu-bar and mubar
+  QID reproduces exactly, and seven PFNS slices reproduce to $10^{-10}$;
+  slices 01318, 01518 and 01618 do not (up to $2.8 \times 10^{-3}$) and are
+  listed as not compared.
 
-**Acceptance:** The shared checks, plus a comparison with ENDF/B-VIII.1 (the
-specification expects them to be consistent); to be extended before work
-starts.
+**Acceptance:** The shared checks, plus:
 
-**Result today:** Not started.
+- Rows 0–2550 of `/delta`, `/sens`, `/responses/*` and the leading
+  2551 × 2551 block of `/cov` equal Exercise 5's exactly.
+- Snyder rows: released $E$, $C$, $\sigma_E = uE$; one non-zero
+  sensitivity per row, $C/\mu$ on the MT18 state of the group holding
+  $E_\text{in}$ (checked against an energy lookup); the Snyder block equals
+  $D_{\sigma_E}\rho D_{\sigma_E} + s_N^2 E E^\top$, is positive definite and
+  uncorrelated with every other block.
+- The reference step writes both libraries' 979-state group values, the
+  per-QID VIII.0 reproduction error and the gate flag; a VIII.0 run that no
+  longer reproduces a QID that passed before fails loudly.
+- The analysis gives Exercise 5's sections for five data sets and an
+  "ENDF/B-VIII.1 comparison" section: per compared QID, the target
+  adjustment $t$ against the relative mean adjustment $r$, the number of
+  states moved toward VIII.1, and the number with $|z_f| \le 1$ and
+  $\le 2$; per-state values in a CSV; the excluded QIDs with their
+  reproduction error.
+- The questions sheet answers the shape questions for Snyder (shape data
+  set, normalization factor with 1.17 % prior uncertainty); the comment sheet
+  states the Snyder rule.
 
-**Concepts:** `DifferentialObservations` `EndfComparison`
+**Result today:** Not started (contract 2026-11-23).
 
-**Comments:** —
+**Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `DifferentialCovariance` `IndependentDataSets` `EndfComparison` `ReferenceGroupValues` `ReproductionGate` `TargetAdjustment` `PosteriorConsistency` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
+
+**Comments:** 2026-11-23, orchestrator: the specification asks only to
+"compare with the ENDF/B-VIII.1 file"; nobody instructed us to process
+VIII.1 ourselves. The Captain chose to process it with the released NJOY
+input behind the reproduction gate. Found before work: VIII.1's ERRORR
+cross-section output has no MT17 or MT37 (no MF33 covariance for them), so
+the GENDF tape is the source for cross sections. VIII.1 changes are large in
+the groups above 0.3 MeV: MT17 −13 to −93 %, MT37 −40 %, MT102 −51 to
++18 %, MT4 −6 to +20 %, MT16 −10 to +2 %, MT18 within ±0.9 %; PFNS slices
+up to 25 % in groups holding more than $10^{-3}$ of the slice maximum.
 
 ## Exercise 7 · SNEAK-7A/B validation
 
