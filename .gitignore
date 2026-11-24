@@ -1,6 +1,7 @@
 Resources/
 .omp/
 .vscode/
+.obsidian/
 tmp/
 *.hdf5
 *.h5
