@@ -12,6 +12,7 @@ Submission_to_NEA/
 omp.sh
 
 # Presentation: copied release plots and generated numbers (rebuild with make_assets.py)
+Presentation_to_supervisors.zip
 Presentation_to_supervisors/images/
 Presentation_to_supervisors/generated/
 Presentation_to_supervisors/*.pdf
