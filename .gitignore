@@ -11,6 +11,24 @@ ex*_njoy/
 Submission_to_NEA/
 omp.sh
 
+# Presentation: copied release plots and generated numbers (rebuild with make_assets.py)
+Presentation_to_supervisors/images/
+Presentation_to_supervisors/generated/
+Presentation_to_supervisors/*.pdf
+Presentation_to_supervisors/*.aux
+Presentation_to_supervisors/*.log
+Presentation_to_supervisors/*.nav
+Presentation_to_supervisors/*.out
+Presentation_to_supervisors/*.snm
+Presentation_to_supervisors/*.toc
+Presentation_to_supervisors/*.bbl
+Presentation_to_supervisors/*.bcf
+Presentation_to_supervisors/*.blg
+Presentation_to_supervisors/*.run.xml
+Presentation_to_supervisors/*.fdb_latexmk
+Presentation_to_supervisors/*.fls
+Presentation_to_supervisors/*.xdv
+
 # Python junk
 __pycache__/
 *.py[cod]

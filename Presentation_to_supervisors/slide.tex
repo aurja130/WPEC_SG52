@@ -1,0 +1,554 @@
+%%% Uppsala University presentation beamer template v2.0
+%%% provided by Diletta Goglia, IT Department, Uppsala University
+%%% email: diletta.goglia@it.uu.se
+%%% December, 2023
+
+% This template is the updated version of the "Uppsala University presentation template v1.0" created by Mats Jonsson (mats@mekeriet.se) in March 2021.
+
+
+\documentclass{beamer}
+
+\usepackage[english]{babel}
+% \usepackage[utf8x]{inputenc}
+\usepackage{hyperref, % clickable links
+    graphicx, % include images
+    listings, % for code and formatting
+    caption, % customization of captions in figures and tables
+    stackengine, % custom layouts 
+    amsmath, % math env
+    xcolor, % extend color support
+    multicol, % multiple columns layout
+    booktabs, % high-quality tables
+    lipsum % remove it
+}
+
+\usepackage{uu_beamer} % customized style
+\usepackage{adjustbox}
+
+% Every result number on the slides comes from generated/numbers.tex, written by
+% make_assets.py from the Exercise 1-4 HDF5 files. Read one with \ExVal{<N>}{<key>}.
+\input{generated/numbers.tex}
+
+% Per-exercise setup flowchart: prior and data -> GLLS -> posterior -> submission.
+% Defined before \tikzset below, but only expanded inside frames, so the styles exist by then.
+\newcommand{\setupflow}[1]{%
+    \centering
+    \begin{tikzpicture}[node distance=4mm and 7mm, font=\footnotesize]
+        \node[box=40mm] (prior) {\textbf{Prior} (ENDF/B-VIII.0)\\[2pt]
+            $\mu_i \in \mathbb{R}^{\ExVal{#1}{n}}$\\
+            $\Sigma_i \in \mathbb{R}^{\ExVal{#1}{n} \times \ExVal{#1}{n}}$};
+        \node[box=40mm, below=of prior] (data) {\textbf{Adjustment data}\\[2pt]
+            {\scriptsize\adjustbox{max width=38mm}{\input{generated/ex#1_data.tex}}}\\[3pt]
+            $\Delta \in \mathbb{R}^{\ExVal{#1}{m}}$, \
+            $\Sigma_E \in \mathbb{R}^{\ExVal{#1}{m} \times \ExVal{#1}{m}}$\\
+            $S \in \mathbb{R}^{\ExVal{#1}{m} \times \ExVal{#1}{n}}$};
+        \node[result=11mm, anchor=west] (glls) at ($(prior.east)!0.5!(data.east) + (7mm,0)$) {\textbf{GLLS}};
+        \node[box=34mm, anchor=south west] (post) at ($(glls.east) + (7mm,2mm)$) {\textbf{Posterior}\\[2pt]
+            $\mu_f \in \mathbb{R}^{\ExVal{#1}{n}}$\\
+            $\Sigma_f \in \mathbb{R}^{\ExVal{#1}{n} \times \ExVal{#1}{n}}$};
+        \node[box=34mm, below=6mm of post] (sub) {\textbf{Submitted to the NEA}\\[2pt]
+            relative adjustment: \ExVal{#1}{nTemplate}\\
+            relative covariance: \ExVal{#1}{nTemplate} $\times$ \ExVal{#1}{nTemplate}};
+        \draw[arr] (prior.east) -- (glls);
+        \draw[arr] (data.east) -- (glls);
+        \draw[arr] (glls) -- (post.west);
+        \draw[arr] (post) -- (sub);
+    \end{tikzpicture}}
+
+% Four coordinator comparison plots in a 2x2 grid.
+\newcommand{\gridfour}[4]{%
+    \centering
+    \includegraphics[height=0.37\textheight]{#1}\hspace{2mm}%
+    \includegraphics[height=0.37\textheight]{#2}\\[1mm]
+    \includegraphics[height=0.37\textheight]{#3}\hspace{2mm}%
+    \includegraphics[height=0.37\textheight]{#4}}
+\newcommand{\cmpsource}{%
+    \par\vfill{\tiny Plots: SG52 coordinators, release 4 (\texttt{Submissions\_against\_release\_3}).
+    UU = this work.}}
+
+% ---- Put this in the PREAMBLE (styles use #1, which breaks if defined inside a frame) ----
+\usetikzlibrary{positioning, arrows.meta, calc}
+\tikzset{
+    box/.style={draw=uppsalared, line width=0.6pt, rounded corners=2pt, fill=white,
+    align=center, inner sep=3pt, text width=#1,
+    execute at begin node={\hyphenpenalty=10000}},
+    box/.default=30mm,
+    result/.style={box=#1, fill=uppsalared!8},
+    result/.default=30mm,
+    op/.style={draw=uppsalared, circle, line width=0.6pt, inner sep=0.5pt, font=\small},
+    arr/.style={-{Stealth[length=2mm]}, line width=0.6pt, draw=black!70},
+    lbl/.style={font=\tiny, text=black!60, fill=white, inner sep=1pt}
+}
+
+\def\cmd#1{\texttt{\color{red}\footnotesize $\backslash$#1}}
+\def\env#1{\texttt{\color{blue}\footnotesize #1}}
+
+% ------ CODE COLOR DEFINITION ------ %
+
+\definecolor{codered}{rgb}{0.6,0,0}
+\definecolor{codeblue}{rgb}{0,0,0.8}
+\definecolor{codegreen}{rgb}{0,0.5,0}
+\definecolor{almostwhite}{gray}{0.55}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    keywordstyle=\bfseries\color{codeblue},
+    emphstyle=\ttfamily\color{codered},   % Custom highlighting style
+    stringstyle=\color{codepurple},
+    numbers=left,
+    numberstyle=\small\color{almostwhite},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    frame=shadowbox,
+    commentstyle=\color{codegreen},
+    captionpos=b    
+}
+
+% ------------- PRESENTATION INFO --------------- %
+\newcommand{\fullconference}{Presentation to supervisory team}
+\newcommand{\shortconference}{}
+\newcommand{\contact}{\textit{aurora.jahan@physics.uu.se}}
+
+\author[\contact]{\href{}{Aurora Jahan}}
+\institute[]{\href{}{Tillämpad kärnfysik, Uppsala universitet}
+    \\ \smallskip \contact}
+\title[NEA WPEC SG52 NDA exercises]{Nuclear Data Adjustment Exercises}
+\subtitle[\shortconference]{with OECD NEA WPEC SG52}
+\date[Month 20XX]{\small \today
+    \\ \fullconference}
+
+\usepackage{biblatex}
+\addbibresource{ref.bib}
+
+\begin{document}
+
+% ------------ TITLE SLIDE --------------- %
+{
+% Remove headline and footline from first slide
+\setbeamertemplate{footline}{} 
+\setbeamertemplate{headline}{} 
+
+\begin{frame}\label{start}
+    \titlepage
+    \begin{figure}
+            \includegraphics[scale=0.65]{style/uu_logo.pdf} 
+    \end{figure}
+\end{frame}
+}
+
+% ---------- TABLE OF CONTENT --------- %
+\begin{frame}{Agenda}
+    \tableofcontents[sectionstyle=show, subsectionstyle=show/shaded/hide, subsubsectionstyle=show/shaded/hide]
+\end{frame}
+
+% =====================================================================
+\section{Introduction}
+% =====================================================================
+
+\begin{frame}{What is this about?}
+    \begin{itemize}
+        \item \textbf{SG52}: Subgroup 52 of the OECD-NEA Working Party on International Nuclear Data
+              Evaluation Co-operation (WPEC).
+        \item Topic: \textbf{nuclear data adjustment}, i.e.\ updating evaluated nuclear data with measurements.
+        \item Nuclide and range: \textbf{Pu-239}, fast neutron energies.
+        \item Method: generalized linear least squares (\textbf{GLLS}).
+        \item The coordinators send data \emph{releases}; every participant returns results in a common
+              template; the coordinators compare the participants.
+        \item Participants so far: EPFL, SCK CEN, UPM and UU (us).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{The goal}
+    \begin{block}{From the SG52 specification \cite{sg52spec}}
+        \small
+        Reconstruct a modern evaluation, ENDF/B-VIII.1 \cite{nobre2026endf}, from its predecessor,
+        ENDF/B-VIII.0 \cite{brown2018endf}, using the same experimental data as the evaluators.
+    \end{block}
+    \vspace{4mm}
+    \centering
+    \begin{tikzpicture}[node distance=5mm and 6mm, font=\scriptsize]
+        \node[box=20mm] (old) {\textbf{ENDF/B-VIII.0}\\Pu-239 (prior)};
+        \node[box=20mm, below=of old] (exp) {\textbf{Experiments}\\integral and differential};
+        \node[result=15mm, anchor=west] (glls) at ($(old.east)!0.5!(exp.east) + (6mm,0)$) {\textbf{GLLS}\\adjustment};
+        \node[result=17mm, right=of glls] (adj) {\textbf{Adjusted}\\Pu-239};
+        \node[box=20mm, right=15mm of adj] (new) {\textbf{ENDF/B-VIII.1}\\Pu-239};
+        \draw[arr] (old.east) -- (glls);
+        \draw[arr] (exp.east) -- (glls);
+        \draw[arr] (glls) -- (adj);
+        \draw[arr, dashed, <->] (adj) -- (new) node[lbl, midway, below=1mm] {should agree};
+    \end{tikzpicture}\\[5mm]
+    \small
+    \ldots\ without weakening the criticality, reactor and shielding results that already work.
+\end{frame}
+
+\begin{frame}{Where we start: the prior}
+    \centering
+    \small All Pu-239 quantities we adjust form the state vector $x$:\\[4mm]
+    \begin{tikzpicture}[x=0.9mm, y=1mm]
+        \fill[uppsalared!25] (0,0) rectangle (51,10);
+        \fill[uppsalared!55] (51,0) rectangle (108,10);
+        \fill[uppsalared] (108,0) rectangle (110,10);
+        \draw[uppsalared] (0,0) rectangle (110,10);
+        \node[font=\small] at (25.5,5) {9 reactions $\times$ 51 groups};
+        \node[font=\small] at (79.5,5) {10 PFNS $\times$ 51 groups};
+        \node[font=\scriptsize, align=center, below] at (25.5,-1)
+            {elastic, inelastic, (n,2n), (n,3n), (n,4n),\\fission, capture, $\bar\nu$ total, $\bar\nu$ prompt};
+        \node[font=\scriptsize, align=center, below] at (79.5,-1)
+            {prompt fission neutron spectrum,\\one per incident-energy group};
+        \draw[arr] (109,11) -- ++(0,5) node[above, font=\scriptsize] {10 $\bar\mu$};
+    \end{tikzpicture}\\[6mm]
+    \[
+        n = 459 + 510 + 10 = \ExVal{1}{n}\ \text{states}
+    \]
+    \begin{columns}[T]
+        \begin{column}{0.45\textwidth}
+            \centering\small
+            \textbf{Prior mean} $\mu_i$: ENDF/B-VIII.0 values
+        \end{column}
+        \begin{column}{0.45\textwidth}
+            \centering\small
+            \textbf{Prior covariance} $\Sigma_i$: ENDF/B-VIII.0 covariances
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Where we want to go: eight exercises of increasing scope}
+    \centering
+    \begin{tikzpicture}[node distance=3mm and 4mm, font=\scriptsize]
+        \node[result=21mm] (e1) {\textbf{Ex1}\\JEZEBEL $k_\mathrm{eff}$};
+        \node[result=21mm, right=of e1] (e2) {\textbf{Ex2}\\+ EUCLID $k_\mathrm{eff}$};
+        \node[result=21mm, right=of e2] (e3) {\textbf{Ex3}\\all integral responses};
+        \node[result=21mm, right=of e3] (e4) {\textbf{Ex4}\\+ Marini $\bar\nu$ \cite{marini2022}};
+        \node[box=21mm, dashed, below=9mm of e4] (e5) {\textbf{Ex5}\\+ Marini, Keegan PFNS};
+        \node[box=21mm, dashed, left=of e5] (e6) {\textbf{Ex6}\\+ Snyder \cite{snyder2021};\\compare VIII.1};
+        \node[box=21mm, dashed, left=of e6] (e8) {\textbf{Ex8}\\+ Dongwi \cite{dongwi2025}};
+        \node[box=21mm, dashed, below=6mm of e6] (e7) {\textbf{Ex7}\\SNEAK-7A/B validation};
+        \draw[arr] (e1) -- (e2);
+        \draw[arr] (e2) -- (e3);
+        \draw[arr] (e3) -- (e4);
+        \draw[arr] (e4) -- (e5);
+        \draw[arr] (e5) -- (e6);
+        \draw[arr] (e6) -- (e8);
+        \draw[arr] (e6) -- (e7);
+        \node[result=16mm, below=4mm of e8] (done) {submitted};
+        \node[box=16mm, dashed, below=1mm of done] (todo) {not started};
+    \end{tikzpicture}\\[5mm]
+    \small
+    Each exercise adds data. The end point: an adjusted Pu-239 that agrees with ENDF/B-VIII.1 (Ex6)
+    and holds up on benchmarks kept out of the fit (Ex7).
+\end{frame}
+
+% =====================================================================
+\section{Methodology}
+% =====================================================================
+
+\begin{frame}{Workflow: one reproducible pipeline per exercise}
+    \centering
+    \begin{tikzpicture}[node distance=6mm and 7mm, font=\scriptsize]
+        \node[box=20mm] (rel) {Release data\\covariances, measurements, sensitivities};
+        \node[box=19mm, right=of rel, yshift=9mm] (pri) {Prior builder (Python)\\$\mu_i$, $\Sigma_i$};
+        \node[box=19mm, right=of rel, yshift=-9mm] (obs) {Observation builder (Python)\\$\Delta$, $S$, $\Sigma_E$};
+        \node[result=19mm, right=of pri, yshift=-9mm] (nda) {\texttt{nda}: GLLS in C++20\\$\mu_f$, $\Sigma_f$};
+        \node[box=19mm, right=of nda, yshift=9mm] (dia) {Diagnostics\\checks and plots};
+        \node[box=19mm, right=of nda, yshift=-9mm] (sub) {NEA template\\(Excel)};
+        \draw[arr] (rel.east) -- (pri.west);
+        \draw[arr] (rel.east) -- (obs.west);
+        \draw[arr] (pri) -- (obs);
+        \draw[arr] (pri.east) -- (nda.west);
+        \draw[arr] (obs.east) -- (nda.west);
+        \draw[arr] (nda.east) -- (dia.west);
+        \draw[arr] (nda.east) -- (sub.west);
+    \end{tikzpicture}
+    \vspace{4mm}
+    \begin{itemize}
+        \small
+        \item The C++ GLLS program is generic; everything specific to SG52 lives in the Python steps.
+        \item Every reported number is computed from the release files, and reruns give identical results.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{The ingredients}
+    \centering
+    \begin{tikzpicture}[x=1mm, y=1mm, font=\scriptsize,
+            desc/.style={below, align=center, text width=20mm, inner sep=1pt,
+                execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}}]
+        % group headers
+        \node[font=\small\bfseries, text=uppsalared] at (20.5,25) {Prior: what we know};
+        \node[font=\small\bfseries, text=black!60] at (52,25) {Link};
+        \node[font=\small\bfseries, text=uppsalared] at (83.5,25) {Observations: what we measure};
+        % shapes show matrix dimensions: n states (18 mm) against m observations (6 mm)
+        \filldraw[fill=uppsalared!25, draw=uppsalared] (8.75,2) rectangle (11.25,20);
+        \filldraw[fill=uppsalared!25, draw=uppsalared] (22,2) rectangle (40,20);
+        \filldraw[fill=black!12, draw=black!60] (43,8) rectangle (61,14);
+        \filldraw[fill=uppsalared!55, draw=uppsalared] (71.75,8) rectangle (74.25,14);
+        \filldraw[fill=uppsalared!55, draw=uppsalared] (91,8) rectangle (97,14);
+        % descriptions
+        \node[desc] at (10,0) {$\mu_i$\\\textbf{prior mean}\\ENDF/B-VIII.0 values\\size $n$};
+        \node[desc] at (31,0) {$\Sigma_i$\\\textbf{prior covariance}\\how uncertain and correlated the prior is\\$n \times n$};
+        \node[desc] at (52,0) {$S$\\\textbf{sensitivity}\\how each calculated response moves with each state\\$m \times n$};
+        \node[desc] at (73,0) {$\Delta = E - C$\\\textbf{discrepancy}\\measured minus calculated\\size $m$};
+        \node[desc] at (94,0) {$\Sigma_E$\\\textbf{observation covariance}\\measurement and calculation uncertainty\\$m \times m$};
+    \end{tikzpicture}\\[5mm]
+    \small
+    $n = \ExVal{1}{n}$ states; $m$ = \ExVal{1}{m} (Ex1) to \ExVal{4}{m} (Ex4) observations.\\[2pt]
+    The release gives relative values; we convert them to absolute units first.
+\end{frame}
+
+\begin{frame}{Putting it together: the GLLS update}
+    \centering
+    \begin{tikzpicture}[node distance=2mm and 5mm, font=\scriptsize]
+        \node[box=10mm] (s) {$S$};
+        \node[box=10mm, above=of s] (si) {$\Sigma_i$};
+        \node[box=10mm, below=of s] (se) {$\Sigma_E$};
+        \node[box=23mm, right=of s] (v) {$V = S \Sigma_i S^\top + \Sigma_E$\\[2pt]
+            total uncertainty of the discrepancy};
+        \node[box=23mm, right=of v] (k) {$K = \Sigma_i S^\top V^{-1}$\\[2pt]
+            gain: how far each state moves per unit discrepancy};
+        \node[result=26mm, right=of k, yshift=9mm] (muf) {$\mu_f = \mu_i + K \Delta$\\[2pt]
+            \textbf{posterior mean}};
+        \node[result=26mm, right=of k, yshift=-9mm] (sf) {$\Sigma_f = \Sigma_i - K S \Sigma_i$\\[2pt]
+            \textbf{posterior covariance}};
+        \draw[arr] (si.east) -- (v.west);
+        \draw[arr] (s) -- (v);
+        \draw[arr] (se.east) -- (v.west);
+        \draw[arr] (v) -- (k);
+        \draw[arr] (k.east) -- (muf.west);
+        \draw[arr] (k.east) -- (sf.west);
+    \end{tikzpicture}\\[6mm]
+    \small
+    The data pull the mean toward agreement with the measurements and shrink the covariance.\\[4pt]
+    Reported relative to the prior mean: adjustment $(\mu_f - \mu_i)/\mu_i$,
+    covariance $\Sigma_f / (\mu_i \mu_i^\top)$, element by element.
+\end{frame}
+
+% =====================================================================
+\section{Results}
+% =====================================================================
+
+\begin{frame}{Exercises 1--4 at a glance}
+    \centering
+    \small
+    \begin{tabular}{@{}lcccc@{}}
+        \toprule
+                                                   & Ex1                 & Ex2                 & Ex3                 & Ex4                 \\
+        \midrule
+        Observations $m$                           & \ExVal{1}{m}        & \ExVal{2}{m}        & \ExVal{3}{m}        & \ExVal{4}{m}        \\
+        Within $1\sigma$: before $\to$ after       & \ExVal{1}{withinPrior}\,$\to$\,\ExVal{1}{withinPost}
+                                                   & \ExVal{2}{withinPrior}\,$\to$\,\ExVal{2}{withinPost}
+                                                   & \ExVal{3}{withinPrior}\,$\to$\,\ExVal{3}{withinPost}
+                                                   & \ExVal{4}{withinPrior}\,$\to$\,\ExVal{4}{withinPost}                      \\
+        Largest shift (prior $\sigma$)             & \ExVal{1}{maxZ}     & \ExVal{2}{maxZ}     & \ExVal{3}{maxZ}     & \ExVal{4}{maxZ}     \\
+        Smallest $\sigma_\text{post}/\sigma_\text{prior}$ & \ExVal{1}{minRatio} & \ExVal{2}{minRatio} & \ExVal{3}{minRatio} & \ExVal{4}{minRatio} \\
+        Negative posterior values                  & \ExVal{1}{negative} & \ExVal{2}{negative} & \ExVal{3}{negative} & \ExVal{4}{negative} \\
+        \bottomrule
+    \end{tabular}\\[8pt]
+    All four were run on release 3 and submitted to the coordinators.
+\end{frame}
+
+% ---------------------------------------------------------------------
+\subsection{Exercise 1}
+
+\begin{frame}{Exercise 1: JEZEBEL $k_\mathrm{eff}$}
+    \setupflow{1}\\[5mm]
+    \scriptsize\input{generated/ex1_ce_table.tex}
+\end{frame}
+
+\begin{frame}{Exercise 1: relative adjustment, all participants}
+    \gridfour{images/ex1_adjustments_MT2.png}{images/ex1_adjustments_MT4.png}%
+    {images/ex1_adjustments_MT18.png}{images/ex1_adjustments_MT452.png}
+    \cmpsource
+\end{frame}
+
+\begin{frame}{Exercise 1: posterior relative uncertainty, all participants}
+    \gridfour{images/ex1_uncertainties_MT2.png}{images/ex1_uncertainties_MT18.png}%
+    {images/ex1_uncertainties_MT452.png}{images/ex1_uncertainties_MT1518.png}
+    \cmpsource
+\end{frame}
+
+% ---------------------------------------------------------------------
+\subsection{Exercise 2}
+
+\begin{frame}{Exercise 2: JEZEBEL and EUCLID $k_\mathrm{eff}$}
+    \setupflow{2}\\[5mm]
+    \scriptsize\input{generated/ex2_ce_table.tex}
+\end{frame}
+
+\begin{frame}{Exercise 2: relative adjustment, all participants}
+    \gridfour{images/ex2_adjustments_MT2.png}{images/ex2_adjustments_MT4.png}%
+    {images/ex2_adjustments_MT18.png}{images/ex2_adjustments_MT452.png}
+    \cmpsource
+\end{frame}
+
+\begin{frame}{Exercise 2: posterior relative uncertainty, all participants}
+    \gridfour{images/ex2_uncertainties_MT2.png}{images/ex2_uncertainties_MT18.png}%
+    {images/ex2_uncertainties_MT452.png}{images/ex2_uncertainties_MT1518.png}
+    \cmpsource
+\end{frame}
+
+% ---------------------------------------------------------------------
+\subsection{Exercise 3}
+
+\begin{frame}{Exercise 3: all integral responses}
+    \setupflow{3}
+\end{frame}
+
+\begin{frame}{Exercise 3: calculated over measured, before and after}
+    \centering
+    \includegraphics[width=\textwidth]{images/ex3_ce.pdf}\\[4pt]
+    \small
+    Within one observation standard deviation: \ExVal{3}{withinPrior} before,
+    \ExVal{3}{withinPost} after (of \ExVal{3}{m}).
+\end{frame}
+
+\begin{frame}{Exercise 3: relative adjustment, all participants}
+    \gridfour{images/ex3_adjustments_MT2.png}{images/ex3_adjustments_MT4.png}%
+    {images/ex3_adjustments_MT18.png}{images/ex3_adjustments_MT452.png}
+    \cmpsource
+\end{frame}
+
+\begin{frame}{Exercise 3: posterior relative uncertainty, all participants}
+    \gridfour{images/ex3_uncertainties_MT2.png}{images/ex3_uncertainties_MT18.png}%
+    {images/ex3_uncertainties_MT452.png}{images/ex3_uncertainties_MT1518.png}
+    \cmpsource
+\end{frame}
+
+% ---------------------------------------------------------------------
+\subsection{Exercise 4}
+
+\begin{frame}{Exercise 4: integral data plus Marini $\bar\nu$}
+    \setupflow{4}\\[4mm]
+    \small
+    Marini \cite{marini2022} measured prompt $\bar\nu$; as instructed by the coordinators,
+    the points adjust total $\bar\nu$.
+\end{frame}
+
+\begin{frame}{Exercise 4: calculated over measured, before and after}
+    \centering
+    \includegraphics[width=\textwidth]{images/ex4_ce.pdf}\\[4pt]
+    \small
+    Within one observation standard deviation: integral \ExVal{4}{withinPriorInt}\,$\to$\,\ExVal{4}{withinPostInt},
+    Marini \ExVal{4}{withinPriorMar}\,$\to$\,\ExVal{4}{withinPostMar}.\\
+    All Marini points end below C/E = 1 (see Discussion).
+\end{frame}
+
+\begin{frame}{Exercise 4: relative adjustment, all participants (grey: prior $1\sigma$)}
+    \gridfour{images/ex4_adjustments_MT2.png}{images/ex4_adjustments_MT4.png}%
+    {images/ex4_adjustments_MT18.png}{images/ex4_adjustments_MT452.png}
+    \cmpsource
+\end{frame}
+
+\begin{frame}{Exercise 4: posterior relative uncertainty, all participants}
+    \gridfour{images/ex4_uncertainties_MT2.png}{images/ex4_uncertainties_MT18.png}%
+    {images/ex4_uncertainties_MT452.png}{images/ex4_uncertainties_MT1518.png}
+    \cmpsource
+\end{frame}
+
+\begin{frame}{Exercise 4: our posterior correlations}
+    \centering
+    \includegraphics[width=0.49\textwidth]{images/ex4_correlations_XS_UU_Ex4.png}\hfill
+    \includegraphics[width=0.49\textwidth]{images/ex4_correlations_PFNS_UU_Ex4.png}\\[2pt]
+    \raggedright\footnotesize
+    The data create correlations the prior did not have, e.g.\ fission against $\bar\nu$,
+    and across PFNS incident-energy groups.
+    \cmpsource
+\end{frame}
+
+% ---------------------------------------------------------------------
+\subsection{Exercises 5--8}
+
+\begin{frame}{Exercises 5--8: not done yet}
+    \begin{itemize}
+        \item \textbf{Ex5}: add Marini and Keegan PFNS.
+        \item \textbf{Ex6}: add the Snyder fission ratio \cite{snyder2021}; compare with ENDF/B-VIII.1.
+        \item \textbf{Ex7}: validate on the SNEAK-7A/B benchmarks.
+        \item \textbf{Ex8}: add the Dongwi fission ratio \cite{dongwi2025}.
+    \end{itemize}
+    \vspace{3mm}
+    \small A new data release (release 4) arrived in November 2026; Exercises 1--4 move to it first.
+\end{frame}
+
+% =====================================================================
+\section{Discussion}
+% =====================================================================
+
+\begin{frame}{How we compare with the other participants}
+    \begin{itemize}
+        \item \textbf{Ex1--3}: all four participants' adjustments and uncertainties lie on top of each other
+              in every coordinator plot we inspected.
+        \item \textbf{Ex4}: EPFL, SCK CEN and UU still overlap; UPM differs, most visibly in MT452 $\bar\nu$
+              (slightly in MT4 and MT18). The coordinators have not stated a cause.
+        \item The release 4 specification now spells out our Ex4 treatment: compare C and E on MT456,
+              apply the adjustment to MT452 as if the data were on it.
+    \end{itemize}
+    \vspace{2mm}
+    \begin{block}{Takeaway}
+        Independent codes and workflows reproduce one another for the integral exercises: an external
+        cross-check of our absolute-form GLLS and the relative/absolute conversions.
+    \end{block}
+\end{frame}
+
+\begin{frame}{Points worth flagging}
+    \begin{itemize}
+        \small
+        \item \textbf{Marini $\bar\nu$ lands below the posterior.} The \ExVal{4}{mariniN} points are strongly correlated
+              (mean off-diagonal $\rho$ = \ExVal{4}{mariniRhoMean}; one eigenmode carries \ExVal{4}{mariniTopMode}\,\%
+              of the correlation matrix), and the prior disagrees with their shape.
+              GLLS fits the shape and moves the common level, so all posterior C/E end below 1.
+              We report this as it is and do not correct it.
+        \item \textbf{Prior correlation plots differ in below-threshold groups.} \ExVal{1}{zeroMean} states have
+              zero prior mean (below-threshold groups and a few low-energy PFNS bins); the released relative
+              covariance carries tiny non-zero entries there. The absolute
+              conversion sets them to zero, so our plots are blank where the reference shows noise
+              (no effect on the adjustment).
+        \item \textbf{GLLS limits.} No PFNS normalization or positivity constraint: we flag deviations, never clip.
+              Adjusted responses are linearized predictions.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Prior correlation: reference vs.\ ours}
+    \centering
+    \includegraphics[width=0.49\textwidth]{images/ex4_prior_correlations_XS_reference_prior.png}\hfill
+    \includegraphics[width=0.49\textwidth]{images/ex4_prior_correlations_XS_UU_Ex4.png}\\[2pt]
+    \raggedright\footnotesize
+    Left: the coordinators' plot of the released relative covariance. Right: our prior, built
+    through $\Sigma_i = D_{\mu_i} R_i D_{\mu_i}$. The difference sits in the zero-mean blocks (MT4 below
+    its threshold, MT16, MT17, MT37).
+    \cmpsource
+\end{frame}
+
+\begin{frame}{Conclusions and next steps}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Where we are}
+                \small
+                \begin{itemize}
+                    \item Generic GLLS code plus one reproducible workflow per exercise.
+                    \item Exercises 1--4 submitted on release 3, all coordinator method rules met.
+                    \item Results agree with the other participants; in Ex4 UPM differs from the other three.
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{What comes next}
+                \small
+                \begin{enumerate}
+                    \item Move Exercises 1--4 to release 4 and resubmit.
+                    \item Design the PFNS observation model; Exercise 5.
+                    \item Snyder data and the ENDF/B-VIII.1 comparison (Ex6), Dongwi (Ex8).
+                    \item Clarify the scope of the SNEAK validation (Ex7).
+                \end{enumerate}
+            \end{block}
+        \end{column}
+    \end{columns}
+    \vspace{4mm}
+    \centering\small
+    Our role is to follow the SG52 directions; the open choices go to the coordinators.
+\end{frame}
+
+\begin{frame}[allowframebreaks]{References}
+    \printbibliography
+\end{frame}
+
+\end{document}
+
