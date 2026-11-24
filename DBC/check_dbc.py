@@ -48,9 +48,10 @@ DEFINITIONS.md
 EXERCISES.md
 - One ``## Exercise <N> · <title>`` section per exercise, with a unique N.
   Every ``Exercise_<N>/`` directory in the repository has a section.
-- Each section has lines starting ``**Data:**``, ``**Assumptions:**``,
-  ``**Acceptance:**``, ``**Result today:**``, ``**Concepts:**`` (backticked
-  owned node IDs) and ``**Comments:**``.
+- Each section has lines starting ``**Data:**``, ``**Matrices:**``,
+  ``**Data treatment:**``, ``**Assumptions:**``, ``**Acceptance:**``,
+  ``**Result today:**``, ``**Concepts:**`` (backticked owned node IDs) and
+  ``**Comments:**``.
 
 TESTS.md
 - Every table has a ``Concepts`` column of backticked owned node IDs.
@@ -77,6 +78,8 @@ EXERCISE_HEADING = re.compile(r"^Exercise ([0-9]+) · \S.*$")
 EXERCISE_DIRECTORY = re.compile(r"^Exercise_([0-9]+)$")
 EXERCISE_FIELDS = (
     "**Data:**",
+    "**Matrices:**",
+    "**Data treatment:**",
     "**Assumptions:**",
     "**Acceptance:**",
     "**Result today:**",

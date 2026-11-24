@@ -4,9 +4,11 @@ Reference set: [CONCEPTS](CONCEPTS.md) · [CODE](CODE.md) ·
 [DEFINITIONS](DEFINITIONS.md) · [TESTS](TESTS.md)
 
 One section per SG52 exercise from the specification. Each section is the
-contract for its workflow: data used, assumptions, acceptance checks, the
-result today, the concept nodes it exercises, and comments. Comments are dated
-and signed; any agent may add one.
+contract for its workflow: data used, the matrix layout, the data treatment,
+assumptions, acceptance checks, the result today, the concept nodes it
+exercises, and comments. Comments are dated and signed; any agent may add one.
+The matrix layout and the data treatment of each section refer to the shared
+tables in [Matrix layout and data treatment](#matrix-layout-and-data-treatment).
 
 Acceptance checks shared by every exercise, from the method rules:
 
@@ -66,11 +68,177 @@ Exercise 5:
     normalization factor, no renormalization on the prior.
 11. Snyder–Dongwi correlation: not applicable, not used.
 
+### Matrix layout and data treatment
+
+Shared by every exercise; notation as in [CONCEPTS](CONCEPTS.md#notation).
+Indices are zero-based. Ranges are inclusive. Counts and index ranges were read
+from the generated HDF5 files on 2026-11-24.
+
+#### Matrices
+
+| Matrix | Dataset | Shape | Rows | Columns |
+|---|---|---|---|---|
+| $\mu_i$ | `ex<N>_prior.hdf5:/mean/values` | $n$ | states (`/mean/row_indices`) | — |
+| $\Sigma_i$ | `ex<N>_prior.hdf5:/cov/values` | $n \times n$ | states | states |
+| $\Delta$ | `ex<N>_observations.hdf5:/delta/values` | $m$ | responses (`/delta/row_indices`) | — |
+| $\Sigma_E$ | `ex<N>_observations.hdf5:/cov/values` | $m \times m$ | responses | responses |
+| $S$ | `ex<N>_observations.hdf5:/sens/values` | $m \times n$ | responses | states (`/sens/col_indices`, prior order) |
+| $E$, $\sigma_E$, $C$, $\sigma_C$ | `ex<N>_observations.hdf5:/responses/{experimental, experimental_uncertainty, simulated, simulated_uncertainty}` (Exercise 2 on) | $m$ each | responses (`/responses/row_indices`) | — |
+| $\mu_f$ | `ex<N>_results.hdf5:/mean/values` | $n$ | states, prior order (no index dataset) | — |
+| $\Sigma_f$ | `ex<N>_results.hdf5:/covariance/values` | $n \times n$ | states, prior order | states |
+
+$n = 979$ in every exercise. Every index dataset of one exercise lists the same
+states in the same order.
+
+#### State index (rows of $\mu$ and $\Sigma$, columns of $S$)
+
+Label `94239_<QID>_<g>` for 51-group quantities, `94239_<QID>` for mubar.
+Within a 51-group QID, state = first index + $g$, energy group $g = 0$
+(1e-5–2.97e-3 eV) … 50 (17–20 MeV), ascending (`gs.txt`, eV).
+
+| States | QID | Quantity |
+|---|---|---|
+| 0–50 | 00002 | elastic |
+| 51–101 | 00004 | inelastic |
+| 102–152 | 00016 | (n,2n) |
+| 153–203 | 00017 | (n,3n) |
+| 204–254 | 00018 | fission |
+| 255–305 | 00037 | (n,4n) |
+| 306–356 | 00102 | capture |
+| 357–407 | 00452 | total nu-bar |
+| 408–458 | 00456 | prompt nu-bar |
+| $459 + 51k + g$, $k = 0…9$ (459–968) | $1018 + 100k$ | PFNS slice $k$, outgoing group $g$ |
+| $969 + k$, $k = 0…9$ (969–978) | $251 + 1000k$ | mubar, incident range $k$ |
+
+PFNS slice and mubar incident ranges (`pfns_incident_energies.txt`,
+`mubar_incident_energies.txt`; the mubar bounds read 1.353 and 5.3526 MeV
+where PFNS reads 1.35 and 5.35):
+
+| $k$ | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| PFNS QID | 1018 | 1118 | 1218 | 1318 | 1418 | 1518 | 1618 | 1718 | 1818 | 1918 |
+| States | 459–509 | 510–560 | 561–611 | 612–662 | 663–713 | 714–764 | 765–815 | 816–866 | 867–917 | 918–968 |
+| Incident (MeV) | 1e-11–6.41e-7 | 6.41e-7–0.5 | 0.5–1.35 | 1.35–5.35 | 5.35–6.07 | 6.07–10 | 10–13 | 13–14 | 14–15 | 15–20 |
+
+#### Observation rows (rows of $\Delta$, $\Sigma_E$, $S$)
+
+From Exercise 3 on, every exercise keeps the rows of the one before it and
+appends its new data set; Exercises 1 and 2 pick single integral rows (see
+their sections).
+
+| Rows | Data set | Response IDs | Count |
+|---|---|---|---|
+| 0 | JEZEBEL $k_\text{eff}$ | `PU-MET-FAST-001-001-s` | 1 |
+| 1–3 | JEZEBEL reaction-rate ratios | `PU-MET-FAST-001-001_{U238, Np237, Pu239}/U235` | 3 |
+| 4–5 | EUCLID $k_\text{eff}$ | `euclid-3x2-crit`, `euclid-8x1-crit` | 2 |
+| 6–20 | EUCLID leakage spectrum | `euclid_NLS_<config>_<E>`: configs `3x2x45` (6–10), `3x2x55` (11–15), `8x1x90` (16–20), each $E$ = 2.4, 3.2, 4, 4.8, 5.6 | 15 |
+| 21–28 | EUCLID reaction-rate ratios | `euclid_rrr_<config>_<reaction>/U235(fission)`: `8x1x130` (21–24), `3x2x65` (25–28), each Pu239(fission), U238(n,2n), U238(capture), U238(fission) | 8 |
+| 29–53 | Marini nu-bar | `marini-nubar-00` … `-24` | 25 |
+| 54–1273 | Marini PFNS | `marini-pfns-0000` … `-1219` | 1220 |
+| 1274–2550 | Keegan PFNS | `keegan-pfns-0000` … `-1276` | 1277 |
+| 2551–2641 | Snyder | `snyder-00` … `-90` | 91 |
+| 2642–2732 | Dongwi | `dongwi-00` … `-90` | 91 |
+
+$\Sigma_E$ is block-diagonal over these data sets (integral rows 0–28 count as
+one block); every entry between two data sets is zero (independent data sets).
+
+#### Data treatment by source
+
+**Prior (`Covariances/plaintext`).** $\mu_i$: `94239-<QID>-xs.txt`, in state
+order. $R_i$: `94239-<QID1>-94239-<QID2>-relcov.txt` (51 × 51, mubar 1 × 1)
+placed at the two QIDs' state ranges; missing files are zero blocks (release
+README). Made absolute, $\Sigma_i = D_{\mu_i} R_i D_{\mu_i}$. Blocks between
+QIDs are non-zero among the seven cross sections (MT2, 4, 16, 17, 18, 37, 102,
+states 0–356), among PFNS slices 1018–1318, between 1418 and 1518, and among
+1718–1918; MT452, MT456, slice 1618 and the mubar states have no covariance
+with other QIDs. 196 states have $\mu_i = 0$ (MT4 groups 0–23, MT16 0–37,
+MT17 0–43, MT37 0–49, PFNS slices 1218–1918 groups 0–4); 215 have zero prior
+variance (these plus slice 1018 groups 0–17 and mubar 00251), so GLLS cannot
+move them.
+
+**Integral (`Integral/{JEZEBEL,EUCLID}`).** From `*_obs.csv` (columns `expt`,
+`expt_uncert`, `sim`, `sim_uncert`; JEZEBEL file rows 0–3, EUCLID file
+rows 4–28): $\Delta_k = E_k - C_k$, and the diagonal entry
+$(\Sigma_E)_{kk} = \sigma_{E,k}^2 + \sigma_{C,k}^2$, absolute as released. From
+`*_sens_rel.csv` (3836 parameter columns): the 596 `Pu239_*` columns map to
+states (elastic → 00002, inelastic → 00004, z,2n → 00016, z,3n → 00017,
+fission → 00018, z,4n → 00037, capture → 00102, multiplicity total nu →
+00452, spectrum prompt nu $k$, $g$ → PFNS slice $k$ group $g$, mubar $k$ →
+$251 + 1000k$) and are made absolute, $S_{kj} = C_k s_{kj} / \mu_{i,j}$; the
+3240 columns of other nuclides are dropped (not adjusted); `*_sens_unc_rel.csv`
+is not read. Non-zero $S$ columns in rows 0–28: 595 — MT2, MT18, MT102, MT452
+all groups; MT4 groups 25–50 (states 76–101); MT16 38–50 (140–152); MT17
+45–50 (198–203); MT37 50 (305); PFNS slices 1018–1318 groups 18–50, 1418–1918
+groups 17–50; mubar 01251–09251 (970–978). Always zero: MT456 (408–458) and
+mubar 00251 (969).
+
+**Marini nu-bar (`Marini nubar/nubar-Marini2021.json`; release 3:
+`nubar_Marini2021.json`).** $E$ = `experimental data.values`, $u$ =
+`.uncertainties`, $\rho$ = `.correlations`, $C$ = `evaluated data.values`
+(prompt, MT456). Kept: points with energy ≤ 20 MeV and a non-zero row (all 25).
+$\Delta = E - C$ into rows 29–53; $\sigma_E = uE$, $\sigma_C = 0$; $\Sigma_E$
+block $D_{\sigma_E} \rho D_{\sigma_E}$ at rows/columns 29–53. One-hot row on
+group $g$ moved to MT452 (as-MT452 rule): $S_{k,\,357+g} = C_k / \mu_{i,357+g}$,
+groups 31–50 (states 388–407), 18 distinct states.
+
+**Marini PFNS (`Marini PFNS/PFNS_CEAcor.json`) and Keegan PFNS (`Keegan
+PFNS/PFNS_ChiNuPu9_Oct2020.json`).** $E$ = `data.values`, $u$ =
+`data.uncertainties`, $\rho$ = `data.correlations`, $C$ = `evaluated
+data.values` (block-normalized, used as released). Kept: $E_\text{in} \le 20$
+MeV, non-zero row, finite $C$ (Marini 1220 of 1281, Keegan 1277 of 1277).
+$\Delta = E - C$; $\sigma_E = uE$, $\sigma_C = 0$; $\Sigma_E$ block
+$D_{\sigma_E} \rho D_{\sigma_E}$ per data set (Marini rows/columns 54–1273,
+Keegan 1274–2550). One-hot row on (slice $k$ holding $E_\text{in}$, group $g$
+holding $E_\text{out}$), checked against an energy lookup:
+$S_{r,\,459+51k+g} = C_r / \mu_{i,459+51k+g}$. Marini: slices 1218–1918,
+groups 28–43, 128 distinct states; Keegan: slices 1318–1918, groups 25–42,
+126 distinct states.
+
+**Snyder (`Snyder/nfcs_Snyder2021_shape.json`) and Dongwi
+(`Dongwi/nfcs_Dongwi2025_shape.json`).** $E$ = `experimental data.values`,
+$u$, $\rho$ as for Marini nu-bar, $C$ = `evaluated data.values` (MT18). Kept:
+energy ≤ 20 MeV and a non-zero row (91 of 92 each). $\Delta = E - C$;
+$\sigma_E = uE$, $\sigma_C = 0$; $\Sigma_E$ block
+$D_{\sigma_E} \rho D_{\sigma_E} + s_N^2 E E^\top$ with $s_N$ = 0.0117 Snyder
+(rows/columns 2551–2641), 0.0134 Dongwi (2642–2732). One-hot row on MT18 group
+$g$, checked against an energy lookup: $S_{k,\,204+g} = C_k / \mu_{i,204+g}$,
+groups 27–50 (states 231–254), 22 distinct states.
+
+**Posterior and outputs.** `nda` writes $\mu_f$ and $\Sigma_f$ (absolute GLLS,
+[CONCEPTS](CONCEPTS.md#notation)) in prior state order. The analysis forms
+linearized responses $C_f = C + S(\mu_f - \mu_i)$ for every row. The relative
+workbook holds the 928 template states (all but MT456) in template order: MT2,
+4, 16, 17, 18, 37, 102 (states 0–356), mubar (969–978), MT452 (357–407), PFNS
+slices 1018–1918 (459–968). `posterior_rel_adjust` and `prior_abs` are 51
+group rows × 19 QID columns (mubar column: rows 0–9); the two
+`*_cov_rel_to_prior` sheets are 928 × 928. Relative values are normalized on
+the prior: $r = D_{\mu_i}^{-1}(\mu_f - \mu_i)$,
+$R_f = D_{\mu_i}^{-1} \Sigma_f D_{\mu_i}^{-1}$; cells with $\mu_i = 0$ are
+written `NaN`. The absolute workbook holds all 979 states in state order
+(`State_values_absolute`: $\mu_i$, $\mu_f$, prior and posterior standard
+deviation) and both 979 × 979 absolute covariances.
+
+**ENDF/B-VIII.0 and VIII.1 reference (Exercise 6 only).**
+`ex6_endf_reference.hdf5` holds each library's reference group values on the
+979 states (`/row_indices`, prior order) and the per-QID reproduction gate
+(29 QIDs). It enters no GLLS matrix; the analysis compares it with $\mu_i$,
+$\mu_f$ and $\Sigma_f$ state by state.
+
 ## Exercise 1 · JEZEBEL criticality
 
 **Data:** Prior from the release covariances. One integral response: JEZEBEL
 $k_\text{eff}$ (`PU-MET-FAST-001-001-s`). Workflow in
 [`Exercise_1/`](../Exercise_1/README.md).
+
+**Matrices:** $n = 979$, $m = 1$. $\mu_i$, $\mu_f$ (979) and $\Sigma_i$,
+$\Sigma_f$ (979 × 979) over states 0–978 as in the shared state index table.
+$\Delta$ (1), $\Sigma_E$ (1 × 1) and $S$ (1 × 979, 447 non-zero columns) have
+one row: row 0 JEZEBEL $k_\text{eff}$. No `/responses` group (added in
+Exercise 2).
+
+**Data treatment:** Prior as in the shared section, into all of $\mu_i$ and
+$\Sigma_i$. Integral: JEZEBEL file row 0 only, into row 0 of $\Delta$,
+$\Sigma_E$ and $S$; $\Sigma_E = \sigma_E^2 + \sigma_C^2$.
 
 **Assumptions:** Sensitivity uncertainties are not propagated.
 
@@ -98,6 +266,15 @@ Packaged as `UU_Erik_Aurora_SG52_v4` for the Captain to send.
 $k_\text{eff}$, EUCLID 3x2 and 1x8 $k_\text{eff}$ (`euclid-3x2-crit`,
 `euclid-8x1-crit`). Workflow in [`Exercise_2/`](../Exercise_2/README.md).
 
+**Matrices:** $n = 979$, $m = 3$. Prior and posterior as Exercise 1. Rows of
+$\Delta$, $\Sigma_E$ (3 × 3, diagonal), $S$ (3 × 979, 538 non-zero columns)
+and `/responses/*`: 0 `PU-MET-FAST-001-001-s`, 1 `euclid-3x2-crit`, 2
+`euclid-8x1-crit`. This order differs from the shared row table (EUCLID
+$k_\text{eff}$ at rows 1–2, not 4–5).
+
+**Data treatment:** Prior as in the shared section. Integral: JEZEBEL file
+row 0 into row 0, EUCLID file rows 0–1 into rows 1–2; diagonal $\Sigma_E$.
+
 **Assumptions:** No covariance between the three responses (diagonal
 observation covariance). Sensitivity uncertainties are not propagated.
 
@@ -123,6 +300,13 @@ are cell-identical to the previous export. Packaged as `_v4`.
 JEZEBEL $k_\text{eff}$ and three reaction-rate ratios; EUCLID two
 $k_\text{eff}$, 15 neutron-leakage-spectrum points and eight reaction-rate
 ratios. Workflow in [`Exercise_3/`](../Exercise_3/README.md).
+
+**Matrices:** $n = 979$, $m = 29$. Prior and posterior as Exercise 1. Rows
+0–28 as in the shared row table: 0–3 JEZEBEL, 4–28 EUCLID. $\Sigma_E$
+29 × 29 diagonal; $S$ 29 × 979, 595 non-zero columns.
+
+**Data treatment:** Prior and Integral as in the shared section: the whole
+JEZEBEL and EUCLID files, rows 0–28 of $\Delta$, $\Sigma_E$ and $S$.
 
 **Assumptions:** No covariance between responses, including between
 neutron-leakage-spectrum points. Sensitivity uncertainties are not propagated.
@@ -165,6 +349,15 @@ point energies = `experimental data.structure.limits` (MeV), $C$ =
 private communication. Observation HDF5 keeps Exercise 3's layout (`/delta`,
 `/cov`, `/sens`, `/responses/*`) with $\sigma_C = 0$ for the Marini rows.
 Workflow in `Exercise_4/`.
+
+**Matrices:** $n = 979$, $m = 54$. Prior and posterior as Exercise 1. Rows:
+0–28 integral, 29–53 Marini nu-bar. $\Sigma_E$ 54 × 54: diagonal on 0–28, full
+block on 29–53, zero between. $S$ 54 × 979; rows 29–53 hit only MT452 states
+388–407; MT456 columns 408–458 are zero in every row.
+
+**Data treatment:** Prior and Integral as Exercise 3 (release 3 files). Marini
+nu-bar as in the shared section (release 3 file name), into rows/columns
+29–53 of $\Delta$, $\Sigma_E$ and rows 29–53 of $S$.
 
 **Assumptions:** The as-MT452 rule (coordinator instruction, 2026-10-23):
 Marini sensitivity rows land on MT452; $E$ and $C$ are used as released (both
@@ -268,6 +461,16 @@ index). Row order: Exercise 4's 54 rows, Marini PFNS, Keegan PFNS.
 Observation HDF5 keeps Exercise 4's layout (`/delta`, `/cov`, `/sens`,
 `/responses/*`) with $\sigma_C = 0$ for every differential row. Workflow in
 `Exercise_5/`.
+
+**Matrices:** $n = 979$, $m = 2551$. Prior and posterior as Exercise 1. Rows:
+0–53 as Exercise 4, 54–1273 Marini PFNS, 1274–2550 Keegan PFNS. $\Sigma_E$
+2551 × 2551 with four diagonal blocks (0–28 diagonal, 29–53, 54–1273,
+1274–2550 full). $S$: PFNS rows hit only PFNS states (Marini slices
+1218–1918 groups 28–43, Keegan slices 1318–1918 groups 25–42).
+
+**Data treatment:** Prior, Integral and Marini nu-bar as Exercise 4 (release 4
+files). Marini PFNS and Keegan PFNS as in the shared section, into rows 54–1273
+and 1274–2550 of $\Delta$, $S$ and the matching diagonal blocks of $\Sigma_E$.
 
 **Assumptions:**
 - Exercise 4's assumptions carry over: the as-MT452 rule for Marini nu-bar, no
@@ -382,6 +585,15 @@ from `releases/B-VIII.1/neutrons/neutrons-version.VIII.1.tar.gz`), both
 processed with NJOY 2016.78 and the ERRORR part of the release's
 `Covariances/NJOY_input` (from the second `moder`). Workflow in
 `Exercise_6/`.
+
+**Matrices:** $n = 979$, $m = 2642$. Prior and posterior as Exercise 1. Rows:
+0–2550 as Exercise 5, 2551–2641 Snyder. $\Sigma_E$ adds the full block
+2551–2641. $S$: Snyder rows hit only MT18 states 231–254.
+
+**Data treatment:** Everything of Exercise 5 unchanged. Snyder as in the
+shared section ($s_N = 0.0117$), into rows 2551–2641 of $\Delta$, $S$ and the
+block 2551–2641 of $\Sigma_E$. ENDF/B-VIII.0 and VIII.1 reference as in the
+shared section; outside the GLLS matrices.
 
 **Assumptions:**
 - Exercise 5's assumptions carry over.
@@ -508,6 +720,10 @@ VIII.1 PFNS slices averaged on VIII.0's incident energies.
 SNEAK-LMFR-EXP-001) with the release's models, and the posterior of the
 preceding adjustment.
 
+**Matrices:** Not built.
+
+**Data treatment:** Not built.
+
 **Assumptions:** To be fixed before work starts. **Open:** transport
 calculation with an adjusted library, or a linear estimate from SNEAK
 sensitivities.
@@ -540,6 +756,15 @@ Differential README (release 3's absolute file gives 1.3426 %: absolute
 covariance = shape covariance + $(0.013426)^2 E E^\top$ exactly). No
 ENDF/B-VIII.1 comparison: the specification asks for it only in Exercise 6
 (Captain, 2026-11-23). Workflow in `Exercise_8/`.
+
+**Matrices:** $n = 979$, $m = 2733$. Prior and posterior as Exercise 1. Rows:
+0–2641 as Exercise 6, 2642–2732 Dongwi. $\Sigma_E$ adds the full block
+2642–2732 (zero against Snyder). $S$: Dongwi rows hit the same MT18 states
+231–254 as Snyder.
+
+**Data treatment:** Everything of Exercise 6's GLLS input unchanged (no
+ENDF/B-VIII.1 reference). Dongwi as in the shared section ($s_N = 0.0134$),
+into rows 2642–2732 of $\Delta$, $S$ and the block 2642–2732 of $\Sigma_E$.
 
 **Assumptions:**
 - Exercise 6's assumptions carry over, except the ENDF/B-VIII.1 comparison.
