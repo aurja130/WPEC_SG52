@@ -10,10 +10,11 @@ Files: ``DBC/CONCEPTS.md``, ``CODE.md``, ``DEFINITIONS.md``, ``EXERCISES.md`` an
 every relative link or image target exists.
 
 CONCEPTS.md
-- Exactly one L1 diagram, headed ``## L1 · SG52 adjustment``. L2 and L3
-  diagrams are headed ``### L2 · <title> (`ParentID`)`` and
-  ``#### L3 · <title> (`ParentID`)``. Every owned L1 node has exactly one L2
-  diagram; an L2 node has at most one L3 diagram; an L3 parent is an L2 node.
+- Exactly one L1 diagram, headed ``## L1 · SG52 adjustment``. L2, L3 and L4
+  diagrams are headed ``### L2 · <title> (`ParentID`)``,
+  ``#### L3 · <title> (`ParentID`)`` and ``##### L4 · <title> (`ParentID`)``.
+  Every owned L1 node has exactly one L2 diagram; an L2 or L3 node has at most
+  one diagram one level down; the parent of an L<k> diagram is an L<k-1> node.
 - Each diagram has exactly one mermaid block starting ``flowchart LR`` or
   ``flowchart TD``. Allowed lines: node declarations ``ID["label"]`` (also
   ``("…")``, ``{"…"}``, ``(["…"])``, ``[("…")]``, ``{{"…"}}``); edges ``-->``,
@@ -89,7 +90,7 @@ EXERCISE_FIELDS = (
 EXERCISE_NUMBER = re.compile(r"\b(?:Exercise|Ex)\s*_?[0-9]+\b")
 STATUSES = {"implemented", "partial", "planned", "external"}
 NODE_ID = r"[A-Za-z][A-Za-z0-9]*"
-DIAGRAM_HEADING = re.compile(r"^(#{2,4})\s+L([1-3]) · (.+?)\s*$")
+DIAGRAM_HEADING = re.compile(r"^(#{2,5})\s+L([1-4]) · (.+?)\s*$")
 ANY_HEADING = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 NODE_DECLARATION = re.compile(
     r"""
@@ -422,7 +423,7 @@ def parse_concepts(
                 line_number,
                 f"the L1 diagram heading must be exactly '## L1 · {PROJECT_TITLE}'",
             )
-        if level in {2, 3} and parent is None:
+        if level >= 2 and parent is None:
             add_problem(
                 problems,
                 filename,
@@ -590,7 +591,7 @@ def parse_concepts(
     l1_diagrams = [diagram for diagram in diagrams if diagram.level == 1]
     l1 = l1_diagrams[0] if l1_diagrams else None
     l2_sections: dict[str, list[Diagram]] = {}
-    l3_sections: dict[str, list[Diagram]] = {}
+    deeper_sections: dict[str, list[Diagram]] = {}
     for diagram in diagrams:
         if diagram.level == 2:
             if diagram.parent is not None:
@@ -610,15 +611,15 @@ def parse_concepts(
                         diagram.line,
                         f"L2 diagram parent {diagram.parent} must be an owned node in the L1 diagram",
                     )
-        elif diagram.level == 3 and diagram.parent is not None:
-            l3_sections.setdefault(diagram.parent, []).append(diagram)
+        elif diagram.level >= 3 and diagram.parent is not None:
+            deeper_sections.setdefault(diagram.parent, []).append(diagram)
             parent_node = owners.get(diagram.parent)
-            if parent_node is None or parent_node.level != 2:
+            if parent_node is None or parent_node.level != diagram.level - 1:
                 add_problem(
                     problems,
                     filename,
                     diagram.line,
-                    f"L3 diagram parent {diagram.parent} must be an owned node in an L2 diagram",
+                    f"L{diagram.level} diagram parent {diagram.parent} must be an owned node in an L{diagram.level - 1} diagram",
                 )
     if l1 is not None:
         for identifier, node in l1.nodes.items():
@@ -632,25 +633,21 @@ def parse_concepts(
                         f"L1 node {identifier} must have exactly one L2 section; found {count}",
                     )
     for node in owners.values():
-        if node.level == 2:
-            count = len(l3_sections.get(node.identifier, []))
+        if node.level in {2, 3}:
+            count = len(deeper_sections.get(node.identifier, []))
             if count > 1:
                 add_problem(
                     problems,
                     filename,
                     node.line,
-                    f"L2 node {node.identifier} has {count} L3 sections; at most one is allowed",
+                    f"L{node.level} node {node.identifier} has {count} L{node.level + 1} sections; at most one is allowed",
                 )
 
     for child in diagrams:
-        if child.level not in {2, 3} or child.parent is None:
+        if child.level < 2 or child.parent is None:
             continue
         parent = owners.get(child.parent)
-        if (
-            parent is None
-            or (child.level == 2 and parent.level != 1)
-            or (child.level == 3 and parent.level != 2)
-        ):
+        if parent is None or parent.level != child.level - 1:
             continue
         children = [node for node in child.nodes.values() if node.status != "external"]
         statuses = {node.status for node in children}
@@ -1127,11 +1124,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     counts = {
         level: sum(1 for node in owners.values() if node.level == level)
-        for level in (1, 2, 3)
+        for level in (1, 2, 3, 4)
     }
     total = sum(counts.values())
     summary = (
-        f"check_dbc: ok — {total} nodes (L1 {counts[1]}, L2 {counts[2]}, L3 {counts[3]}), "
+        f"check_dbc: ok — {total} nodes (L1 {counts[1]}, L2 {counts[2]}, L3 {counts[3]}, L4 {counts[4]}), "
         + f"{code_count} code rows, {test_count} test rows, {exercise_count} exercise sections"
     )
     print(summary)

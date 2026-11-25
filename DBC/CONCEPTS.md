@@ -4,10 +4,11 @@ Reference set: [CODE](CODE.md) · [DEFINITIONS](DEFINITIONS.md) ·
 [EXERCISES](EXERCISES.md) · [TESTS](TESTS.md)
 
 How the SG52 Pu-239 adjustment works, as concepts. L1 is the whole method, each
-L2 diagram opens one L1 node, and L3 diagrams spell out rules with steps. Status
-per node: `implemented`, `partial`, `planned`, or `external` (a node owned by
-another diagram, shown for context). Dashed boxes are planned, dotted boxes are
-partial.
+L2 diagram opens one L1 node, L3 diagrams spell out rules with steps, and L4
+diagrams give the treatment of one data source, from release values to GLLS
+terms. Status per node: `implemented`, `partial`, `planned`, or `external` (a
+node owned by another diagram, shown for context). Dashed boxes are planned,
+dotted boxes are partial.
 
 ## Notation
 
@@ -150,6 +151,16 @@ $$
 n = \underbrace{9 \times 51}_{459} + \underbrace{10 \times 51}_{510} + \underbrace{10}_{\text{mubar}} = 979
 $$
 
+The release gives each QID pair $(q, q')$ as one relative block, $51 \times 51$
+(a mubar state is $1 \times 1$). It lands at the two QIDs' state ranges; a pair
+the release does not give is a zero block:
+
+$$
+(R_i)_{(q,g),(q',g')} = R^{(q,q')}_{g g'},
+\qquad
+R^{(q,q')} = 0 \text{ if not released}
+$$
+
 Relative to absolute, entry by entry and as a matrix:
 
 $$
@@ -157,6 +168,12 @@ $$
 \qquad\Longleftrightarrow\qquad
 \Sigma_i = D_{\mu_i} R_i D_{\mu_i}
 $$
+
+A state with $\mu_{i,j} = 0$, or with $(R_i)_{jj} = 0$, has zero prior
+variance, and its row and column of $\Sigma_i$ are zero ($\Sigma_i$ is
+positive semidefinite). The GLLS update cannot move it:
+$(\mu_f - \mu_i)_j = (\Sigma_i S^\top V^{-1} \Delta)_j = 0$ and
+$(\Sigma_f)_{jj} = 0$.
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
@@ -175,20 +192,16 @@ flowchart LR
   DifferentialSet["Differential measurements"]
   DifferentialSensitivities["Differential sensitivities"]
   PriorMean["Prior mean"]
-  ResponseSelection["Response selection"]
+  IntegralObservations["Integral observations"]
   Discrepancy["Discrepancy"]
-  SensitivityAlignment["Sensitivity alignment"]
   AbsoluteSensitivity["Absolute sensitivity"]
   ObservationCovariance["Observation covariance"]
   DifferentialObservations["Differential observations"]
   Glls["GLLS update"]
-  IntegralSet --> ResponseSelection
-  ResponseSelection --> Discrepancy
-  ResponseSelection --> ObservationCovariance
-  IntegralSensitivities --> SensitivityAlignment
-  SensitivityAlignment & PriorMean --> AbsoluteSensitivity
+  IntegralSet & IntegralSensitivities --> IntegralObservations
   DifferentialSet & DifferentialSensitivities --> DifferentialObservations
-  DifferentialObservations --> Discrepancy & AbsoluteSensitivity & ObservationCovariance
+  IntegralObservations & DifferentialObservations --> Discrepancy & AbsoluteSensitivity & ObservationCovariance
+  PriorMean --> AbsoluteSensitivity
   Discrepancy & AbsoluteSensitivity & ObservationCovariance --> Glls
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
@@ -196,9 +209,10 @@ flowchart LR
   class IntegralSet,IntegralSensitivities,DifferentialSet,DifferentialSensitivities,PriorMean,Glls external
 ```
 
-Discrepancy, and relative to absolute sensitivity. The released sensitivity is
-relative to the calculated value, so the conversion multiplies by $C$ and
-divides by the prior mean:
+Every source, integral or differential, ends in the same three terms:
+discrepancy, absolute sensitivity and observation covariance. The released
+sensitivity is relative to the calculated value, so the conversion multiplies
+by $C$ and divides by the prior mean:
 
 $$
 \Delta_k = E_k - C_k,
@@ -210,8 +224,10 @@ S_{kj} = \frac{\partial C_k}{\partial x_j} = \frac{C_k\, s_{kj}}{\mu_{i,j}}
 S = D_C\, s\, D_{\mu_i}^{-1}
 $$
 
-Columns for nuclides outside the state vector are dropped; states with no
-released sensitivity get a zero column.
+Read as a model, a row of $S$ says how the calculated value follows the state
+vector to first order: $C_k(x) \approx C_k + \sum_j S_{kj}(x_j - \mu_{i,j})$.
+The per-source sections below give $E$, $C$, $s$ and $\Sigma_E$ for each data
+source.
 
 Relative form, if ever used, must normalize every term on the same vector
 $N$, either $E$ or $C$ (method rule):
@@ -231,9 +247,8 @@ construction.
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
-| `ResponseSelection` | Pick the responses an exercise uses, by response ID, keeping released order | integral response, response ID | implemented |
+| `IntegralObservations` | JEZEBEL and EUCLID responses selected, their Pu-239 sensitivity columns mapped to states, and their discrepancies, sensitivities and covariance formed. Split out of this diagram on 2026-11-25; its steps were L2 nodes before | integral response, response ID, relative sensitivity | implemented |
 | `Discrepancy` | Measured minus calculated value per response | discrepancy | implemented |
-| `SensitivityAlignment` | Map each released Pu-239 sensitivity column to its state; reject duplicates and unknown parameters | relative sensitivity, state vector | implemented |
 | `AbsoluteSensitivity` | Convert relative sensitivities to absolute derivatives with the calculated value and the prior mean | absolute sensitivity | implemented |
 | `ObservationCovariance` | Covariance of the discrepancies, block-diagonal over data sets: the integral block from the experimental and calculation uncertainties (method rule), each differential block from its released correlations. Used the published total uncertainty before 2026-10-22; integral responses only before 2026-10-23 | observation covariance, assumption | implemented |
 | `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules. Built for nu-bar, PFNS, Snyder and Dongwi | differential measurement, differential point | implemented |
@@ -243,6 +258,61 @@ construction.
 | `DifferentialSensitivities` | See Release data | | external |
 | `PriorMean` | See Prior | | external |
 | `Glls` | See L1 | | external |
+
+#### L3 · Integral observations (`IntegralObservations`)
+
+```mermaid
+flowchart LR
+  IntegralSet["Integral responses"]
+  IntegralSensitivities["Integral sensitivities"]
+  ResponseSelection["Response selection"]
+  SensitivityAlignment["Sensitivity alignment"]
+  CombinedVariance["Combined variance"]
+  UncorrelatedResponses["Uncorrelated integral responses"]
+  Discrepancy["Discrepancy"]
+  AbsoluteSensitivity["Absolute sensitivity"]
+  ObservationCovariance["Observation covariance"]
+  IntegralSet --> ResponseSelection
+  ResponseSelection --> Discrepancy & CombinedVariance
+  IntegralSensitivities --> SensitivityAlignment
+  ResponseSelection & SensitivityAlignment --> AbsoluteSensitivity
+  CombinedVariance & UncorrelatedResponses --> ObservationCovariance
+  classDef external opacity: 0.6
+  class IntegralSet,IntegralSensitivities,CombinedVariance,UncorrelatedResponses,Discrepancy,AbsoluteSensitivity,ObservationCovariance external
+```
+
+An integral response $k$ is released with $E_k$, $\sigma_{E,k}$, $C_k$,
+$\sigma_{C,k}$, all absolute, and a relative sensitivity $s_{kp}$ to every
+released nuclide parameter $p$. An exercise selects responses by response ID,
+in released order. A map $\pi$ sends each Pu-239 parameter to its state;
+parameters of other nuclides have no state and are dropped, and a state no
+parameter reaches gets a zero column:
+
+$$
+\Delta_k = E_k - C_k,
+\qquad
+S_{kj} = \frac{C_k}{\mu_{i,j}} \sum_{p:\, \pi(p) = j} s_{kp},
+\qquad
+\Sigma_E^{\text{int}} = \operatorname{diag}\!\left(\sigma_{E,k}^2 + \sigma_{C,k}^2\right)
+$$
+
+$\pi$ is one-to-one (a duplicate or unknown Pu-239 parameter is an error), so
+the sum has at most one term. Pu-239 total nu-bar parameters land on MT452,
+prompt spectrum parameters on (PFNS slice, outgoing group), mubar parameters on
+their incident range. The released sensitivity uncertainties are not
+propagated (assumption).
+
+| Node | Meaning | Terms | Status |
+|---|---|---|---|
+| `ResponseSelection` | Pick the responses an exercise uses, by response ID, keeping released order | integral response, response ID | implemented |
+| `SensitivityAlignment` | Map each released Pu-239 sensitivity column to its state; reject duplicates and unknown parameters; drop other nuclides | relative sensitivity, state vector | implemented |
+| `IntegralSet` | See Release data | | external |
+| `IntegralSensitivities` | See Release data | | external |
+| `CombinedVariance` | See Observation covariance | | external |
+| `UncorrelatedResponses` | See Observation covariance | | external |
+| `Discrepancy` | See Observations | | external |
+| `AbsoluteSensitivity` | See Observations | | external |
+| `ObservationCovariance` | See Observations | | external |
 
 #### L3 · Observation covariance (`ObservationCovariance`)
 
@@ -298,80 +368,255 @@ flowchart LR
   DifferentialSet["Differential measurements"]
   DifferentialSensitivities["Differential sensitivities"]
   DifferentialSelection["Differential point selection"]
-  NubarAsTotal["Nu-bar as MT452"]
   DifferentialAlignment["Differential alignment"]
+  NubarObservationModel["Nu-bar observation model"]
+  PfnsObservationModel["PFNS observation model"]
+  CrossSectionShapeModel["Fission cross-section shape model"]
   Discrepancy["Discrepancy"]
   AbsoluteSensitivity["Absolute sensitivity"]
   ObservationCovariance["Observation covariance"]
-  PfnsObservationModel["PFNS observation model"]
-  CrossSectionShapeModel["Fission cross-section shape model"]
   DifferentialSet & DifferentialSensitivities --> DifferentialSelection
-  DifferentialSelection --> Discrepancy & ObservationCovariance
-  DifferentialSelection & NubarAsTotal & PfnsObservationModel & CrossSectionShapeModel --> DifferentialAlignment
-  PfnsObservationModel & CrossSectionShapeModel --> Discrepancy
-  DifferentialAlignment --> AbsoluteSensitivity
+  DifferentialSelection --> DifferentialAlignment
+  DifferentialSelection & DifferentialAlignment --> NubarObservationModel & PfnsObservationModel & CrossSectionShapeModel
+  NubarObservationModel & PfnsObservationModel & CrossSectionShapeModel --> Discrepancy & AbsoluteSensitivity & ObservationCovariance
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
   class DifferentialSet,DifferentialSensitivities,Discrepancy,AbsoluteSensitivity,ObservationCovariance external
 ```
 
-A point $k$ is kept when its energies lie on the group grids, its released
-sensitivity row is non-zero and its calculated value is not `null`. A nu-bar
-row has 52 columns: column $g \le 50$ is energy group $g$ and column 51 must be
-zero, and the row lands on MT452 (coordinator instruction). A PFNS row is
-$10 \times 51$: PFNS slice $p$ (the pseudo-MT holding $E_\text{in}$) by
-outgoing group $g$ (holding $E_\text{out}$). Measured and calculated values
-are used as released, so the existing rules apply unchanged, with QID the
-data set's QID or, for PFNS, the slice's pseudo-MT:
+Shared by every differential source. A point $k$ is kept when its energies lie
+on the group grids (at most 20 MeV), its released sensitivity row is non-zero
+and its calculated value is not `null`. Every released row is one-hot: a single
+entry 1 on the state $j(k)$ whose energy group holds the point (a nu-bar or
+cross-section row has 52 columns, column 51 always zero; a PFNS row is
+$10 \times 51$, slice by outgoing group). Alignment places the entry on
+$j(k)$ and checks $j(k)$ against an independent lookup of the point's
+energies. With $s_{kj} = \delta_{j,\,j(k)}$ the general rules reduce to
 
 $$
-s_{k,(\text{QID},g)} = s^{\text{rel}}_{k,g},
-\qquad
 \Delta_k = E_k - C_k,
 \qquad
-S_{k,(\text{QID},g)} = \frac{C_k\, s^{\text{rel}}_{k,g}}{\mu_{i,(\text{QID},g)}}
-$$
-
-The released PFNS calculated value is block-normalized: the prior spectrum
-$\chi_i$, a density normalized to one over all outgoing energies, at the
-point, times the data's own integral $I_b$ over the block's measured outgoing
-range (trapezoid rule). The block's $C$ therefore integrates to slightly less
-than $I_b$ over that range (0.95–0.96 of it for Marini, 0.985–0.998 for
-Keegan):
-
-$$
-C_k = \chi_i\!\left(E_{\text{out},k} \mid E_{\text{in},k}\right) I_b,
+S_{kj} = \frac{C_k}{\mu_{i,j(k)}}\, \delta_{j,\,j(k)},
 \qquad
-\int \chi_i \, dE_\text{out} = 1,
-\qquad
-I_b = \int_b E \, dE_\text{out}
+C_k(x) \approx C_k\, \frac{x_{j(k)}}{\mu_{i,j(k)}}
 $$
 
-A fission cross-section shape data set keeps its released values and
-calculated values; its missing overall normalization becomes a factor $N$
-with prior $N = 1 \pm s_N$, $s_N$ the removed normalization (systematic)
-error. Marginalizing $N$ adds a rank-one term to the data set's covariance
-block, so the state vector is unchanged:
+so a point's calculated value scales with the relative change of its one
+state, and several points in one group share that state. Each data set has its
+own covariance block from its relative uncertainties $u$ and correlations
+$\rho$, with no calculation uncertainty (assumption):
 
 $$
-\Sigma_E^{(\text{shape})} = D_{\sigma_E}\, \rho\, D_{\sigma_E} + s_N^2\, E E^\top,
+\sigma_{E,k} = u_k E_k,
 \qquad
-\sigma_E = u E
+\Sigma_E^{(d)} = D_{\sigma_E}\, \rho^{(d)}\, D_{\sigma_E}
 $$
+
+The three source models below say what $C$ is, which state $j(k)$ is and what
+is added to $\Sigma_E^{(d)}$.
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
 | `DifferentialSelection` | Keep the points of a data set that lie on the group grids, have a non-zero sensitivity row and a calculated value, in released order; give each a response ID | differential point, response ID, energy group | implemented |
-| `NubarAsTotal` | Nu-bar data adjust MT452 (total nu-bar), though Marini measured prompt nu-bar; MT456 receives no sensitivity | as-MT452 rule, MT452, MT456 | implemented |
 | `DifferentialAlignment` | Place each released one-hot sensitivity row on its state: QID and energy group for nu-bar (52 columns, column 51 zero), PFNS slice and outgoing group for PFNS ($10 \times 51$), checked against a lookup of the point's energies | differential sensitivity, one-hot sensitivity, state vector | implemented |
-| `PfnsObservationModel` | PFNS points use the released block-normalized calculated values and one-hot rows on (PFNS slice, outgoing group), with no free normalization factor and no block-normalization term in the sensitivity. Before 2026-11-23 an open design question, because release 3 gave the PFNS files neither calculated values nor sensitivities | PFNS observation model, PFNS block, block-normalized calculated value | implemented |
-| `CrossSectionShapeModel` | A fission cross-section shape data set (Snyder, Dongwi) uses its released calculated values and one-hot MT18 rows; its missing normalization is a factor with prior uncertainty equal to the removed normalization error, marginalized into its covariance block as $s_N^2 E E^\top$. Before 2026-11-23 an open design question | shape data set, shape normalization uncertainty, differential sensitivity | implemented |
+| `NubarObservationModel` | Marini nu-bar points: prompt values used as released, rows on MT452. Added on 2026-11-25 as the parent of the nu-bar treatment; `NubarAsTotal` was a node of this diagram before | Marini nu-bar, as-MT452 rule | implemented |
+| `PfnsObservationModel` | Marini and Keegan PFNS points: released block-normalized calculated values, one-hot rows on (PFNS slice, outgoing group), no floating normalization factor. Before 2026-11-23 an open design question, because release 3 gave the PFNS files neither calculated values nor sensitivities | PFNS observation model, PFNS block, block-normalized calculated value | implemented |
+| `CrossSectionShapeModel` | Snyder and Dongwi shape points: released calculated values, one-hot MT18 rows, and a marginalized normalization factor with prior uncertainty $s_N$. Before 2026-11-23 an open design question | shape data set, shape normalization uncertainty, differential sensitivity | implemented |
 | `DifferentialSet` | See Release data | | external |
 | `DifferentialSensitivities` | See Release data | | external |
 | `Discrepancy` | See Observations | | external |
 | `AbsoluteSensitivity` | See Observations | | external |
 | `ObservationCovariance` | See Observations | | external |
+
+##### L4 · Nu-bar observations (`NubarObservationModel`)
+
+```mermaid
+flowchart LR
+  DifferentialSelection["Differential point selection"]
+  DifferentialAlignment["Differential alignment"]
+  NubarAsTotal["Nu-bar as MT452"]
+  Discrepancy["Discrepancy"]
+  AbsoluteSensitivity["Absolute sensitivity"]
+  DifferentialCovariance["Differential covariance"]
+  DifferentialSelection --> Discrepancy & DifferentialCovariance
+  DifferentialSelection --> DifferentialAlignment --> NubarAsTotal --> AbsoluteSensitivity
+  classDef external opacity: 0.6
+  class DifferentialSelection,DifferentialAlignment,Discrepancy,AbsoluteSensitivity,DifferentialCovariance external
+```
+
+Point $k$ is a prompt nu-bar at incident energy $E_{\text{in},k}$ in group
+$g(k)$. $E_k$ is measured prompt nu-bar; $C_k$ is the released ENDF/B-VIII.0
+prompt nu-bar (MT456) at that energy. The row lands on total nu-bar, so the
+prompt calculated value follows the relative change of MT452 in its group, and
+MT456 gets no sensitivity:
+
+$$
+\Delta_k = E_k - C_k,
+\qquad
+S_{k,(452,g(k))} = \frac{C_k}{\mu_{i,(452,g(k))}},
+\qquad
+S_{k,(456,\cdot)} = 0,
+\qquad
+\Sigma_E^{(\nu)} = D_{uE}\, \rho\, D_{uE}
+$$
+
+| Node | Meaning | Terms | Status |
+|---|---|---|---|
+| `NubarAsTotal` | Nu-bar data adjust MT452 (total nu-bar), though Marini measured prompt nu-bar; MT456 receives no sensitivity | as-MT452 rule, MT452, MT456 | implemented |
+| `DifferentialSelection` | See Differential observations | | external |
+| `DifferentialAlignment` | See Differential observations | | external |
+| `Discrepancy` | See Observations | | external |
+| `AbsoluteSensitivity` | See Observations | | external |
+| `DifferentialCovariance` | See Observation covariance | | external |
+
+##### L4 · PFNS observations (`PfnsObservationModel`)
+
+```mermaid
+flowchart LR
+  DifferentialSelection["Differential point selection"]
+  DifferentialAlignment["Differential alignment"]
+  PfnsBlockNormalization["PFNS block normalization"]
+  PfnsLevelConstraint["PFNS level constraint"]
+  Discrepancy["Discrepancy"]
+  AbsoluteSensitivity["Absolute sensitivity"]
+  DifferentialCovariance["Differential covariance"]
+  DifferentialSelection --> PfnsBlockNormalization --> Discrepancy
+  DifferentialSelection --> DifferentialAlignment --> AbsoluteSensitivity
+  PfnsBlockNormalization --> AbsoluteSensitivity
+  DifferentialSelection --> DifferentialCovariance
+  PfnsLevelConstraint --> DifferentialCovariance
+  classDef external opacity: 0.6
+  class DifferentialSelection,DifferentialAlignment,Discrepancy,AbsoluteSensitivity,DifferentialCovariance external
+```
+
+A PFNS block $b$ is the set of points at one incident energy
+$E_{\text{in},b}$, measured at outgoing energies $E_{\text{out},k}$ over a
+limited range. Its slice $p(b)$ is the PFNS slice holding $E_{\text{in},b}$;
+several blocks can share a slice. The states of a slice are group values that
+sum to one over the 51 outgoing groups.
+
+The released calculated value is block-normalized: the ENDF/B-VIII.0 spectrum
+$\chi_i$, a density normalized to one over all outgoing energies, scaled to
+the measured integral $I_b$ of the block (trapezoid weights $w_k$ over the
+measured range):
+
+$$
+C_k = \chi_i\!\left(E_{\text{out},k} \mid E_{\text{in},b}\right) I_b,
+\qquad
+\int_0^\infty \chi_i \, dE_\text{out} = 1,
+\qquad
+I_b = \sum_{k \in b} w_k E_k
+$$
+
+Over the measured range $C$ does not reach $I_b$: the tails outside it are
+missing, so the in-range fraction $f_b$ is below one (0.952–0.956 for Marini,
+0.985–0.998 for Keegan). At the prior, the weighted residual of every block is
+therefore positive:
+
+$$
+f_b = \frac{1}{I_b} \sum_{k \in b} w_k C_k \le 1,
+\qquad
+\sum_{k \in b} w_k \Delta_k = (1 - f_b)\, I_b \ge 0
+$$
+
+The row of point $k$ is one-hot on (slice $p(b)$, outgoing group $g(k)$),
+and $I_b$ is held fixed: it does not follow $x$, and its dependence on $E$ is
+not propagated ($\sigma_C = 0$, assumption). The covariance is the plain
+differential block:
+
+$$
+S_{k,(p(b),g(k))} = \frac{C_k}{\mu_{i,(p(b),g(k))}},
+\qquad
+\Sigma_E^{(\text{PFNS})} = D_{uE}\, \rho\, D_{uE}
+$$
+
+Level constraint. Scaling slice $p$ by $1 + \varepsilon$ scales the predicted
+block integral to $(1 + \varepsilon) f_b I_b$, while the data integral stays
+$I_b$. Nothing in $S$ or $\Sigma_E^{(\text{PFNS})}$ absorbs a level difference
+between a block and its slice, so the data constrain the level of each slice
+they touch as well as its shape. Block normalization removes the data's
+overall scale from the prior residual: $E \to (1 + a) E$ gives
+$I_b \to (1 + a) I_b$ and $\Delta \to (1 + a)\Delta$. It does not remove the
+scale from the likelihood, which still weighs a change of level with
+$\Sigma_E^{(\text{PFNS})}$.
+
+The alternative, **not built**, is a floating normalization factor per block,
+$C_b \to N_b C_b$ with $N_b = 1 \pm \sigma_N$. Marginalized, it adds
+$\sigma_N^2 C_b C_b^\top$ to the block's covariance; carried as an extra state,
+it has prior variance $\sigma_N^2$ and sensitivity column $C_b$. Both give the
+same update of $x$. As $\sigma_N \to \infty$ the gain on a residual
+proportional to $C_b$ goes to zero, $\Sigma_i S^\top V^{-1} C_b \to 0$, so the
+block keeps only its shape information.
+
+| Node | Meaning | Terms | Status |
+|---|---|---|---|
+| `PfnsBlockNormalization` | The released calculated value is the prior spectrum times the block's measured integral $I_b$; its in-range fraction $f_b < 1$ leaves a positive weighted residual $(1 - f_b) I_b$ in every block at the prior | block-normalized calculated value, PFNS block, in-range fraction | implemented |
+| `PfnsLevelConstraint` | No floating normalization factor: $I_b$ is held fixed and the PFNS covariance has no level term, so the PFNS data constrain the level of the slices they touch, not only their shape (assumption). **Open:** the 2026-11-24 feedback asks for one floating factor per block with $\sigma_N$ = 100 % | PFNS observation model, floating normalization factor | implemented |
+| `DifferentialSelection` | See Differential observations | | external |
+| `DifferentialAlignment` | See Differential observations | | external |
+| `Discrepancy` | See Observations | | external |
+| `AbsoluteSensitivity` | See Observations | | external |
+| `DifferentialCovariance` | See Observation covariance | | external |
+
+##### L4 · Fission cross-section shape observations (`CrossSectionShapeModel`)
+
+```mermaid
+flowchart LR
+  DifferentialSelection["Differential point selection"]
+  DifferentialAlignment["Differential alignment"]
+  ShapeNormalizationFactor["Shape normalization factor"]
+  Discrepancy["Discrepancy"]
+  AbsoluteSensitivity["Absolute sensitivity"]
+  DifferentialCovariance["Differential covariance"]
+  DifferentialSelection --> Discrepancy & DifferentialCovariance
+  DifferentialSelection --> DifferentialAlignment --> AbsoluteSensitivity
+  ShapeNormalizationFactor --> DifferentialCovariance
+  classDef external opacity: 0.6
+  class DifferentialSelection,DifferentialAlignment,Discrepancy,AbsoluteSensitivity,DifferentialCovariance external
+```
+
+Point $k$ is a fission cross-section value at incident energy in group
+$g(k)$. $E_k$ and $C_k$ (ENDF/B-VIII.0 MT18) are used as released; the row is
+one-hot on MT18:
+
+$$
+\Delta_k = E_k - C_k,
+\qquad
+S_{k,(18,g(k))} = \frac{C_k}{\mu_{i,(18,g(k))}}
+$$
+
+The shape file's covariance has its overall normalization component removed.
+The missing normalization becomes a factor $N$ on the whole data set, with
+prior $N = 1 \pm s_N$, $s_N$ the removed normalization (systematic) error
+(1.17 % Snyder, 1.34 % Dongwi). To first order around $N = 1$,
+$x = \mu_i$:
+
+$$
+N\, C_k(x) \approx C_k + \sum_j S_{kj}(x_j - \mu_{i,j}) + C_k (N - 1)
+$$
+
+The last term is treated as observation noise with variance $s_N^2$, so it adds
+a rank-one term to the block and the state vector is unchanged. The term is
+built on $E$, like $\sigma_E = uE$ (assumption):
+
+$$
+\Sigma_E^{(\text{shape})} = D_{uE}\, \rho\, D_{uE} + s_N^2\, E E^\top
+$$
+
+With $s_N$ of about 1 %, the data set still carries the absolute level of MT18
+with an uncertainty of about $s_N$. **Open:** the 2026-11-24 feedback says a
+shape data set carries no absolute information and asks for $\sigma_N$ = 100 %
+instead of $s_N$; the limit is the one in PFNS observations.
+
+| Node | Meaning | Terms | Status |
+|---|---|---|---|
+| `ShapeNormalizationFactor` | One normalization factor per shape data set, prior $1 \pm s_N$, marginalized into the data set's covariance block as $s_N^2 E E^\top$ (assumption) | shape normalization uncertainty, floating normalization factor | implemented |
+| `DifferentialSelection` | See Differential observations | | external |
+| `DifferentialAlignment` | See Differential observations | | external |
+| `Discrepancy` | See Observations | | external |
+| `AbsoluteSensitivity` | See Observations | | external |
+| `DifferentialCovariance` | See Observation covariance | | external |
 
 ### L2 · GLLS update (`Glls`)
 

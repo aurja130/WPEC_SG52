@@ -33,6 +33,7 @@ nu-bar); `Exercise_1/` to `Exercise_3/` differ in which responses they select.
 
 | Node | Code | Notes |
 |---|---|---|
+| `IntegralObservations` | `Exercise_3/ex3_observations.py` `load_observations` `load_sensitivities` `build_inputs` | Rows 0–28; Exercises 1 and 2 select subsets |
 | `ResponseSelection` | `Exercise_1/ex1_observations.py` `select_response_positions` `Exercise_2/ex2_observations.py` `select_response_positions` `Exercise_3/ex3_observations.py` `JEZEBEL_CRITICALITY_ID` `load_observations` | Exercise 3 takes every released response |
 | `Discrepancy` | `Exercise_3/ex3_observations.py` `build_inputs` | `delta = experimental - simulated` |
 | `SensitivityAlignment` | `Exercise_3/ex3_observations.py` `parameter_to_prior_index` `build_inputs` | |
@@ -40,6 +41,7 @@ nu-bar); `Exercise_1/` to `Exercise_3/` differ in which responses they select.
 | `ObservationCovariance` | `Exercise_3/ex3_observations.py` `build_inputs` `write_observations` `Exercise_4/ex4_observations.py` `build_marini_inputs` `combine_inputs` `require_positive_definite` | Integral block $\operatorname{diag}(\sigma_E^2 + \sigma_C^2)$, checked against the components by the analysis; Marini block $D_{\sigma_E}\rho D_{\sigma_E}$ |
 | `DifferentialObservations` | `Exercise_8/ex8_observations.py` `load_marini_nubar` `build_marini_inputs` `load_pfns` `build_pfns_inputs` `load_shape` `build_shape_inputs` `combine_inputs` | Rows after the 29 integral rows: Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder, Dongwi. Exercises 4–6 hold the earlier subsets |
 | `DifferentialSelection` | `Exercise_8/ex8_observations.py` `load_marini_nubar` `load_pfns` `load_shape` `MARINI_ENERGY_LIMIT_MEV` `PFNS_ENERGY_LIMIT_MEV` `SHAPE_ENERGY_LIMIT_MEV` `MARINI_PFNS_PREFIX` `KEEGAN_PFNS_PREFIX` `SNYDER_RESPONSE_PREFIX` `DONGWI_RESPONSE_PREFIX` | Drops points above 20 MeV, with a zero sensitivity row or (PFNS) a `null` calculated value |
+| `NubarObservationModel` | `Exercise_8/ex8_observations.py` `load_marini_nubar` `build_marini_inputs` | Same in Exercises 4–6 |
 | `NubarAsTotal` | `Exercise_8/ex8_observations.py` `total_nubar_prior_index` | Same in Exercises 4–6 |
 | `DifferentialAlignment` | `Exercise_8/ex8_observations.py` `load_marini_nubar` `build_marini_inputs` `load_pfns` `build_pfns_inputs` `load_shape` `build_shape_inputs` | Rejects rows that are not one-hot; nu-bar and shape sets reject a non-zero column 51; PFNS and shape sets check the one-hot state against an energy lookup |
 | `PfnsObservationModel` | `Exercise_8/ex8_observations.py` `load_pfns` `build_pfns_inputs` `PfnsPoints` | Released block-normalized $C$; one-hot row on `94239_<slice MT>_<group>`, $S = C/\mu_i$; same in Exercises 5 and 6 |

@@ -144,65 +144,63 @@ one block); every entry between two data sets is zero (independent data sets).
 
 #### Data treatment by source
 
-**Prior (`Covariances/plaintext`).** $\mu_i$: `94239-<QID>-xs.txt`, in state
-order. $R_i$: `94239-<QID1>-94239-<QID2>-relcov.txt` (51 × 51, mubar 1 × 1)
-placed at the two QIDs' state ranges; missing files are zero blocks (release
-README). Made absolute, $\Sigma_i = D_{\mu_i} R_i D_{\mu_i}$. Blocks between
-QIDs are non-zero among the seven cross sections (MT2, 4, 16, 17, 18, 37, 102,
-states 0–356), among PFNS slices 1018–1318, between 1418 and 1518, and among
-1718–1918; MT452, MT456, slice 1618 and the mubar states have no covariance
-with other QIDs. 196 states have $\mu_i = 0$ (MT4 groups 0–23, MT16 0–37,
-MT17 0–43, MT37 0–49, PFNS slices 1218–1918 groups 0–4); 215 have zero prior
-variance (these plus slice 1018 groups 0–17 and mubar 00251), so GLLS cannot
-move them.
+Per source: release file and fields, what is kept, and where it lands. The
+mathematics of each source lives in its CONCEPTS section, linked in the
+heading line; it is not repeated here.
 
-**Integral (`Integral/{JEZEBEL,EUCLID}`).** From `*_obs.csv` (columns `expt`,
-`expt_uncert`, `sim`, `sim_uncert`; JEZEBEL file rows 0–3, EUCLID file
-rows 4–28): $\Delta_k = E_k - C_k$, and the diagonal entry
-$(\Sigma_E)_{kk} = \sigma_{E,k}^2 + \sigma_{C,k}^2$, absolute as released. From
-`*_sens_rel.csv` (3836 parameter columns): the 596 `Pu239_*` columns map to
-states (elastic → 00002, inelastic → 00004, z,2n → 00016, z,3n → 00017,
-fission → 00018, z,4n → 00037, capture → 00102, multiplicity total nu →
-00452, spectrum prompt nu $k$, $g$ → PFNS slice $k$ group $g$, mubar $k$ →
-$251 + 1000k$) and are made absolute, $S_{kj} = C_k s_{kj} / \mu_{i,j}$; the
-3240 columns of other nuclides are dropped (not adjusted); `*_sens_unc_rel.csv`
-is not read. Non-zero $S$ columns in rows 0–28: 595 — MT2, MT18, MT102, MT452
-all groups; MT4 groups 25–50 (states 76–101); MT16 38–50 (140–152); MT17
-45–50 (198–203); MT37 50 (305); PFNS slices 1018–1318 groups 18–50, 1418–1918
-groups 17–50; mubar 01251–09251 (970–978). Always zero: MT456 (408–458) and
-mubar 00251 (969).
+**Prior (`Covariances/plaintext`;
+[CONCEPTS: Prior](CONCEPTS.md#l2--prior-prior)).** $\mu_i$:
+`94239-<QID>-xs.txt`, in state order. $R_i$:
+`94239-<QID1>-94239-<QID2>-relcov.txt` (51 × 51, mubar 1 × 1); missing files
+are zero blocks (release README). Blocks between QIDs are non-zero among the
+seven cross sections (MT2, 4, 16, 17, 18, 37, 102, states 0–356), among PFNS
+slices 1018–1318, between 1418 and 1518, and among 1718–1918; MT452, MT456,
+slice 1618 and the mubar states have no covariance with other QIDs. 196 states
+have $\mu_i = 0$ (MT4 groups 0–23, MT16 0–37, MT17 0–43, MT37 0–49, PFNS
+slices 1218–1918 groups 0–4); 215 have zero prior variance (these plus slice
+1018 groups 0–17 and mubar 00251), so GLLS cannot move them.
+
+**Integral (`Integral/{JEZEBEL,EUCLID}`;
+[CONCEPTS: Integral observations](CONCEPTS.md#l3--integral-observations-integralobservations)).**
+$E$, $\sigma_E$, $C$, $\sigma_C$ from `*_obs.csv` columns `expt`,
+`expt_uncert`, `sim`, `sim_uncert` (JEZEBEL file rows 0–3, EUCLID file rows
+4–28). $s$ from `*_sens_rel.csv` (3836 parameter columns): the 596 `Pu239_*`
+columns map to states (elastic → 00002, inelastic → 00004, z,2n → 00016, z,3n
+→ 00017, fission → 00018, z,4n → 00037, capture → 00102, multiplicity total nu
+→ 00452, spectrum prompt nu $k$, $g$ → PFNS slice $k$ group $g$, mubar $k$ →
+$251 + 1000k$); the 3240 columns of other nuclides are dropped;
+`*_sens_unc_rel.csv` is not read. Non-zero $S$ columns in rows 0–28: 595 —
+MT2, MT18, MT102, MT452 all groups; MT4 groups 25–50 (states 76–101); MT16
+38–50 (140–152); MT17 45–50 (198–203); MT37 50 (305); PFNS slices 1018–1318
+groups 18–50, 1418–1918 groups 17–50; mubar 01251–09251 (970–978). Always
+zero: MT456 (408–458) and mubar 00251 (969).
 
 **Marini nu-bar (`Marini nubar/nubar-Marini2021.json`; release 3:
-`nubar_Marini2021.json`).** $E$ = `experimental data.values`, $u$ =
-`.uncertainties`, $\rho$ = `.correlations`, $C$ = `evaluated data.values`
-(prompt, MT456). Kept: points with energy ≤ 20 MeV and a non-zero row (all 25).
-$\Delta = E - C$ into rows 29–53; $\sigma_E = uE$, $\sigma_C = 0$; $\Sigma_E$
-block $D_{\sigma_E} \rho D_{\sigma_E}$ at rows/columns 29–53. One-hot row on
-group $g$ moved to MT452 (as-MT452 rule): $S_{k,\,357+g} = C_k / \mu_{i,357+g}$,
-groups 31–50 (states 388–407), 18 distinct states.
+`nubar_Marini2021.json`;
+[CONCEPTS: Nu-bar observations](CONCEPTS.md#l4--nu-bar-observations-nubarobservationmodel)).**
+$E$ = `experimental data.values`, $u$ = `.uncertainties`, $\rho$ =
+`.correlations`, $C$ = `evaluated data.values` (prompt, MT456). Kept: points
+with energy ≤ 20 MeV and a non-zero row (all 25). Rows and $\Sigma_E$ block
+29–53. Rows land on MT452 groups 31–50 (states 388–407), 18 distinct states.
 
 **Marini PFNS (`Marini PFNS/PFNS_CEAcor.json`) and Keegan PFNS (`Keegan
-PFNS/PFNS_ChiNuPu9_Oct2020.json`).** $E$ = `data.values`, $u$ =
-`data.uncertainties`, $\rho$ = `data.correlations`, $C$ = `evaluated
-data.values` (block-normalized, used as released). Kept: $E_\text{in} \le 20$
-MeV, non-zero row, finite $C$ (Marini 1220 of 1281, Keegan 1277 of 1277).
-$\Delta = E - C$; $\sigma_E = uE$, $\sigma_C = 0$; $\Sigma_E$ block
-$D_{\sigma_E} \rho D_{\sigma_E}$ per data set (Marini rows/columns 54–1273,
-Keegan 1274–2550). One-hot row on (slice $k$ holding $E_\text{in}$, group $g$
-holding $E_\text{out}$), checked against an energy lookup:
-$S_{r,\,459+51k+g} = C_r / \mu_{i,459+51k+g}$. Marini: slices 1218–1918,
-groups 28–43, 128 distinct states; Keegan: slices 1318–1918, groups 25–42,
-126 distinct states.
+PFNS/PFNS_ChiNuPu9_Oct2020.json`;
+[CONCEPTS: PFNS observations](CONCEPTS.md#l4--pfns-observations-pfnsobservationmodel)).**
+$E$ = `data.values`, $u$ = `data.uncertainties`, $\rho$ = `data.correlations`,
+$C$ = `evaluated data.values` (block-normalized, used as released). Kept:
+$E_\text{in} \le 20$ MeV, non-zero row, finite $C$ (Marini 1220 of 1281, Keegan
+1277 of 1277). Rows and $\Sigma_E$ blocks: Marini 54–1273, Keegan 1274–2550.
+Rows land on state $459 + 51k + g$: Marini slices 1218–1918, groups 28–43, 128
+distinct states; Keegan slices 1318–1918, groups 25–42, 126 distinct states.
 
 **Snyder (`Snyder/nfcs_Snyder2021_shape.json`) and Dongwi
-(`Dongwi/nfcs_Dongwi2025_shape.json`).** $E$ = `experimental data.values`,
-$u$, $\rho$ as for Marini nu-bar, $C$ = `evaluated data.values` (MT18). Kept:
-energy ≤ 20 MeV and a non-zero row (91 of 92 each). $\Delta = E - C$;
-$\sigma_E = uE$, $\sigma_C = 0$; $\Sigma_E$ block
-$D_{\sigma_E} \rho D_{\sigma_E} + s_N^2 E E^\top$ with $s_N$ = 0.0117 Snyder
-(rows/columns 2551–2641), 0.0134 Dongwi (2642–2732). One-hot row on MT18 group
-$g$, checked against an energy lookup: $S_{k,\,204+g} = C_k / \mu_{i,204+g}$,
-groups 27–50 (states 231–254), 22 distinct states.
+(`Dongwi/nfcs_Dongwi2025_shape.json`;
+[CONCEPTS: Fission cross-section shape observations](CONCEPTS.md#l4--fission-cross-section-shape-observations-crosssectionshapemodel)).**
+$E$ = `experimental data.values`, $u$, $\rho$ as for Marini nu-bar, $C$ =
+`evaluated data.values` (MT18). Kept: energy ≤ 20 MeV and a non-zero row (91
+of 92 each). Rows and $\Sigma_E$ blocks: Snyder 2551–2641 ($s_N$ = 0.0117),
+Dongwi 2642–2732 ($s_N$ = 0.0134). Rows land on MT18 groups 27–50 (states
+231–254), 22 distinct states.
 
 **Posterior and outputs.** `nda` writes $\mu_f$ and $\Sigma_f$ (absolute GLLS,
 [CONCEPTS](CONCEPTS.md#notation)) in prior state order. The analysis forms
@@ -256,7 +254,7 @@ template: only the questions sheet changed (answers 6–11); every other sheet
 and the absolute workbook are cell-identical to the previous export.
 Packaged as `UU_Erik_Aurora_SG52_v4` for the Captain to send.
 
-**Concepts:** `ResponseSelection` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `AbsolutePriorCovariance` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
+**Concepts:** `IntegralObservations` `ResponseSelection` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `AbsolutePriorCovariance` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
 **Comments:** —
 
@@ -290,7 +288,7 @@ coordinators 2026-10-23. Re-exported 2026-11-23 into the release 4 template:
 only the questions sheet changed; every other sheet and the absolute workbook
 are cell-identical to the previous export. Packaged as `_v4`.
 
-**Concepts:** `ResponseSelection` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
+**Concepts:** `IntegralObservations` `ResponseSelection` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
 **Comments:** —
 
@@ -330,7 +328,7 @@ release 4 template: only the questions sheet changed; every other sheet and
 the absolute workbook are cell-identical to the previous export. Packaged as
 `_v4`.
 
-**Concepts:** `ResponseSelection` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `UncertaintyAudit` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
+**Concepts:** `IntegralObservations` `ResponseSelection` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `UncertaintyAudit` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
 **Comments:** —
 
@@ -402,7 +400,7 @@ Captain to send; coordinator comments go into the next round. Re-exported
 (answers 6–11); every other sheet and the absolute workbook are
 cell-identical to the previous export. Packaged as `_v4`.
 
-**Concepts:** `ResponseSelection` `DifferentialSet` `DifferentialSensitivities` `DifferentialObservations` `DifferentialSelection` `NubarAsTotal` `DifferentialAlignment` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
+**Concepts:** `IntegralObservations` `ResponseSelection` `DifferentialSet` `DifferentialSensitivities` `DifferentialObservations` `DifferentialSelection` `NubarObservationModel` `NubarAsTotal` `DifferentialAlignment` `Discrepancy` `SensitivityAlignment` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
 **Comments:** 2026-10-23, orchestrator: Marini measured prompt nu-bar (JSON
 `reaction = "nubar-prompt"`; its `evaluated data` matches ENDF/B-VIII.0 MF1
@@ -533,7 +531,7 @@ states; MT456 unchanged; largest mean shift 2.72 prior standard deviations
 blockers (2026-11-23). Added 2026-11-23 to `UU_Erik_Aurora_SG52_v4` (`Ex5/`;
 Ex1–4 unchanged, archives rebuilt) for the Captain to send.
 
-**Concepts:** `DifferentialSet` `DifferentialSensitivities` `DifferentialSelection` `NubarAsTotal` `PfnsObservationModel` `DifferentialAlignment` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `GllsReproduction` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
+**Concepts:** `DifferentialSet` `DifferentialSensitivities` `DifferentialSelection` `NubarObservationModel` `NubarAsTotal` `PfnsObservationModel` `PfnsBlockNormalization` `PfnsLevelConstraint` `DifferentialAlignment` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `GllsReproduction` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
 **Comments:** 2026-11-23, orchestrator: release 4 adds `evaluated data` and
 one-hot `sensitivities` to both PFNS files (release 3 had neither), which is
@@ -664,7 +662,7 @@ PFNS slices 01318, 01518, 01618 (reproduction error $1.5$–$2.8 \times
 2026-11-23 to `UU_Erik_Aurora_SG52_v4` (`Ex6/`; Ex1–5 unchanged, archives
 rebuilt) for the Captain to send.
 
-**Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `DifferentialCovariance` `IndependentDataSets` `EndfComparison` `ReferenceGroupValues` `ReproductionGate` `TargetAdjustment` `PosteriorConsistency` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
+**Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `ShapeNormalizationFactor` `DifferentialCovariance` `IndependentDataSets` `EndfComparison` `ReferenceGroupValues` `ReproductionGate` `TargetAdjustment` `PosteriorConsistency` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
 
 **Comments:** 2026-11-23, orchestrator: the specification asks only to
 "compare with the ENDF/B-VIII.1 file"; nobody instructed us to process
@@ -806,7 +804,7 @@ to +0.04 %; the largest stays about +1.34 %. Completion review passed with no
 blockers (2026-11-23). Added 2026-11-23 to `UU_Erik_Aurora_SG52_v4` (`Ex8/`;
 Ex1–6 unchanged, archives rebuilt) for the Captain to send.
 
-**Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `DifferentialCovariance` `IndependentDataSets` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
+**Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `ShapeNormalizationFactor` `DifferentialCovariance` `IndependentDataSets` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
 
 **Comments:** 2026-11-23, orchestrator: completion review (one round): no
 blockers; the reviewer independently confirmed rows 0–2641, the shared
