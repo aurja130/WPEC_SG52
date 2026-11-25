@@ -72,7 +72,7 @@ flowchart LR
   classDef planned stroke-dasharray: 6 4
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
-  class ReleaseData partial
+  class ReleaseData,Observations partial
   class Validation planned
 ```
 
@@ -80,7 +80,7 @@ flowchart LR
 |---|---|---|---|
 | `ReleaseData` | The coordinators' input package: prior covariances, integral and differential data with sensitivities, validation benchmarks and the output template. Prior, integral data and every released differential set are used; the validation data are not (the SNEAK validation step is ignored by decision of the 2026-10-26 meeting) | release, release data | partial |
 | `Prior` | ENDF/B-VIII.0 Pu-239 means and absolute covariance on the state vector | prior, state vector | implemented |
-| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses: integral responses, Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi | observation, integral response, differential measurement | implemented |
+| `Observations` | Discrepancies, absolute sensitivities and observation covariance for the responses an exercise uses: integral responses, Marini nu-bar, Marini and Keegan PFNS, Snyder and Dongwi. Partial while the PFNS floating normalization is being built | observation, integral response, differential measurement | partial |
 | `Glls` | Linear Bayesian update of the prior with the observations, in absolute form | GLLS, posterior | implemented |
 | `Diagnostics` | Checks and summaries of the update: reproduction, linearized responses, uncertainty reduction, covariance health, PFNS normalization and positivity, and the comparison with ENDF/B-VIII.1 | linearized prediction, PFNS normalization, target adjustment | implemented |
 | `Submission` | Relative and absolute results filled into the release 4 output template, normalized on the prior mean. The release 3 template until 2026-11-23; before 2026-10-22 the release 2 template, with the posterior relative covariance normalized on the posterior mean | output template, submission | implemented |
@@ -207,6 +207,7 @@ flowchart LR
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
   class IntegralSet,IntegralSensitivities,DifferentialSet,DifferentialSensitivities,PriorMean,Glls external
+  class DifferentialObservations partial
 ```
 
 Every source, integral or differential, ends in the same three terms:
@@ -251,7 +252,7 @@ construction.
 | `Discrepancy` | Measured minus calculated value per response | discrepancy | implemented |
 | `AbsoluteSensitivity` | Convert relative sensitivities to absolute derivatives with the calculated value and the prior mean | absolute sensitivity | implemented |
 | `ObservationCovariance` | Covariance of the discrepancies, block-diagonal over data sets: the integral block from the experimental and calculation uncertainties (method rule), each differential block from its released correlations. Used the published total uncertainty before 2026-10-22; integral responses only before 2026-10-23 | observation covariance, assumption | implemented |
-| `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules. Built for nu-bar, PFNS, Snyder and Dongwi | differential measurement, differential point | implemented |
+| `DifferentialObservations` | Differential points selected and aligned to the state vector; their discrepancies, sensitivities and covariances join the integral ones through the same rules. Built for nu-bar, PFNS, Snyder and Dongwi; PFNS floating normalization planned | differential measurement, differential point | partial |
 | `IntegralSet` | See Release data | | external |
 | `IntegralSensitivities` | See Release data | | external |
 | `DifferentialSet` | See Release data | | external |
@@ -383,6 +384,7 @@ flowchart LR
   classDef partial stroke-dasharray: 2 2
   classDef external opacity: 0.6
   class DifferentialSet,DifferentialSensitivities,Discrepancy,AbsoluteSensitivity,ObservationCovariance external
+  class PfnsObservationModel partial
 ```
 
 Shared by every differential source. A point $k$ is kept when its energies lie
@@ -421,7 +423,7 @@ is added to $\Sigma_E^{(d)}$.
 | `DifferentialSelection` | Keep the points of a data set that lie on the group grids, have a non-zero sensitivity row and a calculated value, in released order; give each a response ID | differential point, response ID, energy group | implemented |
 | `DifferentialAlignment` | Place each released one-hot sensitivity row on its state: QID and energy group for nu-bar (52 columns, column 51 zero), PFNS slice and outgoing group for PFNS ($10 \times 51$), checked against a lookup of the point's energies | differential sensitivity, one-hot sensitivity, state vector | implemented |
 | `NubarObservationModel` | Marini nu-bar points: prompt values used as released, rows on MT452. Added on 2026-11-25 as the parent of the nu-bar treatment; `NubarAsTotal` was a node of this diagram before | Marini nu-bar, as-MT452 rule | implemented |
-| `PfnsObservationModel` | Marini and Keegan PFNS points: released block-normalized calculated values, one-hot rows on (PFNS slice, outgoing group), no floating normalization factor. Before 2026-11-23 an open design question, because release 3 gave the PFNS files neither calculated values nor sensitivities | PFNS observation model, PFNS block, block-normalized calculated value | implemented |
+| `PfnsObservationModel` | Marini and Keegan PFNS points: released block-normalized calculated values, one-hot rows on (PFNS slice, outgoing group), and one floating normalization factor per PFNS block with $\sigma_N$ = 100 % (since 2026-11-25; no factor before). Before 2026-11-23 an open design question, because release 3 gave the PFNS files neither calculated values nor sensitivities | PFNS observation model, PFNS block, block-normalized calculated value | partial |
 | `CrossSectionShapeModel` | Snyder and Dongwi shape points: released calculated values, one-hot MT18 rows, and a marginalized normalization factor with prior uncertainty $s_N$. Before 2026-11-23 an open design question | shape data set, shape normalization uncertainty, differential sensitivity | implemented |
 | `DifferentialSet` | See Release data | | external |
 | `DifferentialSensitivities` | See Release data | | external |
@@ -488,6 +490,8 @@ flowchart LR
   PfnsLevelConstraint --> DifferentialCovariance
   classDef external opacity: 0.6
   class DifferentialSelection,DifferentialAlignment,Discrepancy,AbsoluteSensitivity,DifferentialCovariance external
+  classDef planned stroke-dasharray: 6 4
+  class PfnsLevelConstraint planned
 ```
 
 A PFNS block $b$ is the set of points at one incident energy
@@ -522,37 +526,42 @@ $$
 
 The row of point $k$ is one-hot on (slice $p(b)$, outgoing group $g(k)$),
 and $I_b$ is held fixed: it does not follow $x$, and its dependence on $E$ is
-not propagated ($\sigma_C = 0$, assumption). The covariance is the plain
-differential block:
+not propagated ($\sigma_C = 0$, assumption):
 
 $$
-S_{k,(p(b),g(k))} = \frac{C_k}{\mu_{i,(p(b),g(k))}},
-\qquad
-\Sigma_E^{(\text{PFNS})} = D_{uE}\, \rho\, D_{uE}
+S_{k,(p(b),g(k))} = \frac{C_k}{\mu_{i,(p(b),g(k))}}
 $$
 
-Level constraint. Scaling slice $p$ by $1 + \varepsilon$ scales the predicted
-block integral to $(1 + \varepsilon) f_b I_b$, while the data integral stays
-$I_b$. Nothing in $S$ or $\Sigma_E^{(\text{PFNS})}$ absorbs a level difference
-between a block and its slice, so the data constrain the level of each slice
-they touch as well as its shape. Block normalization removes the data's
-overall scale from the prior residual: $E \to (1 + a) E$ gives
-$I_b \to (1 + a) I_b$ and $\Delta \to (1 + a)\Delta$. It does not remove the
-scale from the likelihood, which still weighs a change of level with
-$\Sigma_E^{(\text{PFNS})}$.
+Why the level needs freeing. Scaling slice $p$ by $1 + \varepsilon$ scales
+the predicted block integral to $(1 + \varepsilon) f_b I_b$, while the data
+integral stays $I_b$. With the plain block $D_{uE}\rho D_{uE}$, nothing absorbs
+a level difference between a block and its slice, so the data would constrain
+the level of each slice they touch as well as its shape. Block normalization
+removes the data's overall scale from the prior residual: $E \to (1 + a) E$
+gives $I_b \to (1 + a) I_b$ and $\Delta \to (1 + a)\Delta$. It does not
+remove the scale from the likelihood.
 
-The alternative, **not built**, is a floating normalization factor per block,
-$C_b \to N_b C_b$ with $N_b = 1 \pm \sigma_N$. Marginalized, it adds
-$\sigma_N^2 C_b C_b^\top$ to the block's covariance; carried as an extra state,
-it has prior variance $\sigma_N^2$ and sensitivity column $C_b$. Both give the
-same update of $x$. As $\sigma_N \to \infty$ the gain on a residual
-proportional to $C_b$ goes to zero, $\Sigma_i S^\top V^{-1} C_b \to 0$, so the
-block keeps only its shape information.
+Floating normalization factor. Each block gets a factor $N_b = 1 \pm
+\sigma_N$ on its measured values, $\sigma_N = 1$ (100 %): the data carry no
+absolute information. With $E^{(b)}$ equal to $E$ on block $b$ and zero
+elsewhere, marginalizing the factors adds one rank-one term per block, and the
+state vector is unchanged:
+
+$$
+\Sigma_E^{(\text{PFNS})} = D_{uE}\, \rho\, D_{uE} + \sigma_N^2 \sum_b E^{(b)} E^{(b)\top}
+$$
+
+Carrying $N_b$ as an extra state instead (prior variance $\sigma_N^2$,
+sensitivity column $E^{(b)}$) gives the same update of $x$. As
+$\sigma_N \to \infty$ the gain on a residual proportional to $E^{(b)}$ goes to
+zero, $\Sigma_i S^\top V^{-1} E^{(b)} \to 0$, so the block keeps only its
+shape. At $\sigma_N = 1$ a level mismatch of the size of the prior offset
+$(1 - f_b)$ costs almost nothing.
 
 | Node | Meaning | Terms | Status |
 |---|---|---|---|
 | `PfnsBlockNormalization` | The released calculated value is the prior spectrum times the block's measured integral $I_b$; its in-range fraction $f_b < 1$ leaves a positive weighted residual $(1 - f_b) I_b$ in every block at the prior | block-normalized calculated value, PFNS block, in-range fraction | implemented |
-| `PfnsLevelConstraint` | No floating normalization factor: $I_b$ is held fixed and the PFNS covariance has no level term, so the PFNS data constrain the level of the slices they touch, not only their shape (assumption). **Open:** the 2026-11-24 feedback asks for one floating factor per block with $\sigma_N$ = 100 % | PFNS observation model, floating normalization factor | implemented |
+| `PfnsLevelConstraint` | One floating normalization factor per PFNS block, $N_b = 1 \pm 1$, marginalized into the data set's covariance block as $\sum_b E^{(b)} E^{(b)\top}$, so the PFNS data constrain the shape of the slices they touch and practically not their level (Captain, 2026-11-25, after the 2026-11-24 feedback). Before 2026-11-25 it meant the opposite: no factor, $I_b$ fixed, the data constraining level and shape | PFNS observation model, floating normalization factor | planned |
 | `DifferentialSelection` | See Differential observations | | external |
 | `DifferentialAlignment` | See Differential observations | | external |
 | `Discrepancy` | See Observations | | external |

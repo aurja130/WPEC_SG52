@@ -475,16 +475,24 @@ and 1274–2550 of $\Delta$, $S$ and the matching diagonal blocks of $\Sigma_E$.
   covariance between integral responses, sensitivity uncertainties not
   propagated, no calculation uncertainty for differential points.
 - PFNS calculated values are the released block-normalized values, used as
-  released: no free normalization factor, no renormalization on the prior.
-  This is how the PFNS shape data are handled. It also makes Marini's
-  multiplicity-weighted convention harmless, because each block's $C$ is
-  scaled to its own data.
+  released: no renormalization on the prior. Marini's multiplicity-weighted
+  convention is harmless, because each block's $C$ is scaled to its own data.
+- PFNS floating normalization (Captain, 2026-11-25, after the 2026-11-24
+  feedback): PFNS are shape data. Each PFNS block $b$ (the kept points of one
+  data set that share one incident energy: Marini 20 blocks, Keegan 20) gets
+  a factor $N_b = 1 \pm \sigma_N$ with $\sigma_N = 1$ (100 %), marginalized
+  into the data set's covariance block on the measured values. The state
+  vector stays at 979. Before 2026-11-25 there was no factor, and the
+  block-normalized $C$ alone set the level.
 - PFNS sensitivities are the released one-hot rows (value 1 on the PFNS slice
   holding $E_\text{in}$ and the outgoing group holding $E_\text{out}$), with
   no term for the block normalization, as released.
-- Each PFNS set's covariance is $D_{\sigma_E} \rho D_{\sigma_E}$ with
-  $\sigma_E = uE$, as for Marini nu-bar; no Peelle's Pertinent Puzzle
-  correction.
+- Each PFNS set's covariance is
+  $D_{\sigma_E} \rho D_{\sigma_E} + \sigma_N^2 \sum_b E^{(b)} E^{(b)\top}$
+  with $\sigma_E = uE$ and $E^{(b)}$ equal to $E$ on block $b$ and zero
+  elsewhere; no Peelle's Pertinent Puzzle correction.
+  `/responses/experimental_uncertainty` keeps $\sigma_E = uE$ (without the
+  factor), as for the shape sets.
 - Independent data sets: no covariance between the integral block, Marini
   nu-bar, Marini PFNS and Keegan PFNS. The two PFNS files share an EXFOR
   number but are independent experiments (release README).
@@ -498,9 +506,11 @@ and 1274–2550 of $\Delta$, $S$ and the matching diagonal blocks of $\Sigma_E$.
   equal to $C_k / \mu_{i,j}$; that state agrees with a lookup of both
   energies in the released `sensitivities.structure` limits; every other
   entry is zero.
-- Each PFNS block of `/cov` is $D_{\sigma_E} \rho D_{\sigma_E}$ with
-  $\sigma_E = uE$, symmetric and positive definite; every block between
-  data sets is zero.
+- Each PFNS block of `/cov` is
+  $D_{\sigma_E} \rho D_{\sigma_E} + \sum_b E^{(b)} E^{(b)\top}$ with
+  $\sigma_E = uE$, blocks found by equal released incident energy (Marini 20,
+  Keegan 20), symmetric and positive definite; every block between data sets
+  is zero.
 - `nda` runs on the 2551 × 2551 $\Sigma_E$, and the analysis reproduces its
   posterior from the inputs.
 - The analysis report gives, per data set (integral, Marini nu-bar, Marini
