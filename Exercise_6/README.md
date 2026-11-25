@@ -53,11 +53,11 @@ Snyder selection: incident energy at or below 20 MeV and a non-zero sensitivity 
 
 ## Observation model
 
-- Nu-bar and PFNS: as in Exercise 5 (as-MT452 rule for Marini nu-bar; PFNS one-hot rows with S = C_k / μ_prior; no block-normalization term; no free normalization factor).
+- Nu-bar and PFNS: as in Exercise 5 (as-MT452 rule for Marini nu-bar; PFNS one-hot rows with S = C_k / μ_prior; no block-normalization term in the sensitivity; one floating normalization factor per PFNS block with σ_N = 1.0 (100 %) in the covariance).
 - Snyder: each point is its own observation with residual δ_k = E_k − C_k, where C_k is the released ENDF/B-VIII.0 MT18 value. Its sensitivity is the released one-hot row: a single non-zero entry on `94239_00018_<group>`, the group holding E_in, with S = C_k / μ_prior.
 - Covariance is block diagonal over the five data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder):
   - integral block: diag(expt² + sim²), as in Exercise 3;
-  - Marini nu-bar, Marini PFNS, Keegan PFNS: diag(σ_E) ρ diag(σ_E), with σ_E = u · E (u relative, ρ from the release);
+  - Marini nu-bar, Marini PFNS, Keegan PFNS: diag(σ_E) ρ diag(σ_E), with σ_E = u · E (u relative, ρ from the release); Marini PFNS and Keegan PFNS additionally σ_N² Σ_b E_b E_bᵀ (σ_N = 1.0, one floating normalization factor per block);
   - Snyder: diag(σ_E) ρ diag(σ_E) + s_N² E Eᵀ, with σ_E = u · E and s_N = 1.17 %;
   - all blocks between data sets: zero.
   Each differential block is checked for symmetry and positive definiteness (Cholesky).
@@ -75,6 +75,7 @@ Snyder selection: incident energy at or below 20 MeV and a non-zero sensitivity 
 ## Assumptions
 
 - Exercise 5's assumptions carry over.
+- PFNS: one floating normalization factor per block (kept points sharing one released incident energy), σ_N = 1.0 (100 %), marginalized into the covariance as σ_N² Σ_b E_b E_bᵀ. Captain decision 2026-11-25, after the 2026-11-24 coordinator feedback (`feedback_on_v4_submission.pdf`): PFNS are shape data.
 - Snyder shape normalization: a free normalization factor with prior uncertainty s_N = 1.17 % (the normalization error removed from the shape file, release 4 Differential README), marginalized into the Snyder covariance as D_σ ρ D_σ + s_N² E Eᵀ; no renormalization on the prior.
 - Snyder is independent of every other data set; Dongwi is not used.
 - Reference group values as above; the same procedure is applied to ENDF/B-VIII.1 although its PFNS incident grid differs from ENDF/B-VIII.0's.

@@ -196,6 +196,27 @@ def released_pfns_arrays(
     return values, relative, correlation.reshape(count, count), evaluated
 
 
+PFNS_BLOCK_COUNT: Final = 20
+PFNS_NORMALIZATION_SIGMA: Final = 1.0  # 100 % per-block normalization (Captain 2026-11-25)
+
+
+def pfns_normalization_term(document: dict[str, Any], kept: slice) -> FloatArray:
+    """Return sigma_N**2 * sum_b outer(E_b, E_b) over the released incident-energy blocks."""
+    values = np.asarray(document["data"]["values"], dtype=np.float64)[kept]
+    energies = np.asarray(document["data"]["structure"][0]["limits"], dtype=np.float64)[kept]
+    term = np.zeros((values.size, values.size), dtype=np.float64)
+    for energy in np.unique(energies):
+        block = np.where(energies == energy, values, 0.0)
+        term += np.outer(block, block)
+    return PFNS_NORMALIZATION_SIGMA**2 * term
+
+
+def first_appearance_labels(energies: FloatArray) -> tuple[int, ...]:
+    """Label each point by its energy block, numbered in order of first appearance."""
+    labels: dict[float, int] = {}
+    return tuple(labels.setdefault(energy, len(labels)) for energy in energies.tolist())
+
+
 class ExerciseFiveObservationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -286,7 +307,10 @@ class ExerciseFiveObservationTest(unittest.TestCase):
             self.ex5.delta[block], values[kept] - evaluated[kept], rtol=1e-12
         )
         scale = np.diag(sigma)
-        expected = scale @ correlation[kept, kept] @ scale
+        expected = (
+            scale @ correlation[kept, kept] @ scale
+            + pfns_normalization_term(self.marini_pfns_document, kept)
+        )
         np.testing.assert_allclose(
             self.ex5.covariance[block, block], expected, rtol=1e-12, atol=1e-30
         )
@@ -308,7 +332,9 @@ class ExerciseFiveObservationTest(unittest.TestCase):
             self.ex5.experimental_uncertainty[KEEGAN_PFNS_BLOCK], sigma, rtol=1e-12
         )
         scale = np.diag(sigma)
-        expected = scale @ correlation @ scale
+        expected = scale @ correlation @ scale + pfns_normalization_term(
+            self.keegan_pfns_document, slice(None)
+        )
         np.testing.assert_allclose(
             self.ex5.covariance[KEEGAN_PFNS_BLOCK, KEEGAN_PFNS_BLOCK],
             expected,
@@ -318,6 +344,37 @@ class ExerciseFiveObservationTest(unittest.TestCase):
         require_positive_definite(
             self.ex5.covariance[KEEGAN_PFNS_BLOCK, KEEGAN_PFNS_BLOCK], "Keegan PFNS block"
         )
+
+    def test_pfns_blocks_are_twenty_incident_energy_groups(self) -> None:
+        for points, document in (
+            (self.marini_pfns, self.marini_pfns_document),
+            (self.keegan_pfns, self.keegan_pfns_document),
+        ):
+            energies = np.asarray(document["data"]["structure"][0]["limits"], dtype=np.float64)
+            kept_energies = energies[np.asarray(points.released_indices)]
+            self.assertEqual(np.unique(kept_energies).size, PFNS_BLOCK_COUNT)
+            self.assertEqual(points.block_ids, first_appearance_labels(kept_energies))
+
+    def test_pfns_covariance_between_blocks_is_plain_d_rho_d(self) -> None:
+        for block, points, document in (
+            (MARINI_PFNS_BLOCK, self.marini_pfns, self.marini_pfns_document),
+            (KEEGAN_PFNS_BLOCK, self.keegan_pfns, self.keegan_pfns_document),
+        ):
+            values, relative, correlation, _ = released_pfns_arrays(document)
+            released = np.asarray(points.released_indices)
+            first, last = 0, released.size - 1
+            self.assertNotEqual(points.block_ids[first], points.block_ids[last])
+            sigma = relative[released] * values[released]
+            np.testing.assert_allclose(
+                self.ex5.experimental_uncertainty[block], sigma, rtol=1e-12
+            )
+            expected = sigma[first] * correlation[released[first], released[last]] * sigma[last]
+            np.testing.assert_allclose(
+                self.ex5.covariance[block.start + first, block.start + last],
+                expected,
+                rtol=1e-12,
+                atol=1e-30,
+            )
 
     def test_pfns_sensitivities_land_on_one_prior_state_as_c_over_mu(self) -> None:
         means = synthetic_means(PRIOR_COUNT)

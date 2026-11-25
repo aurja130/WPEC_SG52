@@ -37,19 +37,21 @@ Marini PFNS selection: incident energy at or below 20 MeV, a non-zero sensitivit
 ## Observation model
 
 - Nu-bar (as Exercise 4): for Marini nu-bar point k and energy group g, S[k, `94239_00452_g`] = C_k · s_rel[k,g] / μ_prior[`94239_00452_g`]; residual δ_k = E_k − C_k, with values as released.
-- PFNS: each point is its own observation with residual δ_k = E_k − C_k, where C_k is the released block-normalized value. Its sensitivity is the released one-hot row: a single non-zero entry on state `94239_<slice MT>_<outgoing group>`, the state of the PFNS slice holding E_in and the outgoing group holding E_out, with S = C_k / μ_prior. There is no block-normalization term and no free normalization factor.
+- PFNS: each point is its own observation with residual δ_k = E_k − C_k, where C_k is the released block-normalized value. Its sensitivity is the released one-hot row: a single non-zero entry on state `94239_<slice MT>_<outgoing group>`, the state of the PFNS slice holding E_in and the outgoing group holding E_out, with S = C_k / μ_prior. There is no block-normalization term in the sensitivity.
+- PFNS normalization: each PFNS block b (the kept points sharing one released incident energy; 20 blocks per data set, contiguous in released order, otherwise ValueError) has one floating normalization factor N_b = 1 ± σ_N with σ_N = 1.0 (100 %), marginalized into the observation covariance. Captain decision 2026-11-25, after the 2026-11-24 coordinator feedback (`feedback_on_v4_submission.pdf`): PFNS are shape data, and shape data carry no absolute information.
 - Covariance is block diagonal over the four data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS):
   - integral block: diag(expt² + sim²), as in Exercise 3;
   - each differential block: diag(σ_E) ρ diag(σ_E), with σ_E = u · E (u relative, ρ from the release);
+  - Marini PFNS and Keegan PFNS: additionally σ_N² Σ_b E_b E_bᵀ, with E_b the kept experimental values on block b (zero elsewhere) and σ_N = 1.0;
   - all blocks between data sets: zero.
   Each differential block is checked for symmetry and positive definiteness (Cholesky).
 - Differential `/responses`: experimental = E, experimental_uncertainty = σ_E (absolute), simulated = C, simulated_uncertainty = 0.
 
 ## Assumptions
 
-- PFNS calculated values are the released block-normalized values, used as released: no free normalization factor and no renormalization on the prior.
+- PFNS calculated values are the released block-normalized values, used as released: no renormalization on the prior. The per-block floating normalization factor enters only through the covariance (σ_N = 1.0).
 - PFNS sensitivities are the released one-hot rows, with no term for the block normalization, as released.
-- Each PFNS set's covariance is diag(σ_E) ρ diag(σ_E) with σ_E = u · E, as for Marini nu-bar; no Peelle's Pertinent Puzzle correction.
+- Each differential covariance is diag(σ_E) ρ diag(σ_E) with σ_E = u · E, as for Marini nu-bar, plus the PFNS block terms σ_N² Σ_b E_b E_bᵀ for Marini PFNS and Keegan PFNS; no Peelle's Pertinent Puzzle correction.
 - Independent data sets: zero covariance between the integral block, Marini nu-bar, Marini PFNS and Keegan PFNS, even though the two PFNS files share an EXFOR number.
 - Exercise 4's assumptions carry over: the as-MT452 rule for Marini nu-bar (its sensitivity rows land on MT452, E and C used as released), no covariance between integral responses, sensitivity uncertainties not propagated, no calculation uncertainty for differential points.
 

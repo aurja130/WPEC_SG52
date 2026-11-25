@@ -4,7 +4,8 @@ JEZEBEL and EUCLID relative sensitivities are aligned to the Pu-239 prior
 state indices and converted to absolute response derivatives for GLLS. The
 Marini prompt nu-bar points follow the as-MT452 rule. The Marini and Keegan
 PFNS points are aligned to the prompt-spectrum prior states by their single
-non-zero sensitivity. The Snyder and Dongwi shape points are aligned to the
+non-zero sensitivity; each PFNS data set carries one floating normalization factor
+per incident-energy block. The Snyder and Dongwi shape points are aligned to the
 MT18 prior states and carry a normalization-uncertainty term. All six data
 sets are appended with a block-diagonal covariance, so the blocks are mutually
 uncorrelated.
@@ -110,6 +111,10 @@ KEEGAN_PFNS_PREFIX: Final = "keegan-pfns-"
 PFNS_INCIDENT_BIN_COUNT: Final = 10
 PFNS_OUTGOING_GROUP_COUNT: Final = 51
 PFNS_ENERGY_LIMIT_MEV: Final = 20.0
+# Per-block floating normalization factor N_b = 1 +/- sigma_N with 100 % prior uncertainty.
+# Captain 2026-11-25, after the 2026-11-24 coordinator feedback (feedback_on_v4_submission.pdf):
+# shape data carry no absolute information.
+PFNS_NORMALIZATION_UNCERTAINTY: Final = 1.0
 SNYDER_RESPONSE_PREFIX: Final = "snyder-"
 SNYDER_POINT_COUNT: Final = 92
 # Release 4 Adjustement set/Differential/README.md quotes "1.17% (Snyder)": the normalization
@@ -195,6 +200,7 @@ class PfnsPoints:
     correlation: FloatArray
     evaluated: FloatArray
     target_indices: tuple[str, ...]  # prior state per kept point, from its one-hot sensitivity
+    block_ids: tuple[int, ...]  # 0-based normalization block per kept point
 
 
 @dataclass(frozen=True)
@@ -634,6 +640,20 @@ def build_marini_inputs(points: MariniPoints, prior: PriorData) -> ObservationIn
     )
 
 
+def pfns_block_ids(path: Path, energies: FloatArray) -> tuple[int, ...]:
+    """Number kept PFNS points by shared exact incident energy; blocks must be contiguous."""
+    block_of_energy: dict[float, int] = {}
+    block_ids: list[int] = []
+    for energy in energies.tolist():
+        block = block_of_energy.setdefault(energy, len(block_of_energy))
+        if (not block_ids or block != block_ids[-1]) and block in block_ids:
+            raise ValueError(
+                f"{path.name}: PFNS block at incident energy {energy} MeV is not contiguous"
+            )
+        block_ids.append(block)
+    return tuple(block_ids)
+
+
 def load_pfns(path: Path, response_prefix: str) -> PfnsPoints:
     """Load one released PFNS data set and apply the selection and alignment rules."""
     if not path.is_file():
@@ -718,14 +738,26 @@ def load_pfns(path: Path, response_prefix: str) -> PfnsPoints:
         correlation=correlation[np.ix_(selected, selected)],
         evaluated=evaluated_kept,
         target_indices=tuple(target_indices),
+        block_ids=pfns_block_ids(path, energies_in[selected]),
     )
 
 
 def build_pfns_inputs(points: PfnsPoints, prior: PriorData) -> ObservationInputs:
-    """Form PFNS GLLS rows; each sensitivity is C / mu on its single aligned prior state."""
+    """Form PFNS GLLS rows; each sensitivity is C / mu on its single aligned prior state.
+
+    The covariance is D rho D plus, for each energy block b, the term
+    PFNS_NORMALIZATION_UNCERTAINTY**2 * outer(E_b, E_b), with E_b the experimental
+    values of block b and zero elsewhere.
+    """
     prior_position = {index: position for position, index in enumerate(prior.indices)}
     sigma = points.relative_uncertainty * points.experimental
     covariance = np.diag(sigma) @ points.correlation @ np.diag(sigma)
+    block_of_point = np.asarray(points.block_ids)
+    for block in set(points.block_ids):
+        block_experimental = np.where(block_of_point == block, points.experimental, 0.0)
+        covariance += PFNS_NORMALIZATION_UNCERTAINTY**2 * np.outer(
+            block_experimental, block_experimental
+        )
     require_positive_definite(
         covariance, f"PFNS covariance block starting at {points.response_indices[0]}"
     )

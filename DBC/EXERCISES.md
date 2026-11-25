@@ -62,10 +62,13 @@ Exercise 5:
 8. Peelle's Pertinent Puzzle: no correction; $\sigma_E = uE$ for every
    differential set.
 9. Shape data sets: yes for both PFNS sets ("Clean ratio shape"); Snyder and
-   Dongwi not used. This is a judgment: the level comes from the released
-   block-normalized $C$, and no normalization parameter is fitted.
-10. Their normalization: the released block-normalized $C$ as is; no free
-    normalization factor, no renormalization on the prior.
+   Dongwi not used. Each PFNS block carries one floating normalization factor
+   with 100 % prior uncertainty, so the PFNS data carry shape information only
+   (since 2026-11-25; before, the level came from the block-normalized $C$ and
+   no factor was used).
+10. Their normalization: the released block-normalized $C$, no
+    renormalization on the prior, plus one floating factor per PFNS block,
+    marginalized as $\sigma_N^2 E^{(b)} E^{(b)\top}$, $\sigma_N = 1$.
 11. Snyder–Dongwi correlation: not applicable, not used.
 
 ### Matrix layout and data treatment
@@ -515,31 +518,34 @@ and 1274–2550 of $\Delta$, $S$ and the matching diagonal blocks of $\Sigma_E$.
   posterior from the inputs.
 - The analysis report gives, per data set (integral, Marini nu-bar, Marini
   PFNS, Keegan PFNS): count, prior and linearized-posterior $\chi^2/m$, C/E
-  range and the number within one observation standard deviation. It writes
-  every response's row to a CSV, gives PFNS normalization and positivity
-  flags, and names every assumption.
+  range and the number within one shape-only observation standard deviation
+  $\sqrt{\sigma_E^2 + \sigma_C^2}$ (since 2026-11-25; the square root of the
+  $\Sigma_E$ diagonal before). It writes every response's row to a CSV, gives
+  PFNS normalization and positivity flags, and names every assumption.
 - The questions sheet answers 6–11 for the PFNS data; the comment sheet
   states the as-MT452 rule and the PFNS rules.
 
-**Result today:** Built 2026-11-23 on release 4, m = 2551. Gate green: 31
-tests across Exercises 1–5, the full workflow rerun from a clean state, a
-second run giving identical HDF5 datasets, `nda` reproduced by the analysis to
-$5 \times 10^{-13}$, rows 0–53 equal to Exercise 4's. $\chi^2/m$ prior →
-posterior (each set's own $\Sigma_E$ block; Exercise 4's comment used $V$,
-which gives 2.34 for Marini nu-bar): integral 1.25 → 1.16; Marini nu-bar
-7.55 → 1.42; Marini PFNS 0.64 → 0.31; Keegan PFNS 1.82 → 0.89. Within one
-observation standard deviation, prior → posterior: integral 20 → 22, Marini
-nu-bar 21 → 12, Marini PFNS 743 → 931, Keegan PFNS 716 → 586. C/E prior →
-linearized posterior: JEZEBEL $k_\text{eff}$ 1.00044 → 1.00038; EUCLID 3x2
-0.99983 → 1.00218; EUCLID 1x8 0.99800 → 1.00124; Marini nu-bar
-0.9909–1.0121 → 0.9822–0.9967. PFNS block mean C/E: Marini 0.936–1.075 →
-0.914–1.032, Keegan 0.891–2.964 → 0.863–2.512. PFNS normalization: every
-slice's sum rises except 01618; largest deviation $2.40 \times 10^{-3}$
-(slice 01418; Exercise 4 had $1.40 \times 10^{-3}$), flagged. No negative
-states; MT456 unchanged; largest mean shift 2.72 prior standard deviations
-(PFNS states with means near $10^{-8}$). Completion review passed with no
-blockers (2026-11-23). Added 2026-11-23 to `UU_Erik_Aurora_SG52_v4` (`Ex5/`;
-Ex1–4 unchanged, archives rebuilt) for the Captain to send.
+**Result today:** Rebuilt 2026-11-25 on release 4 with the PFNS floating
+normalization, m = 2551. Gate: 72 tests across Exercises 5, 6 and 8 pass; the
+observations rebuilt twice give identical HDF5 files; `nda` reproduced by the
+analysis to $5 \times 10^{-12}$ (mean) and $5 \times 10^{-13}$ (covariance).
+$\chi^2/m$ prior → posterior (each set's own $\Sigma_E$ block, factor terms
+included): integral 1.25 → 0.98; Marini nu-bar 7.55 → 1.42; Marini PFNS
+0.38 → 0.20; Keegan PFNS 1.66 → 0.82. Within one shape-only observation
+standard deviation, prior → posterior: integral 20 → 21, Marini nu-bar
+21 → 11, Marini PFNS 743 → 902, Keegan PFNS 716 → 680. C/E prior →
+linearized posterior: JEZEBEL $k_\text{eff}$ 1.00044 → 1.00020; EUCLID 3x2
+0.99983 → 1.00078; EUCLID 1x8 0.99800 → 0.99976; Marini nu-bar
+0.9909–1.0121 → 0.9818–0.9964. PFNS block mean C/E: Marini 0.936–1.075 →
+0.925–1.053, Keegan 0.891–2.964 → 0.863–2.596. PFNS normalization: every
+slice's sum now falls; largest deviation $5.49 \times 10^{-3}$ (slice 01418,
+sum 0.99451), flagged. No negative states; MT456 unchanged; largest mean
+shift 2.54 prior standard deviations (state 851, slice 01718 group 35). The
+largest change against the v4 posterior is 17 % of the prior mean (state 505,
+slice 01018 group 46). Not yet reviewed or packaged; the v4 submission (sent
+2026-11-23, no factor) had integral 1.25 → 1.16, Marini PFNS 0.64 → 0.31,
+Keegan PFNS 1.82 → 0.89, slice sums rising, largest deviation
+$2.40 \times 10^{-3}$.
 
 **Concepts:** `DifferentialSet` `DifferentialSensitivities` `DifferentialSelection` `NubarObservationModel` `NubarAsTotal` `PfnsObservationModel` `PfnsBlockNormalization` `PfnsLevelConstraint` `DifferentialAlignment` `Discrepancy` `AbsoluteSensitivity` `ObservationCovariance` `CombinedVariance` `UncorrelatedResponses` `DifferentialCovariance` `IndependentDataSets` `PosteriorMean` `PosteriorCovariance` `GllsReproduction` `LinearizedResponses` `PfnsChecks` `RelativePosteriorCovariance` `UpdatedTemplate`
 
@@ -647,30 +653,28 @@ shared section; outside the GLLS matrices.
   set, normalization factor with 1.17 % prior uncertainty); the comment sheet
   states the Snyder rule.
 
-**Result today:** Built 2026-11-23 on release 4, m = 2642. Gate green: 61
-tests across Exercises 1–6; full workflow including both NJOY runs rerun from
-a clean state with identical HDF5 datasets and attributes; `nda` reproduced
-by the analysis to $9 \times 10^{-13}$; rows 0–2550 equal to Exercise 5's.
-$\chi^2/m$ prior → posterior: integral 1.25 → 1.18; Marini nu-bar 7.55 →
-1.42; Marini PFNS 0.64 → 0.31; Keegan PFNS 1.82 → 0.89; Snyder 1.37 → 1.22
-(within one observation standard deviation 60 → 84 of 91). C/E prior →
-linearized posterior: JEZEBEL $k_\text{eff}$ 1.00044 → 1.00038; EUCLID 3x2
-0.99983 → 1.00204; EUCLID 1x8 0.99800 → 1.00108. PFNS normalization largest
-deviation $2.39 \times 10^{-3}$ (slice 01418), flagged; no negative states;
-largest mean shift 2.72 prior standard deviations.
-ENDF/B-VIII.1 comparison over the 826 states of the 26 QIDs that pass the
-gate: VIII.1 differs from the prior on 644 states, the update changed 541 of
-them and moved 186 toward VIII.1; states within two standard deviations of
-VIII.1 fell from 568 (prior) to 324 (posterior), of 626 with finite posterior
-standard deviation. Both are automatic flags in the report: the posterior is
-less consistent with VIII.1 than the prior. MT18 in groups 27–50 (22 of the
-24 groups carry Snyder points): target adjustment within ±0.9 %, relative
-adjustment +0.3 to +1.4 %, 7 of 24 states moved toward VIII.1, 16 of 24
-within two posterior standard deviations (24 of 24 before). Not compared:
-PFNS slices 01318, 01518, 01618 (reproduction error $1.5$–$2.8 \times
-10^{-3}$). Completion review passed with no blockers (2026-11-23). Added
-2026-11-23 to `UU_Erik_Aurora_SG52_v4` (`Ex6/`; Ex1–5 unchanged, archives
-rebuilt) for the Captain to send.
+**Result today:** Rebuilt 2026-11-25 on release 4 with the PFNS floating
+normalization, m = 2642; same gate as Exercise 5; `nda` reproduced to
+$3 \times 10^{-11}$ (mean) and $9 \times 10^{-13}$ (covariance). $\chi^2/m$
+prior → posterior: integral 1.25 → 1.00; Marini nu-bar 7.55 → 1.42; Marini
+PFNS 0.38 → 0.20; Keegan PFNS 1.66 → 0.82; Snyder 1.37 → 1.22 (within one
+shape-only observation standard deviation 38 → 74 of 91; 60 → 84 under the
+old count, which included $s_N$). C/E prior → linearized posterior: JEZEBEL
+$k_\text{eff}$ 1.00044 → 1.00020; EUCLID 3x2 0.99983 → 1.00064; EUCLID 1x8
+0.99800 → 0.99961. PFNS normalization largest deviation
+$5.49 \times 10^{-3}$ (slice 01418), flagged; no negative states; largest
+mean shift 2.54 prior standard deviations. ENDF/B-VIII.1 comparison over the
+826 states of the 26 QIDs that pass the gate: VIII.1 differs from the prior
+on 644 states, the update changed 541 of them and moved 204 toward VIII.1
+(186 in v4); states within two standard deviations of VIII.1 fell from 568
+(prior) to 350 (posterior; 324 in v4), of 626 with finite posterior standard
+deviation, still flagged as less consistent with VIII.1 than the prior. MT18
+in groups 27–50: target adjustment within ±0.9 %, relative adjustment
++0.18 to +1.23 %, 8 of 24 states moved toward VIII.1, 21 of 24 within two
+posterior standard deviations (24 of 24 before). Not compared: PFNS slices
+01318, 01518, 01618 (reproduction error $1.5$–$2.8 \times 10^{-3}$). Not yet
+reviewed or packaged; the v4 submission (2026-11-23, no PFNS factor) is
+superseded.
 
 **Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `ShapeNormalizationFactor` `DifferentialCovariance` `IndependentDataSets` `EndfComparison` `ReferenceGroupValues` `ReproductionGate` `TargetAdjustment` `PosteriorConsistency` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
 
@@ -798,21 +802,19 @@ into rows 2642–2732 of $\Delta$, $S$ and the block 2642–2732 of $\Sigma_E$.
 - The questions sheet answers the shape and Snyder–Dongwi questions; the
   comment sheet states the Dongwi rule.
 
-**Result today:** Built 2026-11-23 on release 4, m = 2733. Gate green: 85
-tests across Exercises 1–6 and 8; full workflow rerun from a clean state with
-identical HDF5 datasets; `nda` reproduced by the analysis to
-$9 \times 10^{-13}$; rows 0–2641 equal to Exercise 6's. $\chi^2/m$ prior →
-posterior: integral 1.25 → 1.19; Marini nu-bar 7.55 → 1.41; Marini PFNS
-0.64 → 0.31; Keegan PFNS 1.82 → 0.89; Snyder 1.37 → 1.19; Dongwi 1.47 →
-1.30 (within one observation standard deviation 43 → 76 of 91). C/E prior →
-linearized posterior: JEZEBEL $k_\text{eff}$ 1.00044 → 1.00037; EUCLID 3x2
-0.99983 → 1.00196; EUCLID 1x8 0.99800 → 1.00094. PFNS normalization largest
-deviation $2.38 \times 10^{-3}$ (slice 01418), flagged; no negative states;
-largest mean shift 2.72 prior standard deviations. Adding Dongwi lowers the
-smallest MT18 relative adjustment in groups 27–50 from +0.31 % (Exercise 6)
-to +0.04 %; the largest stays about +1.34 %. Completion review passed with no
-blockers (2026-11-23). Added 2026-11-23 to `UU_Erik_Aurora_SG52_v4` (`Ex8/`;
-Ex1–6 unchanged, archives rebuilt) for the Captain to send.
+**Result today:** Rebuilt 2026-11-25 on release 4 with the PFNS floating
+normalization, m = 2733; same gate as Exercise 5; `nda` reproduced to
+$1 \times 10^{-11}$ (mean) and $9 \times 10^{-13}$ (covariance). $\chi^2/m$
+prior → posterior: integral 1.25 → 1.01; Marini nu-bar 7.55 → 1.42; Marini
+PFNS 0.38 → 0.20; Keegan PFNS 1.66 → 0.82; Snyder 1.37 → 1.19; Dongwi 1.47 →
+1.30 (within one shape-only observation standard deviation 25 → 44 of 91;
+43 → 76 under the old count, which included $s_N$). C/E prior → linearized
+posterior: JEZEBEL $k_\text{eff}$ 1.00044 → 1.00019; EUCLID 3x2 0.99983 →
+1.00057; EUCLID 1x8 0.99800 → 0.99947. PFNS normalization largest deviation
+$5.52 \times 10^{-3}$ (slice 01418), flagged; no negative states; largest
+mean shift 2.55 prior standard deviations. MT18 relative adjustment in groups
+27–50: −0.09 to +1.22 % (Exercise 6: +0.18 to +1.23 %). Not yet reviewed or
+packaged; the v4 submission (2026-11-23, no PFNS factor) is superseded.
 
 **Concepts:** `DifferentialSelection` `DifferentialAlignment` `CrossSectionShapeModel` `ShapeNormalizationFactor` `DifferentialCovariance` `IndependentDataSets` `LinearizedResponses` `PfnsChecks` `UpdatedTemplate`
 

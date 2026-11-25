@@ -18,7 +18,7 @@ import json
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, Protocol, TypedDict, cast
+from typing import Final, Literal, Protocol, TypedDict, cast
 
 import h5py
 import numpy as np
@@ -189,6 +189,10 @@ KEEGAN_PFNS_FAMILY = "keegan-pfns"
 MT452_QID = "00452"  # total nubar; Marini nu-bar sensitivities are placed here (as-MT452 rule)
 MT456_QID = "00456"  # prompt nubar; no response sensitivity (checked)
 SYMMETRY_RELATIVE_TOLERANCE = 1e-10
+# Per-block floating normalization factor on each PFNS data set (one factor per incident energy):
+# 100 % prior uncertainty. Captain 2026-11-25 after the 2026-11-24 coordinator feedback
+# (feedback_on_v4_submission.pdf): shape data carry no absolute information.
+PFNS_NORMALIZATION_UNCERTAINTY: Final = 1.0
 
 # Row slices in released order; each slice is one data set.
 INTEGRAL_ROWS = slice(0, EXPECTED_INTEGRAL_RESPONSE_COUNT)
@@ -905,8 +909,17 @@ def analyze(args: AnalysisArgs) -> str:
         where=experimental != 0.0,
     )
     observation_quadrature = np.hypot(experimental_uncertainty, simulated_uncertainty)
+    # PFNS rows: expt_uncert^2 + (1.0 E)^2 with E the released experimental value.
+    for pfns_slice in (MARINI_PFNS_ROWS, KEEGAN_PFNS_ROWS):
+        observation_quadrature[pfns_slice] = np.hypot(
+            experimental_uncertainty[pfns_slice],
+            PFNS_NORMALIZATION_UNCERTAINTY * experimental[pfns_slice],
+        )
     if not np.allclose(observation_std, observation_quadrature, rtol=1e-12, atol=0.0):
-        raise ValueError("Sigma_E diagonal must equal hypot(expt_uncert, sim_uncert)")
+        raise ValueError(
+            "Sigma_E diagonal must equal hypot(expt_uncert, sim_uncert), "
+            + "PFNS rows hypot(expt_uncert, 1.0 E)"
+        )
     if np.any(observation_std <= 0.0):
         raise ValueError("Observation covariance must have strictly positive diagonal")
 
@@ -963,7 +976,8 @@ def analyze(args: AnalysisArgs) -> str:
     for name, rows in DATA_SETS:
         prior_residual: FloatArray = Delta_E_i[rows]
         posterior_set_residual: FloatArray = posterior_residual[rows]
-        obs_std_set: FloatArray = observation_std[rows]
+        # Shape-only sigma for all rows (the PFNS diagonal of Sigma_E includes the normalization term).
+        obs_std_set: FloatArray = np.hypot(experimental_uncertainty, simulated_uncertainty)[rows]
         ce_prior_set: FloatArray = c_over_e_i[rows]
         ce_posterior_set: FloatArray = c_over_e_f[rows]
         data_set_rows.append(
@@ -1202,7 +1216,12 @@ def analyze(args: AnalysisArgs) -> str:
         "(ii) E and C used as released for every data set; PFNS C is the released "
         + "block-normalized value (ENDF/B-VIII.0 spectrum normalized to one over all "
         + "outgoing energies, times the trapezoid integral of the measured values over "
-        + "the block's measured outgoing range); no free normalization factor."
+        + "the block's measured outgoing range); no renormalization on the prior. "
+        + "PFNS: one floating normalization factor per block (all points at one incident "
+        + "energy), prior uncertainty 100 %, marginalized as sigma_N^2 E_b E_b^T on the "
+        + "measured values (Captain 2026-11-25, after the 2026-11-24 coordinator feedback), "
+        + "so PFNS carry shape information only. Within-one-sigma counts use the shape-only "
+        + "sigma, hypot(experimental, calculation uncertainty), for all rows."
     )
     add(
         "(iii) PFNS sensitivities: released one-hot rows on (PFNS slice holding E_in, "
@@ -1352,8 +1371,8 @@ def analyze(args: AnalysisArgs) -> str:
     add(
         "Observation covariance: full cov/values matrix (checked symmetric, cross-data-set "
         + "blocks exactly zero, integral block diagonal, each differential block positive "
-        + f"definite); its diagonal equals expt_uncert^2 + sim_uncert^2 for all {n_responses} "
-        + "responses (checked)."
+        + "definite); its diagonal equals expt_uncert^2 + sim_uncert^2 for every response "
+        + "except PFNS, whose diagonal equals expt_uncert^2 + (100 % x E)^2 (checked)."
     )
     add()
 

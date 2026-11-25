@@ -707,10 +707,11 @@ RELATIVE_COMMENT_LINES = (
     "As-MT452 rule (coordinator instruction, 2026-10-23): Marini nu-bar, measured as prompt nu-bar, is used as if it measured MT452 (total nu-bar): its sensitivity rows land on MT452, and its measured and calculated values are used as released.",
     "MT456 (prompt nu-bar) receives no sensitivity from any data set and is not adjusted; it stays at the prior.",
     "PFNS data (Marini PFNS, 1220 points up to 20 MeV; Keegan PFNS, 1277 points): each point is its own observation, residual E_k - C_k with C_k the released block-normalized evaluated value (ENDF/B-VIII.0 spectrum normalized to one over all outgoing energies, times the trapezoid integral of the measured values over the block's measured outgoing range).",
-    "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term, no free normalization factor.",
+    "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term.",
+    "PFNS normalization: one floating normalization factor per PFNS block (all points at one incident energy), prior uncertainty 100 %, marginalized into the observation covariance as sigma_N^2 E_b E_b^T on the measured values, so the PFNS data carry shape information only; C_k is still the released block-normalized evaluated value, with no renormalization on the prior.",
     "Snyder fission cross section (shape file nfcs_Snyder2021_shape.json, 91 points up to 19.4 MeV): each point is its own observation, residual E_k - C_k with C_k the released evaluated value (ENDF/B-VIII.0 MT18); one-hot sensitivity on the MT18 group holding E_in, S = C_k / mu_prior.",
     "Snyder shape normalization: a normalization factor with prior uncertainty 1.17 % (the normalization error removed from the shape file, release 4 Differential README) is marginalized into the Snyder covariance block: D_sigma rho D_sigma + 0.0117^2 E E^T.",
-    "Observation covariance is block-diagonal over the five data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder); each differential block except Snyder is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; the Snyder block adds 0.0117^2 E E^T.",
+    "Observation covariance is block-diagonal over the five data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder); each differential block except Snyder is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; the Marini PFNS and Keegan PFNS blocks also carry the PFNS block terms sigma_N^2 E_b E_b^T for each incident-energy block b (sigma_N = 100 %); the Snyder block adds 0.0117^2 E E^T.",
 )
 
 
@@ -754,7 +755,7 @@ QUESTION_ANSWERS = (
     ),
     (
         "If your code uses the relative form of GLLS, are all the terms (bias, experimental covariance, model/calculation covariance) normalized on C ?",
-        "Not applicable: GLLS is solved in absolute form. All terms are absolute: discrepancy E - C; observation covariance Sigma_E, block-diagonal over data sets: integral block diag(expt_uncert^2 + sim_uncert^2); Marini nu-bar, Marini PFNS and Keegan PFNS blocks D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; Snyder block D_sigma rho D_sigma + 0.0117^2 E E^T (shape normalization factor, 1.17 %, marginalized); no covariance between data sets; the absolute prior covariance. Relative sensitivities are converted to absolute ones with the calculated value C: S[k,j] = C_k * s_rel[k,j] / mu_prior,j.",
+        "Not applicable: GLLS is solved in absolute form. All terms are absolute: discrepancy E - C; observation covariance Sigma_E, block-diagonal over data sets: integral block diag(expt_uncert^2 + sim_uncert^2); Marini nu-bar, Marini PFNS and Keegan PFNS blocks D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations, the PFNS blocks adding sigma_N^2 E_b E_b^T per incident-energy block b (sigma_N = 100 %); Snyder block D_sigma rho D_sigma + 0.0117^2 E E^T (shape normalization factor, 1.17 %, marginalized); no covariance between data sets; the absolute prior covariance. Relative sensitivities are converted to absolute ones with the calculated value C: S[k,j] = C_k * s_rel[k,j] / mu_prior,j.",
     ),
     (
         "Are your posterior covariances normalized on the prior mean to match the exercise specifications ?",
@@ -778,11 +779,11 @@ QUESTION_ANSWERS = (
     ),
     (
         "Are you including Marini/Keegan PFNS, Snyder and Dongwi datasets as shape datasets ?",
-        "Yes: Marini and Keegan PFNS ('Clean ratio shape') and Snyder (shape file nfcs_Snyder2021_shape.json). Dongwi is not used in Exercise 6.",
+        "Yes: Marini and Keegan PFNS ('Clean ratio shape'; one floating normalization factor per PFNS block, all points at one incident energy, prior uncertainty 100 %, so the PFNS data carry shape information only) and Snyder (shape file nfcs_Snyder2021_shape.json). Dongwi is not used in Exercise 6.",
     ),
     (
         "If so, do you renormalize them to prior, do you add a free normalization factor, or do you use a different approach ?",
-        "PFNS: the released evaluated values are used as calculated values (unit-normalized ENDF/B-VIII.0 spectrum times the trapezoid integral of the block's measured values over the measured outgoing range, so over that range it integrates to slightly less than the data); no free normalization factor. Snyder: a free normalization factor whose prior uncertainty is the normalization error removed from the shape file (1.17 %), marginalized into the Snyder covariance block as 0.0117^2 E E^T; no renormalization on the prior.",
+        "PFNS: the released evaluated values are used as calculated values (unit-normalized ENDF/B-VIII.0 spectrum times the trapezoid integral of the block's measured values over the measured outgoing range, so over that range it integrates to slightly less than the data); one floating normalization factor per PFNS block (all points at one incident energy), prior uncertainty 100 %, marginalized into the observation covariance as sigma_N^2 E_b E_b^T on the measured values; no renormalization on the prior. Snyder: a free normalization factor whose prior uncertainty is the normalization error removed from the shape file (1.17 %), marginalized into the Snyder covariance block as 0.0117^2 E E^T; no renormalization on the prior.",
     ),
     (
         "Do you take into account the correlation between Snyder and Dongwi datasets ?",
@@ -893,10 +894,11 @@ def add_absolute_comment_sheet(workbook: Workbook, pfns_line: str) -> None:
         "As-MT452 rule (coordinator instruction, 2026-10-23): Marini nu-bar, measured as prompt nu-bar, is used as if it measured MT452 (total nu-bar): its sensitivity rows land on MT452, and its measured and calculated values are used as released.",
         "MT456 (prompt nu-bar) receives no sensitivity from any data set and is not adjusted; it stays at the prior.",
         "PFNS data (Marini PFNS, 1220 points up to 20 MeV; Keegan PFNS, 1277 points): each point is its own observation, residual E_k - C_k with C_k the released block-normalized evaluated value (ENDF/B-VIII.0 spectrum normalized to one over all outgoing energies, times the trapezoid integral of the measured values over the block's measured outgoing range).",
-        "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term, no free normalization factor.",
+        "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term.",
+        "PFNS normalization: one floating normalization factor per PFNS block (all points at one incident energy), prior uncertainty 100 %, marginalized into the observation covariance as sigma_N^2 E_b E_b^T on the measured values, so the PFNS data carry shape information only; C_k is still the released block-normalized evaluated value, with no renormalization on the prior.",
         "Snyder fission cross section (shape file nfcs_Snyder2021_shape.json, 91 points up to 19.4 MeV): each point is its own observation, residual E_k - C_k with C_k the released evaluated value (ENDF/B-VIII.0 MT18); one-hot sensitivity on the MT18 group holding E_in, S = C_k / mu_prior.",
         "Snyder shape normalization: a normalization factor with prior uncertainty 1.17 % (the normalization error removed from the shape file, release 4 Differential README) is marginalized into the Snyder covariance block: D_sigma rho D_sigma + 0.0117^2 E E^T.",
-        "Observation covariance is block-diagonal over the five data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder); each differential block except Snyder is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; the Snyder block adds 0.0117^2 E E^T.",
+        "Observation covariance is block-diagonal over the five data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder); each differential block except Snyder is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; the Marini PFNS and Keegan PFNS blocks also carry the PFNS block terms sigma_N^2 E_b E_b^T for each incident-energy block b (sigma_N = 100 %); the Snyder block adds 0.0117^2 E E^T.",
         pfns_line,
     ]
     for index, line in enumerate(lines):

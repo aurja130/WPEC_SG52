@@ -707,8 +707,9 @@ RELATIVE_COMMENT_LINES = (
     "As-MT452 rule (coordinator instruction, 2026-10-23): Marini nu-bar, measured as prompt nu-bar, is used as if it measured MT452 (total nu-bar): its sensitivity rows land on MT452, and its measured and calculated values are used as released.",
     "MT456 (prompt nu-bar) receives no sensitivity from any data set and is not adjusted; it stays at the prior.",
     "PFNS data (Marini PFNS, 1220 points up to 20 MeV; Keegan PFNS, 1277 points): each point is its own observation, residual E_k - C_k with C_k the released block-normalized evaluated value (ENDF/B-VIII.0 spectrum normalized to one over all outgoing energies, times the trapezoid integral of the measured values over the block's measured outgoing range).",
-    "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term, no free normalization factor.",
-    "Observation covariance is block-diagonal over the four data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS); each differential block is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations.",
+    "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term.",
+    "PFNS normalization: one floating normalization factor per PFNS block (all points at one incident energy), prior uncertainty 100 %, marginalized into the observation covariance as sigma_N^2 E_b E_b^T on the measured values, so the PFNS data carry shape information only; C_k is still the released block-normalized evaluated value, with no renormalization on the prior.",
+    "Observation covariance is block-diagonal over the four data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS); each differential block is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; the Marini PFNS and Keegan PFNS blocks also carry the PFNS block terms sigma_N^2 E_b E_b^T for each incident-energy block b (sigma_N = 100 %).",
 )
 
 
@@ -752,7 +753,7 @@ QUESTION_ANSWERS = (
     ),
     (
         "If your code uses the relative form of GLLS, are all the terms (bias, experimental covariance, model/calculation covariance) normalized on C ?",
-        "Not applicable: GLLS is solved in absolute form. All terms are absolute: discrepancy E - C; observation covariance Sigma_E, block-diagonal over data sets: integral block diag(expt_uncert^2 + sim_uncert^2); Marini nu-bar, Marini PFNS and Keegan PFNS blocks D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; no covariance between data sets; the absolute prior covariance. Relative sensitivities are converted to absolute ones with the calculated value C: S[k,j] = C_k * s_rel[k,j] / mu_prior,j.",
+        "Not applicable: GLLS is solved in absolute form. All terms are absolute: discrepancy E - C; observation covariance Sigma_E, block-diagonal over data sets: integral block diag(expt_uncert^2 + sim_uncert^2); Marini nu-bar, Marini PFNS and Keegan PFNS blocks D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations, the PFNS blocks adding sigma_N^2 E_b E_b^T per incident-energy block b (sigma_N = 100 %); no covariance between data sets; the absolute prior covariance. Relative sensitivities are converted to absolute ones with the calculated value C: S[k,j] = C_k * s_rel[k,j] / mu_prior,j.",
     ),
     (
         "Are your posterior covariances normalized on the prior mean to match the exercise specifications ?",
@@ -776,11 +777,11 @@ QUESTION_ANSWERS = (
     ),
     (
         "Are you including Marini/Keegan PFNS, Snyder and Dongwi datasets as shape datasets ?",
-        "Yes for the PFNS: Marini and Keegan PFNS are used as shape data ('Clean ratio shape'). Snyder and Dongwi are not used in Exercise 5.",
+        "Yes for the PFNS: Marini and Keegan PFNS are used as shape data ('Clean ratio shape'). Each PFNS block (all points at one incident energy) carries one floating normalization factor with 100 % prior uncertainty, so the PFNS data carry shape information only. Snyder and Dongwi are not used in Exercise 5.",
     ),
     (
         "If so, do you renormalize them to prior, do you add a free normalization factor, or do you use a different approach ?",
-        "We use the released evaluated values as calculated values: the released evaluated value is the ENDF/B-VIII.0 spectrum normalized to one over all outgoing energies, times the trapezoid integral of the block's measured values over the measured outgoing range; over that range it integrates to slightly less than the data (the spectrum's mass outside the measured range). No free normalization factor and no renormalization on the prior; the one-hot sensitivities carry no block-normalization term.",
+        "We use the released evaluated values as calculated values: the released evaluated value is the ENDF/B-VIII.0 spectrum normalized to one over all outgoing energies, times the trapezoid integral of the block's measured values over the measured outgoing range; over that range it integrates to slightly less than the data (the spectrum's mass outside the measured range). Each PFNS block has one floating normalization factor (all points at one incident energy), prior uncertainty 100 %, marginalized into the observation covariance as sigma_N^2 E_b E_b^T on the measured values; there is no renormalization on the prior, and the one-hot sensitivities carry no block-normalization term.",
     ),
     (
         "Do you take into account the correlation between Snyder and Dongwi datasets ?",
@@ -891,8 +892,9 @@ def add_absolute_comment_sheet(workbook: Workbook, pfns_line: str) -> None:
         "As-MT452 rule (coordinator instruction, 2026-10-23): Marini nu-bar, measured as prompt nu-bar, is used as if it measured MT452 (total nu-bar): its sensitivity rows land on MT452, and its measured and calculated values are used as released.",
         "MT456 (prompt nu-bar) receives no sensitivity from any data set and is not adjusted; it stays at the prior.",
         "PFNS data (Marini PFNS, 1220 points up to 20 MeV; Keegan PFNS, 1277 points): each point is its own observation, residual E_k - C_k with C_k the released block-normalized evaluated value (ENDF/B-VIII.0 spectrum normalized to one over all outgoing energies, times the trapezoid integral of the measured values over the block's measured outgoing range).",
-        "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term, no free normalization factor.",
-        "Observation covariance is block-diagonal over the four data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS); each differential block is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations.",
+        "PFNS sensitivities are the released one-hot rows on (PFNS slice holding E_in, outgoing group holding E_out), S = C_k / mu_prior; no block-normalization term.",
+        "PFNS normalization: one floating normalization factor per PFNS block (all points at one incident energy), prior uncertainty 100 %, marginalized into the observation covariance as sigma_N^2 E_b E_b^T on the measured values, so the PFNS data carry shape information only; C_k is still the released block-normalized evaluated value, with no renormalization on the prior.",
+        "Observation covariance is block-diagonal over the four data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS); each differential block is D_sigma rho D_sigma with sigma = relative uncertainty x E and the released correlations; the Marini PFNS and Keegan PFNS blocks also carry the PFNS block terms sigma_N^2 E_b E_b^T for each incident-energy block b (sigma_N = 100 %).",
         pfns_line,
     ]
     for index, line in enumerate(lines):

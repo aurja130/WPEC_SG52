@@ -40,12 +40,12 @@ Snyder and Dongwi selection: incident energy at or below 20 MeV and a non-zero s
 
 ## Observation model
 
-- Nu-bar and PFNS: as in Exercise 6 (as-MT452 rule for Marini nu-bar; PFNS one-hot rows with S = C_k / μ_prior; no block-normalization term; no free normalization factor).
+- Nu-bar and PFNS: as in Exercise 6 (as-MT452 rule for Marini nu-bar; PFNS one-hot rows with S = C_k / μ_prior; no block-normalization term in the sensitivity; one floating normalization factor per PFNS block with σ_N = 1.0 (100 %) in the covariance).
 - Snyder: each point is its own observation with residual δ_k = E_k − C_k, where C_k is the released ENDF/B-VIII.0 MT18 value. Its sensitivity is the released one-hot row: a single non-zero entry on `94239_00018_<group>`, the group holding E_in, with S = C_k / μ_prior.
 - Dongwi: treated as Snyder, with the same residual, one-hot MT18 sensitivity and S = C_k / μ_prior, over its 91 kept points.
 - Covariance is block diagonal over the six data sets (integral, Marini nu-bar, Marini PFNS, Keegan PFNS, Snyder, Dongwi):
   - integral block: diag(expt² + sim²), as in Exercise 3;
-  - Marini nu-bar, Marini PFNS, Keegan PFNS: diag(σ_E) ρ diag(σ_E), with σ_E = u · E (u relative, ρ from the release);
+  - Marini nu-bar, Marini PFNS, Keegan PFNS: diag(σ_E) ρ diag(σ_E), with σ_E = u · E (u relative, ρ from the release); Marini PFNS and Keegan PFNS additionally σ_N² Σ_b E_b E_bᵀ (σ_N = 1.0, one floating normalization factor per block);
   - Snyder: diag(σ_E) ρ diag(σ_E) + s_N² E Eᵀ, with σ_E = u · E and s_N = 1.17 %;
   - Dongwi: diag(σ_E) ρ diag(σ_E) + s_N² E Eᵀ, with σ_E = u · E and s_N = 1.34 %;
   - all blocks between data sets, including Snyder–Dongwi: zero.
